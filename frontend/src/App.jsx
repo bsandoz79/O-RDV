@@ -19,6 +19,7 @@ function App() {
           
           {/* Route pour la prise de rendez-vous */}
           <Route path="/booking/:id" element={<Booking />} />
+
         </Routes>
       </div>
     </Router>
