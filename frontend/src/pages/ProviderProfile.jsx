@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, Star, MapPin, Phone, Mail, ArrowLeft } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, ArrowLeft } from 'lucide-react';
 
 const ProviderProfile = () => {
   const { id } = useParams();
