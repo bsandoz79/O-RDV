@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  # Base de données pour la gestion relationnelle des agendas 
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ordv_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+
+  # API Backend Node.js 
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  # Frontend React.js 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"

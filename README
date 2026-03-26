@@ -1,0 +1,8 @@
+# O'RDV - Plateforme de prise de rendez-vous
+[cite_start]Projet de place de marché pour services de proximité (Coiffure, bien-être, etc.)[cite: 5].
+
+## Stack Technique (MVP)
+- [cite_start]**Frontend** : React.js 
+- [cite_start]**Backend** : Node.js / Express 
+- [cite_start]**Base de données** : MySQL 
+- [cite_start]**Authentification** : JWT
