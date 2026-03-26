@@ -7,7 +7,7 @@ services:
       MYSQL_DATABASE: ordv_db
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
   # API Backend Node.js 
   backend:
