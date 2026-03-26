@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   MapPin,
-  Star,
   Scissors,
   Sparkles,
   Palette,
@@ -11,10 +10,12 @@ import {
   Smile,
   Zap,
   ChevronRight,
-  Navigation,
 } from "lucide-react";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// On importe notre nouveau composant
+import ProviderCard from "../components/ProviderCard";
+
+// ─── Mock Data (À déplacer plus tard dans un fichier data/providers.js) ──────
 const CATEGORIES = [
   { id: "coiffeur", label: "Coiffeur", icon: Scissors },
   { id: "barbier", label: "Barbier", icon: Zap },
@@ -93,102 +94,6 @@ const PROVIDERS = [
   },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-function StarRating({ note }) {
-  const full = Math.floor(note);
-  const hasHalf = note % 1 >= 0.5;
-  return (
-    <span className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          size={12}
-          className={
-            i < full
-              ? "text-amber-400 fill-amber-400"
-              : hasHalf && i === full
-              ? "text-amber-400 fill-amber-200"
-              : "text-slate-300 fill-slate-200"
-          }
-        />
-      ))}
-    </span>
-  );
-}
-
-function ProviderCard({ provider, onClick }) {
-  return (
-    <article
-      onClick={onClick}
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-100 hover:-translate-y-1"
-    >
-      {/* Image */}
-      <div className="relative h-44 overflow-hidden bg-slate-100">
-        <img
-          src={provider.image}
-          alt={provider.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-
-        {/* Badge */}
-        {provider.badge && (
-          <span className="absolute top-3 left-3 text-xs font-semibold bg-white/90 backdrop-blur-sm text-slate-800 px-2.5 py-1 rounded-full shadow-sm">
-            {provider.badge}
-          </span>
-        )}
-
-        {/* Disponibilité */}
-        <span
-          className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm ${
-            provider.disponible
-              ? "bg-emerald-500/90 text-white"
-              : "bg-slate-600/80 text-white"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              provider.disponible ? "bg-white animate-pulse" : "bg-slate-400"
-            }`}
-          />
-          {provider.disponible ? "Disponible" : "Complet"}
-        </span>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-1.5">
-          <h3 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-rose-500 transition-colors">
-            {provider.name}
-          </h3>
-          <ChevronRight
-            size={16}
-            className="flex-shrink-0 text-slate-300 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all mt-0.5"
-          />
-        </div>
-
-        <p className="text-xs text-slate-500 mb-2.5">{provider.metier}</p>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <StarRating note={provider.note} />
-            <span className="text-xs font-semibold text-slate-700">
-              {provider.note.toFixed(1)}
-            </span>
-            <span className="text-xs text-slate-400">({provider.avis})</span>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-slate-500">
-            <Navigation size={11} className="text-rose-400" />
-            {provider.distance}
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Home() {
   const navigate = useNavigate();
@@ -215,17 +120,14 @@ export default function Home() {
     >
       {/* ── Hero Section ──────────────────────────────────────────────────────── */}
       <section className="hero-bg relative overflow-hidden px-4 pt-16 pb-20 text-white">
-        {/* Decorative orbs */}
         <div className="hero-orb absolute -top-16 -right-16 w-96 h-96 rounded-full pointer-events-none" />
         <div className="hero-orb-2 absolute -bottom-12 -left-12 w-72 h-72 rounded-full pointer-events-none" />
 
         <div className="relative z-10 max-w-2xl mx-auto text-center">
-          {/* Eyebrow */}
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-rose-300 mb-4">
             Services de proximité
           </p>
 
-          {/* Title */}
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-4">
             Votre{" "}
             <span
@@ -241,12 +143,10 @@ export default function Home() {
             ,<br />à portée de main.
           </h1>
 
-          {/* Subtitle */}
           <p className="text-slate-300 text-base sm:text-lg mb-10 max-w-md mx-auto leading-relaxed">
             Réservez en quelques secondes chez les meilleurs artisans près de chez vous.
           </p>
 
-          {/* Search bar */}
           <div
             className="search-glow relative flex items-center bg-white rounded-2xl overflow-hidden transition-all duration-300 max-w-lg mx-auto"
             style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
@@ -267,7 +167,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Location hint */}
           <div className="flex items-center justify-center gap-1.5 mt-4 text-slate-400 text-xs">
             <MapPin size={12} className="text-rose-400" />
             <span>Autour de Paris, Île-de-France</span>
@@ -276,7 +175,7 @@ export default function Home() {
       </section>
 
       {/* ── Content Area ─────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 -mt-0">
+      <div className="max-w-5xl mx-auto px-4 mt-10">
         {/* ── Category Filters ─────────────────────────────────────────────── */}
         <section className="mb-8">
           <div
