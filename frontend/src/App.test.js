@@ -1,12 +1,7 @@
 import { render } from '@testing-library/react';
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
+import App from './App'; // Si tu as renommé en .jsx, React le trouvera quand même
 
 test('le composant App s\'affiche sans crash', () => {
-  render(
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  );
+  render(<App />);
 });
