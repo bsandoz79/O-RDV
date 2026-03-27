@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Briefcase, User } from "lucide-react"; // Import des icônes nécessaires
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Briefcase, User, LogOut, ShieldCheck } from "lucide-react"; 
 
 export function ScrollToTop() {
   const [show, setShow] = useState(false);
@@ -29,11 +29,44 @@ export function ScrollToTop() {
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
 
-  // ─── SIMULATION D'AUTHENTIFICATION ─────────────────────────────────────────
-  const isAdmin = false; 
+  // ─── ÉTAT D'AUTHENTIFICATION RÉACTIF ──────────────────────────────────────
+  // On initialise l'état directement en lisant le localStorage
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    const syncAuth = () => {
+      const saved = localStorage.getItem("user");
+      setUser(saved ? JSON.parse(saved) : null);
+    };
+
+    // Écoute l'événement personnalisé déclenché par Login.jsx
+    window.addEventListener("authChange", syncAuth);
+    // Écoute les changements provenant d'autres onglets
+    window.addEventListener("storage", syncAuth);
+    
+    // Force la synchronisation à chaque changement de route
+    syncAuth();
+
+    return () => {
+      window.removeEventListener("authChange", syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, [location]); 
+
+  const handleLogout = () => {
+    localStorage.clear();
+    // On informe immédiatement les autres composants du changement
+    window.dispatchEvent(new Event("authChange"));
+    setUser(null);
+    navigate("/");
+  };
   // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -61,53 +94,59 @@ export default function Navbar() {
           <span className="app-navbar__logo-text">O'RDV</span>
         </Link>
 
-        {/* Liens de navigation centraux */}
+        {/* Liens centraux */}
         <nav className="app-navbar__links flex items-center gap-2">
           
-          {/* Nouveau : Lien Mon Compte (User) */}
-          <Link
-            to="/account"
-            className={`app-navbar__link flex items-center gap-1.5 ${location.pathname === "/account" ? "app-navbar__link--active" : ""}`}
-          >
-            <User size={14} />
-            Mon Compte
-          </Link>
+          {user && (
+            <Link
+              to="/account"
+              className={`app-navbar__link flex items-center gap-1.5 ${location.pathname === "/account" ? "app-navbar__link--active" : ""}`}
+            >
+              <User size={14} />
+              Mon Compte
+            </Link>
+          )}
 
-          {/* L'Espace Pro - Version "Mise en avant" pour ne plus être fade */}
-          <Link
-            to="/dashboard"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-300 border ${
-              location.pathname === "/dashboard"
-                ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
-                : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white"
-            }`}
-          >
-            <Briefcase size={14} className={location.pathname === "/dashboard" ? "text-rose-400" : "text-slate-400"} />
-            Espace Pro
-          </Link>
+          {(user?.role === "pro" || user?.role === "admin") && (
+            <Link
+              to="/dashboard"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm border transition-all ${
+                location.pathname === "/dashboard"
+                  ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
+                  : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              <Briefcase size={14} />
+              Espace Pro
+            </Link>
+          )}
 
-          {/* Le lien Admin (Conditionnel) */}
-          {isAdmin && (
+          {user?.role === "admin" && (
             <Link
               to="/admin"
-              className={`app-navbar__link font-bold text-rose-400 ${location.pathname === "/admin" ? "app-navbar__link--active" : ""}`}
+              className={`app-navbar__link font-bold text-rose-400 flex items-center gap-1.5 ${location.pathname === "/admin" ? "app-navbar__link--active" : ""}`}
             >
-              Panel Admin
+              <ShieldCheck size={14} />
+              Admin
             </Link>
           )}
         </nav>
 
         {/* Boutons d'authentification */}
         <div className="app-navbar__auth">
-          <Link
-            to="/login"
-            className={`app-navbar__btn-ghost ${location.pathname === "/login" ? "app-navbar__btn-ghost--active" : ""}`}
-          >
-            Connexion
-          </Link>
-          <Link to="/register" className="app-navbar__btn-cta">
-            S'inscrire
-          </Link>
+          {user ? (
+            <button 
+              onClick={handleLogout}
+              className="app-navbar__btn-ghost flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-all"
+            >
+              <LogOut size={16} /> Déconnexion
+            </button>
+          ) : (
+            <>
+              <Link to="/login" className="app-navbar__btn-ghost">Connexion</Link>
+              <Link to="/register" className="app-navbar__btn-cta">S'inscrire</Link>
+            </>
+          )}
         </div>
       </div>
     </header>

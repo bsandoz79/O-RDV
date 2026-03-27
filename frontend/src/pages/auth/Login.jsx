@@ -31,6 +31,8 @@ export default function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        window.dispatchEvent(new Event("authChange")); // Pour synchroniser l'état d'auth dans toute l'app
+
         // 3. Redirection dynamique selon le rôle stocké en base [cite: 12, 13, 17]
         const role = data.user.role;
         if (role === "admin") {
