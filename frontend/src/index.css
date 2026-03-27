@@ -67,7 +67,8 @@
 .app-navbar__logo-icon {
   font-size: 13px;
   background: linear-gradient(135deg, #f43f5e, #c084fc);
-  -webkit-background-clip: text;
+  -webkit-background-clip: text; /* Version Chrome/Safari */
+  background-clip: text;         /* Version Standard */
   -webkit-text-fill-color: transparent;
 }
 

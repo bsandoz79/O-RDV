@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Briefcase } from "lucide-react"; 
+import { Briefcase, User } from "lucide-react"; // Import des icônes nécessaires
 
 export function ScrollToTop() {
   const [show, setShow] = useState(false);
@@ -33,8 +33,7 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
 
   // ─── SIMULATION D'AUTHENTIFICATION ─────────────────────────────────────────
-  // Plus tard, cette information viendra de ton "Context" React après vérification du token JWT
-  const isAdmin = false; // Mets sur 'true' pour voir le bouton Admin apparaître !
+  const isAdmin = false; 
   // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -63,30 +62,35 @@ export default function Navbar() {
         </Link>
 
         {/* Liens de navigation centraux */}
-        <nav className="app-navbar__links flex items-center gap-4">
+        <nav className="app-navbar__links flex items-center gap-2">
           
-          {/* Le bouton Espace Pro mis en avant (Style Badge Lumineux) */}
+          {/* Nouveau : Lien Mon Compte (User) */}
+          <Link
+            to="/account"
+            className={`app-navbar__link flex items-center gap-1.5 ${location.pathname === "/account" ? "app-navbar__link--active" : ""}`}
+          >
+            <User size={14} />
+            Mon Compte
+          </Link>
+
+          {/* L'Espace Pro - Version "Mise en avant" pour ne plus être fade */}
           <Link
             to="/dashboard"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-300 border ${
               location.pathname === "/dashboard"
                 ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
-                : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20"
+                : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white"
             }`}
           >
-            <Briefcase size={14} className={location.pathname === "/dashboard" ? "text-rose-400" : "text-slate-300"} />
+            <Briefcase size={14} className={location.pathname === "/dashboard" ? "text-rose-400" : "text-slate-400"} />
             Espace Pro
           </Link>
 
-          {/* Le lien Admin n'existe dans le HTML QUE si isAdmin est true */}
+          {/* Le lien Admin (Conditionnel) */}
           {isAdmin && (
             <Link
               to="/admin"
-              className={`text-sm font-bold transition-colors ${
-                location.pathname === "/admin" 
-                ? "text-rose-400" 
-                : "text-rose-500/60 hover:text-rose-400"
-              }`}
+              className={`app-navbar__link font-bold text-rose-400 ${location.pathname === "/admin" ? "app-navbar__link--active" : ""}`}
             >
               Panel Admin
             </Link>

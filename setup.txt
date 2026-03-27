@@ -1,0 +1,48 @@
+/* Ce fichier est un fichier setup, il est le reflet de la base de donnée*/
+
+
+-- Création de l'environnement
+CREATE DATABASE IF NOT EXISTS ordv_db;
+USE ordv_db;
+
+-- Table Utilisateurs (Authentification & Rôles)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('user', 'pro', 'admin') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table Établissements (Profils Prestataires) [cite: 16]
+CREATE TABLE providers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    description TEXT,
+    phone VARCHAR(20),
+    image_url VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Table Services (Catalogue de prestations) [cite: 14]
+CREATE TABLE services (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    provider_id INT,
+    label VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    duration INT NOT NULL, -- en minutes
+    FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE
+);
+
+-- Table Rendez-vous (Agenda synchronisé) [cite: 6, 10]
+CREATE TABLE appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    service_id INT,
+    appointment_date DATETIME NOT NULL,
+    status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (service_id) REFERENCES services(id)
+);
