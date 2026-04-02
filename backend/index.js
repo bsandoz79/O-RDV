@@ -5,15 +5,20 @@ const jwt = require('jsonwebtoken');
 const db = require('./db'); // Import de la connexion MySQL (db.js)
 require('dotenv').config();
 
+// --- IMPORT DES ROUTES EXTERNES ---
+const appointmentRoutes = require('./routes/appointments'); 
+
 const app = express();
 
 // --- MIDDLEWARES ---
-// Autorise le Frontend (React) à communiquer avec le Backend
 app.use(cors());
-// Permet de lire les données JSON envoyées dans les requêtes (req.body)
 app.use(express.json()); 
 
-// --- ROUTES ---
+// --- UTILISATION DES ROUTES ---
+// On lie le préfixe '/api/appointments' au fichier routes/appointments.js
+app.use('/api/appointments', appointmentRoutes);
+
+// --- ROUTES PRINCIPALES ---
 
 /**
  * Route de test pour vérifier que le serveur tourne
@@ -24,39 +29,48 @@ app.get('/', (req, res) => {
 
 /**
  * 1. Inscription (Register)
- * Chiffre le mot de passe avant insertion en base de données
  */
 app.post('/api/register', async (req, res) => {
     const { email, password, role } = req.body;
 
     try {
-        // Hachage du mot de passe avec un "salt" de 10
+        const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: "Cet email est déjà utilisé." });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
+        const userRole = role || 'user';
 
         const [result] = await db.execute(
             'INSERT INTO users (email, password, role) VALUES (?, ?, ?)',
-            [email, hashedPassword, role || 'user']
+            [email, hashedPassword, userRole]
+        );
+
+        const token = jwt.sign(
+            { id: result.insertId, role: userRole },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
         );
 
         res.status(201).json({ 
-            message: "Utilisateur créé avec succès !", 
-            userId: result.insertId 
+            message: "Inscription et connexion réussies !", 
+            token: token,
+            user: { id: result.insertId, email: email, role: userRole }
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Erreur lors de l'inscription (Email déjà utilisé ?)" });
+        res.status(500).json({ error: "Erreur lors de l'inscription" });
     }
 });
 
 /**
  * 2. Connexion (Login)
- * Vérifie l'identité et génère un token JWT
  */
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Chercher l'utilisateur par son email
         const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
         
         if (users.length === 0) {
@@ -64,29 +78,21 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = users[0];
-
-        // 2. Comparer le mot de passe saisi avec le hash en base
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ error: "Identifiants incorrects" });
         }
 
-        // 3. Générer le Token JWT (valide 24h)
         const token = jwt.sign(
             { id: user.id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // 4. Réponse au client
         res.json({
             message: "Connexion réussie",
             token,
-            user: { 
-                id: user.id, 
-                email: user.email, 
-                role: user.role 
-            }
+            user: { id: user.id, email: user.email, role: user.role }
         });
     } catch (error) {
         console.error(error);
