@@ -5,6 +5,7 @@ import Register from "./pages/auth/Register";
 import Navbar, { ScrollToTop } from "./components/Navbar";
 import UserDashboard from "./pages/user/UserDashboard";
 import BookingForm from './components/BookingForm';
+import ShopSettings from "./pages/pro/ShopSettings";
 
 const DashboardPro = () => <div className="p-10"><h1>🏢 Interface Prestataire</h1></div>;
 const AdminPanel = () => <div className="p-10"><h1>🛡️ Administration</h1></div>;
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/account" element={<UserDashboard />} />
         <Route path="/booking" element={<BookingForm />} />
+        <Route path="/pro/settings" element={<ShopSettings />} />
         
       </Routes>
     </Router>

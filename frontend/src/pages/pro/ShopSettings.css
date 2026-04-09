@@ -1,0 +1,175 @@
+/* ShopSettings.css */
+
+.shop-settings-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 40%, #1a0a2e 100%);
+    padding-top: 7rem;
+    padding-bottom: 4rem;
+    font-family: 'DM Sans', sans-serif;
+    position: relative;
+    color: white;
+    overflow-x: hidden;
+}
+
+/* Orbes décoratifs */
+.decor-orb-1 {
+    position: fixed; top: 8%; right: 3%; width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(244,63,94,0.12) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+}
+
+.decor-orb-2 {
+    position: fixed; bottom: 5%; left: -5%; width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 65%);
+    border-radius: 50%; pointer-events: none; z-index: 0;
+}
+
+.shop-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Header */
+.shop-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    background: linear-gradient(90deg, #fff 40%, #f9a8b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-style: italic;
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
+}
+
+.shop-header p {
+    color: rgba(255,255,255,0.38);
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Cards */
+.section-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 2rem;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    margin-bottom: 1.25rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: white;
+    margin: 0;
+}
+
+/* Inputs & Labels */
+.field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.32);
+    margin-bottom: 6px;
+    display: block;
+    padding-left: 4px;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.custom-input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.custom-input:focus {
+    border-color: rgba(244,63,94,0.5);
+    box-shadow: 0 0 0 3px rgba(244,63,94,0.12);
+}
+
+/* Services Row */
+.service-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+    align-items: flex-end;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    transition: all 0.2s;
+}
+
+.service-row:hover {
+    background: rgba(244,63,94,0.04);
+    border-color: rgba(244,63,94,0.2);
+}
+
+/* Hours */
+.hours-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Button Submit */
+.btn-submit {
+    width: 100%;
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    color: white;
+    border: 1px solid rgba(244,63,94,0.2);
+    border-radius: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 24px rgba(244,63,94,0.35);
+    transition: all 0.3s ease;
+}
+
+.btn-submit.success {
+    background: rgba(52,211,153,0.08);
+    border-color: rgba(52,211,153,0.25);
+    box-shadow: 0 4px 20px rgba(52,211,153,0.15);
+}
+
+/* Utilitaires */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.6) opacity(0.5); cursor: pointer; }
+input::placeholder { color: rgba(255,255,255,0.18) !important; }

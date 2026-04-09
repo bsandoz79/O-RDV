@@ -109,9 +109,9 @@ export default function Navbar() {
 
           {(user?.role === "pro" || user?.role === "admin") && (
             <Link
-              to="/dashboard"
+              to="/pro/settings"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm border transition-all ${
-                location.pathname === "/dashboard"
+                location.pathname === "/pro/settings"
                   ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
                   : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
               }`}
