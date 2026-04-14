@@ -9,6 +9,7 @@ I. Méthodologie et Philosophie Agile
     Approche MVP (Minimum Viable Product) : Priorisation du "cœur" métier (agenda et réservation) pour garantir un produit fonctionnel rapidement avant d'ajouter des options de confort. Cela répond à la valeur agile : "Un logiciel opérationnel plus qu'une documentation exhaustive".
 
     Transparence et Visibilité : L'utilisation d'un Kanban (Trello) permet un suivi précis des états (Backlog, En cours, Tests, Terminé) et assure une traçabilité des évolutions.
+        https://trello.com/b/gd2sUljs/ordv
 
 II. Architecture Fonctionnelle (MVP) & Critères d'Acceptation
 
