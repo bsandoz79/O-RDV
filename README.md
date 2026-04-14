@@ -17,3 +17,7 @@ O'RDV est une solution de prise de rendez-vous en temps réel dédiée aux servi
 ## CI/CD
 Le projet intègre un pipeline de déploiement continu via GitHub Actions.
 État du build : ![CI/CD Status](https://github.com/bsandoz79/O-RDV/actions/workflows/main.yml/badge.svg?branch=develop)
+
+## 📖 Documentation
+- [Spécifications Fonctionnelles (SPECS.md)](./SPECS.md)
+- [Architecture Technique et Sécurité (ARCHITECTURE.md)](./ARCHITECTURE.md)
