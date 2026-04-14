@@ -1,67 +1,133 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const auth = require('../middlewares/auth');
 const multer = require('multer');
 const path = require('path');
+const db = require('../db');
 
-// 1. Configuration du stockage des images (Multer)
+
+// --- 1. CONFIGURATION DE L'UPLOAD IMAGE ---
 const storage = multer.diskStorage({
-    destination: './uploads/',
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
     filename: (req, file, cb) => {
-        // On génère un nom unique pour éviter les conflits
-        cb(null, 'shop-' + Date.now() + path.extname(file.originalname));
+        // On génère un nom unique : timestamp + extension d'origine
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 const upload = multer({ storage: storage });
 
-// 2. Route complète pour configurer la boutique
-// "upload.single('image')" permet de réceptionner le fichier nommé 'image'
-router.post('/setup', upload.single('image'), async (req, res) => {
+// --- 2. RÉCUPÉRER TOUS LES PRESTATAIRES (POUR LA RECHERCHE) ---
+router.get('/all', async (req, res) => {
     try {
-        // Avec FormData, les objets envoyés en JSON doivent être "parsés"
-        const profile = JSON.parse(req.body.profile);
-        const services = JSON.parse(req.body.services);
-        const hours = JSON.parse(req.body.hours);
-        const provider_id = req.body.provider_id;
-        
-        // On récupère le chemin de l'image si elle existe
-        const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+        const [rows] = await db.execute('SELECT * FROM providers');
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur lors de la récupération des prestataires" });
+    }
+});
 
-        // --- A. MISE À JOUR DU PROFIL PRESTATAIRE ---
-        // On met à jour les infos que tu as ajoutées (zip_code, description, etc.)
-        await db.execute(
-            `UPDATE providers 
-             SET name = ?, description = ?, address = ?, zip_code = ?, phone = ?, image_url = IFNULL(?, image_url) 
-             WHERE id = ?`,
-            [profile.name, profile.description, profile.address, profile.zipCode, profile.phone, image_url, provider_id]
+// --- 3. RÉCUPÉRER LES INFOS D'UN PRESTATAIRE PRÉCIS (DASHBOARD) ---
+router.get('/info/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // On cherche le prestataire lié à l'utilisateur
+        const [providers] = await db.execute(
+            'SELECT * FROM providers WHERE user_id = ?', 
+            [userId]
         );
 
-        // --- B. GESTION DES SERVICES (Nettoyage + Insertion) ---
-        // On supprime les anciens services pour repartir sur du propre
-        await db.execute("DELETE FROM services WHERE provider_id = ?", [provider_id]);
-        for (let s of services) {
-            if (s.label && s.price) { // On vérifie que le service n'est pas vide
-                await db.execute(
-                    "INSERT INTO services (provider_id, label, price, duration) VALUES (?, ?, ?, ?)",
-                    [provider_id, s.label, s.price, s.duration]
-                );
-            }
+        if (providers.length === 0) {
+            return res.status(404).json({ error: "Profil non trouvé" });
         }
 
-        // --- C. GESTION DES HORAIRES (Nettoyage + Insertion) ---
-        await db.execute("DELETE FROM business_hours WHERE provider_id = ?", [provider_id]);
-        for (let day in hours) {
-            await db.execute(
-                "INSERT INTO business_hours (provider_id, day_of_week, open_time, close_time, is_closed) VALUES (?, ?, ?, ?, ?)",
-                [provider_id, day, hours[day].open, hours[day].close, hours[day].closed]
-            );
+        const provider = providers[0];
+
+        // On cherche ses horaires associés
+        const [hours] = await db.execute(
+            'SELECT * FROM business_hours WHERE provider_id = ?',
+            [provider.id]
+        );
+
+        res.json({ ...provider, hours });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- 4. ENREGISTRER / METTRE À JOUR LE PROFIL (SETUP) ---
+router.post('/setup', upload.single('image'), async (req, res) => {
+    const connection = await db.getConnection();
+    
+    try {
+        // On démarre une transaction pour s'assurer que TOUT est sauvé ou RIEN du tout
+        await connection.beginTransaction();
+
+        // Extraction des données envoyées par le Frontend
+        const userId = req.body.provider_id;
+        const profile = JSON.parse(req.body.profile);
+        const hours = JSON.parse(req.body.hours); // Reçu en tableau [{}, {}]
+        
+        // Gestion de l'image (si une nouvelle image est uploadée)
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+        // ÉTAPE A : Sauvegarde ou Mise à jour du Profil Prestataire
+        const sqlProvider = `
+            INSERT INTO providers (user_id, name, description, address, zip_code, city, phone, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            name = VALUES(name),
+            description = VALUES(description),
+            address = VALUES(address),
+            zip_code = VALUES(zip_code),
+            city = VALUES(city),
+            phone = VALUES(phone),
+            image_url = IFNULL(VALUES(image_url), image_url)
+        `;
+
+        await connection.execute(sqlProvider, [
+            userId, profile.name, profile.description, 
+            profile.address, profile.zipCode, profile.city, 
+            profile.phone, imageUrl
+        ]);
+
+        // ÉTAPE B : Récupérer l'ID interne du prestataire pour lier les horaires
+        const [rows] = await connection.execute('SELECT id FROM providers WHERE user_id = ?', [userId]);
+        const providerId = rows[0].id;
+
+        // ÉTAPE C : Mise à jour des horaires (On supprime et on recrée)
+        await connection.execute('DELETE FROM business_hours WHERE provider_id = ?', [providerId]);
+
+        const sqlHours = `
+            INSERT INTO business_hours (provider_id, day_of_week, open_time, close_time, is_closed)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        // Boucle sur chaque jour envoyé par le front
+        for (const h of hours) {
+            await connection.execute(sqlHours, [
+                providerId,
+                h.day_of_week,
+                h.open || '09:00',
+                h.close || '18:00',
+                h.closed ? 1 : 0
+            ]);
         }
 
-        res.status(200).json({ message: "Boutique mise à jour avec succès !" });
+        // Si tout est OK, on valide définitivement
+        await connection.commit();
+        res.status(200).json({ message: "Configuration enregistrée avec succès !" });
 
-    } catch (err) {
-        console.error("Erreur Backend Shop:", err);
-        res.status(500).json({ error: "Erreur lors de l'enregistrement de la configuration" });
+    } catch (error) {
+        // En cas d'erreur, on annule tout ce qui a été fait dans la transaction
+        if (connection) await connection.rollback();
+        console.error("Détail de l'erreur :", error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        // On libère la connexion à la base de données
+        if (connection) connection.release();
     }
 });
 

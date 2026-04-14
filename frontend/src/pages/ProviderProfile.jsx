@@ -1,27 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Ajout de useState et useEffect
 import { useParams, Link } from 'react-router-dom';
-import { Star, MapPin, Phone, Mail, ArrowLeft } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, ArrowLeft, Loader } from 'lucide-react';
+import API_BASE_URL from '../api/api'; 
 
 const ProviderProfile = () => {
   const { id } = useParams();
+  
+  // État pour stocker les données du prestataire
+  const [provider, setProvider] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simulation de données (En Phase 2, cela viendra de ton Backend/Base de données)
-  const provider = {
-    id: id,
-    name: "Sophie Martin",
-    specialty: "Coiffeuse Visagiste",
-    rating: 4.9,
-    reviews: 128,
-    address: "15 Rue de la Paix, 75002 Paris",
-    phone: "01 23 45 67 89",
-    email: "sophie.m@example.com",
-    about: "Passionnée par la coiffure depuis 10 ans, je vous accueille dans mon salon pour un moment de détente et de transformation personnalisé.",
-    prices: [
-      { service: "Coupe Femme", price: "45€" },
-      { service: "Coupe Homme", price: "25€" },
-      { service: "Coloration", price: "60€" }
-    ]
-  };
+  // Récupération des données depuis le Backend
+  useEffect(() => {
+    const fetchProviderData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/shop/info/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProvider(data);
+        } else {
+          console.error("Erreur lors de la récupération du prestataire");
+        }
+      } catch (error) {
+        console.error("Erreur réseau :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProviderData();
+  }, [id]);
+
+  // Écran de chargement
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader className="animate-spin text-blue-600" size={48} />
+      </div>
+    );
+  }
+
+  // Si aucun prestataire n'est trouvé
+  if (!provider) {
+    return (
+      <div className="text-center mt-20">
+        <h2 className="text-2xl font-bold">Prestataire introuvable</h2>
+        <Link to="/" className="text-blue-600 hover:underline">Retour à l'accueil</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -36,7 +63,7 @@ const ProviderProfile = () => {
         <div className="px-8 pb-8">
           <div className="relative flex justify-between items-end -mt-12">
             <div className="w-24 h-24 bg-gray-200 rounded-full border-4 border-white shadow-md flex items-center justify-center text-2xl font-bold text-gray-600">
-              {provider.name.charAt(0)}
+              {provider.name ? provider.name.charAt(0) : "?"}
             </div>
             <Link 
               to={`/booking/${id}`} 
@@ -52,8 +79,8 @@ const ProviderProfile = () => {
             
             <div className="flex items-center mt-2 text-yellow-500">
               <Star size={18} fill="currentColor" />
-              <span className="ml-1 font-bold">{provider.rating}</span>
-              <span className="ml-1 text-gray-500 text-sm">({provider.reviews} avis)</span>
+              <span className="ml-1 font-bold">{provider.rating || "N/A"}</span>
+              <span className="ml-1 text-gray-500 text-sm">({provider.reviews || 0} avis)</span>
             </div>
           </div>
 
@@ -70,16 +97,20 @@ const ProviderProfile = () => {
               <p className="text-gray-600 leading-relaxed">{provider.about}</p>
             </div>
 
-            {/* Tarifs */}
+            {/* Tarifs (Conditionnel si les données existent) */}
             <div className="bg-gray-50 p-6 rounded-xl">
               <h2 className="text-xl font-semibold mb-4 text-gray-800">Tarifs & Prestations</h2>
               <div className="space-y-4">
-                {provider.prices.map((item, index) => (
-                  <div key={index} className="flex justify-between border-b pb-2">
-                    <span className="text-gray-700">{item.service}</span>
-                    <span className="font-bold text-gray-900">{item.price}</span>
-                  </div>
-                ))}
+                {provider.prices && provider.prices.length > 0 ? (
+                  provider.prices.map((item, index) => (
+                    <div key={index} className="flex justify-between border-b pb-2">
+                      <span className="text-gray-700">{item.service}</span>
+                      <span className="font-bold text-gray-900">{item.price}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">Aucun tarif renseigné</p>
+                )}
               </div>
             </div>
           </div>

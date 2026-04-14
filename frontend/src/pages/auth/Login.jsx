@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
+import API_BASE_URL from '../../api/api';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export default function Login() {
 
     try {
       // 1. Appel à ton API Node.js (Port 5000) 
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,6 +26,7 @@ export default function Login() {
       });
 
       const data = await response.json();
+      console.log("Données reçues du serveur :", data);
 
       if (response.ok) {
         // 2. Succès : On stocke le Token JWT et les infos utilisateur 
