@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Store, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Lock, Store, ArrowRight, AlertCircle } from "lucide-react";
 import API_BASE_URL from "../../api/api";
 
 export default function Register() {

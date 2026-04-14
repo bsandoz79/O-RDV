@@ -2,14 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  MapPin,
   Scissors,
   Sparkles,
   Palette,
   Heart,
   Smile,
   Zap,
-  ChevronRight,
   Loader2,
 } from "lucide-react";
 
