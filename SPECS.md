@@ -1,26 +1,65 @@
-# Spécifications Fonctionnelles - O'RDV
+                        Spécifications Fonctionnelles - O'RDV
 
-## [cite_start]1. Architecture Fonctionnelle (MVP) [cite: 8]
-### [cite_start]Espace Client (Front-Office) [cite: 9]
-* [cite_start]**Moteur de recherche multicritères** : Recherche par raison sociale, catégorie de service et zone géographique[cite: 10].
-* [cite_start]**Module de réservation** : Visualisation dynamique des créneaux et validation en "un clic"[cite: 11].
-* [cite_start]**Annuaire des prestataires** : Fiches détaillées (descriptifs, tarifs, durées)[cite: 12].
+I. Méthodologie et Philosophie Agile
 
-### [cite_start]Interface Prestataire (Dashboard) [cite: 14]
-* [cite_start]**Gestion du catalogue** : Administration des services (libellés, prix, durée estimée)[cite: 15].
-* [cite_start]**Pilotage de l'activité** : Vue calendrier des rendez-vous entrants[cite: 15].
-* [cite_start]**Configuration des disponibilités** : Paramétrage des plages horaires et absences[cite: 16].
+    Le projet O'RDV est piloté selon une approche Agile (Scrum). Contrairement au cycle en cascade, cette méthode permet une livraison itérative :
 
-### [cite_start]Administration (Back-Office) [cite: 18]
-* [cite_start]**Supervision** : Monitoring du volume de réservations[cite: 19].
-* [cite_start]**Modération** : Gestion des utilisateurs et validation des inscrits[cite: 20].
+    Adaptabilité : En tant que développeur solo, les Sprints hebdomadaires permettent de réajuster les priorités selon la complexité technique rencontrée (ex: gestion des algorithmes de conflits horaires).
 
-## [cite_start]2. Modèle Économique [cite: 28]
-* [cite_start]**Abonnement Basic** : Gratuit pour le référencement standard[cite: 31].
-* [cite_start]**Abonnement Premium** : 9,99€ HT/mois pour une visibilité accrue[cite: 32].
-* [cite_start]**Modèle Transactionnel** : Commission de 1€ par réservation honorée[cite: 33].
+    Approche MVP (Minimum Viable Product) : Priorisation du "cœur" métier (agenda et réservation) pour garantir un produit fonctionnel rapidement avant d'ajouter des options de confort. Cela répond à la valeur agile : "Un logiciel opérationnel plus qu'une documentation exhaustive".
 
-## [cite_start]3. Roadmap (12 Semaines) [cite: 34]
-* [cite_start]**Phase 1 (Semaines 1-4)** : Socle technique, base de données et authentification[cite: 35, 36, 37].
-* [cite_start]**Phase 2 (Semaines 5-8)** : Logique de réservation, dashboard pro et cartographie[cite: 38, 39, 40].
-* [cite_start]**Phase 3 (Semaines 9-12)** : Interface admin, tests et mise en production[cite: 41, 42].
+    Transparence et Visibilité : L'utilisation d'un Kanban (Trello) permet un suivi précis des états (Backlog, En cours, Tests, Terminé) et assure une traçabilité des évolutions.
+
+II. Architecture Fonctionnelle (MVP) & Critères d'Acceptation
+
+    1. Espace Client (Front-Office)
+
+        Moteur de recherche multicritères : Recherche par raison sociale, catégorie de service et zone géographique.
+
+        Critère d'acceptation : L'utilisateur peut filtrer les résultats par code postal et obtenir une liste pertinente en moins de 2 secondes.
+
+        Module de réservation : Visualisation dynamique des créneaux et validation en "un clic".
+
+        Critère d'acceptation : Une fois réservé, le créneau disparait des choix possibles pour les autres utilisateurs (prévention des doublons).
+
+        Annuaire des prestataires : Fiches détaillées (descriptifs, tarifs, durées).
+
+        Critère d'acceptation : Toutes les informations saisies par le professionnel (prix, photo) sont visibles par le client.
+
+    2. Interface Prestataire (Dashboard)
+
+        Gestion du catalogue : Administration des services (libellés, prix, durée estimée).
+
+        Critère d'acceptation : Le prestataire peut ajouter, modifier ou supprimer une prestation avec mise à jour immédiate sur son profil public.
+
+        Pilotage de l'activité : Vue calendrier des rendez-vous entrants.
+
+        Critère d'acceptation : Chaque nouveau rendez-vous génère une notification visuelle sur le dashboard.
+
+        Configuration des disponibilités : Paramétrage des plages horaires et absences.
+
+        Critère d'acceptation : Les périodes d'absences définies bloquent automatiquement la prise de rendez-vous sur le front-office.
+
+    3. Administration (Back-Office)
+
+        Supervision : Monitoring du volume de réservations.
+
+        Modération : Gestion des utilisateurs et validation des inscrits.
+
+        Critère d'acceptation : L'administrateur peut bannir un utilisateur ou suspendre un établissement en cas de non-respect des CGU.
+
+III. Modèle Économique
+
+    Abonnement Basic : Gratuit pour le référencement standard.
+
+    Abonnement Premium : 9,99€ HT/mois pour une visibilité accrue.
+
+    Modèle Transactionnel : Commission de 1€ par réservation honorée.
+
+IV. Roadmap (12 Semaines)
+
+    Phase 1 (Semaines 1-4) : Socle technique, modélisation de la base de données (UML) et système d'authentification sécurisé.
+
+    Phase 2 (Semaines 5-8) : Développement du moteur de réservation, dashboard professionnel et intégration de la cartographie.
+
+    Phase 3 (Semaines 9-12) : Interface administrateur, phases de tests (Unitaires/Intégration) et mise en production.
