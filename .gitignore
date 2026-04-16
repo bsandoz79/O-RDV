@@ -1,3 +1,6 @@
+# Fichier .gitignore pour le projet
+CLAUDE.md
+
 # Dépendances (Le plus lourd)
 node_modules/
 frontend/node_modules/
