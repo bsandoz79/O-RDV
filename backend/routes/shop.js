@@ -17,11 +17,31 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- 2. RÉCUPÉRER TOUS LES PRESTATAIRES (RECHERCHE) ---
-// Cette route reste publique pour que les clients puissent chercher
+// --- 2. LISTE DES CATÉGORIES ---
+router.get('/categories', async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM categories ORDER BY name');
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur lors de la récupération des catégories" });
+    }
+});
+
+// --- 3. RÉCUPÉRER TOUS LES PRESTATAIRES (RECHERCHE + FILTRE CATÉGORIE) ---
 router.get('/all', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM providers');
+        const { category_id } = req.query;
+        let sql = `
+            SELECT p.*, c.name AS category_name, c.icon AS category_icon
+            FROM providers p
+            LEFT JOIN categories c ON p.category_id = c.id
+        `;
+        const params = [];
+        if (category_id) {
+            sql += ' WHERE p.category_id = ?';
+            params.push(category_id);
+        }
+        const [rows] = await db.execute(sql, params);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: "Erreur lors de la récupération des prestataires" });
@@ -87,8 +107,12 @@ router.get('/info/:userId', auth, async (req, res) => {
             'SELECT * FROM business_hours WHERE provider_id = ?',
             [provider.id]
         );
+        const [services] = await db.execute(
+            'SELECT * FROM services WHERE provider_id = ?',
+            [provider.id]
+        );
 
-        res.json({ ...provider, hours });
+        res.json({ ...provider, hours, services });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -112,9 +136,10 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
         const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
         const sqlProvider = `
-            INSERT INTO providers (user_id, name, description, address, zip_code, city, phone, image_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO providers (user_id, category_id, name, description, address, zip_code, city, phone, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
+            category_id = VALUES(category_id),
             name = VALUES(name),
             description = VALUES(description),
             address = VALUES(address),
@@ -125,8 +150,8 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
         `;
 
         await connection.execute(sqlProvider, [
-            userId, profile.name, profile.description, 
-            profile.address, profile.zipCode, profile.city, 
+            userId, profile.categoryId || null, profile.name, profile.description,
+            profile.address, profile.zipCode, profile.city,
             profile.phone, imageUrl
         ]);
 

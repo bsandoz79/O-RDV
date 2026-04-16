@@ -1,86 +1,63 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Scissors,
-  Sparkles,
-  Palette,
-  Heart,
-  Smile,
-  Zap,
-  Loader2,
-} from "lucide-react";
-
-// On importe notre composant de carte
+import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2 } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
-// Import de l'URL centralisée
 import API_BASE_URL from '../api/api';
 
-const CATEGORIES = [
-  { id: "coiffeur", label: "Coiffeur", icon: Scissors },
-  { id: "barbier", label: "Barbier", icon: Zap },
-  { id: "beaute", label: "Institut beauté", icon: Sparkles },
-  { id: "tatoueur", label: "Tatoueur", icon: Palette },
-  { id: "nail-art", label: "Nail Art", icon: Heart },
-  { id: "spa", label: "Spa & Bien-être", icon: Smile },
-];
+// Mapping icône par nom (correspond à la colonne `icon` en DB)
+const ICON_MAP = { Scissors, Zap, Sparkles, Palette, Heart, Smile, Store };
 
 export default function Home() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState(null);
-  
-  // États pour les données réelles
+  const [activeCategory, setActiveCategory] = useState(null); // id numérique
+
+  const [categories, setCategories] = useState([]);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ─── RÉCUPÉRATION DES DONNÉES DEPUIS LA BD ──────────────────────
+  // ─── Charger les catégories ────────────────────────────────────
   useEffect(() => {
-    // Utilisation de API_BASE_URL au lieu de localhost:5000
-    fetch(`${API_BASE_URL}/shop/all`)
+    fetch(`${API_BASE_URL}/shop/categories`)
+      .then((res) => res.json())
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  // ─── Charger les prestataires (re-fetch si filtre change) ──────
+  useEffect(() => {
+    setLoading(true);
+    const url = activeCategory
+      ? `${API_BASE_URL}/shop/all?category_id=${activeCategory}`
+      : `${API_BASE_URL}/shop/all`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        console.log("Données reçues de la BD :", data);
-        
-        const formattedData = data.map((pro) => ({
+        setProviders(data.map((pro) => ({
           id: pro.id,
           name: pro.name,
-          metier: pro.description || "Prestataire de services",
+          metier: pro.category_name || pro.description || "Prestataire de services",
           note: 5.0,
           avis: 12,
           distance: pro.city || "Amiens",
-          // On reconstruit l'URL de l'image dynamiquement
-          // On enlève /api de l'URL de base pour taper sur le dossier racine du serveur
-          image: pro.image_url 
-            ? `${API_BASE_URL.replace('/api', '')}${pro.image_url}` 
+          image: pro.image_url
+            ? `${API_BASE_URL.replace('/api', '')}${pro.image_url}`
             : "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=280&fit=crop",
           badge: "Nouveau",
           disponible: true,
-        }));
-        
-        setProviders(formattedData);
+        })));
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("Erreur API Home:", err);
-        setLoading(false);
-      });
-  }, []);
+      .catch(() => setLoading(false));
+  }, [activeCategory]);
 
-  // ─── LOGIQUE DE FILTRAGE ────────────────────────────────────────
-  const filteredProviders = providers.filter((p) => {
-    const matchesSearch =
-      !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.distance.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory =
-      !activeCategory ||
-      p.metier.toLowerCase().includes(activeCategory.toLowerCase()) ||
-      p.name.toLowerCase().includes(activeCategory.toLowerCase());
-    
-    return matchesSearch && matchesCategory;
-  });
+  // ─── Filtrage texte local ──────────────────────────────────────
+  const filteredProviders = providers.filter((p) =>
+    !searchQuery ||
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.distance.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div
@@ -133,24 +110,41 @@ export default function Home() {
       <div className="max-w-5xl mx-auto px-4 mt-10">
         
         {/* Catégories */}
-        <section className="mb-8">
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-            {CATEGORIES.map(({ id, label, icon: Icon }) => (
+        {categories.length > 0 && (
+          <section className="mb-8">
+            <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+              {/* Bouton "Tous" */}
               <button
-                key={id}
-                onClick={() => setActiveCategory(activeCategory === id ? null : id)}
+                onClick={() => setActiveCategory(null)}
                 className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
-                  activeCategory === id
+                  activeCategory === null
                     ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200"
                     : "bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500"
                 }`}
               >
-                <Icon size={15} />
-                {label}
+                Tous
               </button>
-            ))}
-          </div>
-        </section>
+
+              {categories.map((cat) => {
+                const Icon = ICON_MAP[cat.icon] || Store;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                      activeCategory === cat.id
+                        ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500"
+                    }`}
+                  >
+                    <Icon size={15} />
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Liste des Prestataires */}
         <section className="mb-16">

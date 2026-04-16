@@ -21,9 +21,12 @@ function getDayName(date) {
   return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date).toLowerCase();
 }
 
-// Format YYYY-MM-DD
+// Format YYYY-MM-DD en heure locale (évite le décalage UTC)
 function toDateString(date) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 export default function BookingModal({ provider, preselectedService, onClose }) {
@@ -65,9 +68,10 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
     setLoadingSlots(true);
     setSlots([]);
     setClosedDay(false);
+    const duration = selectedService?.duration || 30;
     try {
       const res = await fetch(
-        `${API_BASE_URL}/appointments/availability/${provider.id}/${toDateString(date)}`
+        `${API_BASE_URL}/appointments/availability/${provider.id}/${toDateString(date)}?duration=${duration}`
       );
       const data = await res.json();
       if (data.closed) {
@@ -80,7 +84,7 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
     } finally {
       setLoadingSlots(false);
     }
-  }, [provider.id]);
+  }, [provider.id, selectedService]);
 
   const handleDayClick = (date) => {
     if (isPast(date) || closedDayNames.has(getDayName(date))) return;
@@ -116,14 +120,13 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
 
     const dateStr = toDateString(selectedDate);
     const payload = {
-      client_id: user.id,
       provider_id: provider.id,
       service_id: selectedService.id,
       appointment_date: `${dateStr} ${selectedTime}:00`,
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/appointments/book`, {
+      const res = await fetch(`${API_BASE_URL}/appointments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

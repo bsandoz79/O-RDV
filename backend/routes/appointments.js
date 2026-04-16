@@ -8,22 +8,52 @@ const checkRole = require('../middlewares/roleGuard'); // VERROU 2 : Vérifie le
 // On ajoute 'auth' : Seuls les gens connectés peuvent prendre RDV
 // On ajoute 'checkRole' : Ici, on autorise 'user' (le client) et 'admin'
 router.post('/', auth, checkRole(['user', 'admin']), async (req, res) => {
-    const { client_id, provider_id, service_id, appointment_date } = req.body;
+    const { provider_id, service_id, appointment_date } = req.body;
+    const client_id = req.auth.userId; // Sécurité : toujours depuis le token
 
-    if (!client_id || !provider_id || !service_id || !appointment_date) {
+    if (!provider_id || !service_id || !appointment_date) {
         return res.status(400).json({ error: "Tous les champs sont obligatoires" });
     }
 
     try {
-        // Sécurité SQL : Les '?' protègent déjà contre les injections ✅
-        const sql = `INSERT INTO appointments (client_id, provider_id, service_id, appointment_date, status) 
+        // --- Validation horaires : rejeter si hors plage business_hours ---
+        const apptDate = new Date(appointment_date);
+        const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
+            .format(apptDate).toLowerCase();
+
+        const [hoursRows] = await db.execute(
+            `SELECT is_closed,
+                    TIME_FORMAT(open_time,  '%H:%i') AS open_str,
+                    TIME_FORMAT(close_time, '%H:%i') AS close_str
+             FROM business_hours
+             WHERE provider_id = ? AND LOWER(day_of_week) = ?`,
+            [provider_id, dayName]
+        );
+
+        if (hoursRows.length === 0 || hoursRows[0].is_closed) {
+            return res.status(400).json({ error: "Le prestataire est fermé ce jour-là." });
+        }
+
+        const openMin  = (() => { const [h,m] = (hoursRows[0].open_str  || '09:00').split(':').map(Number); return h*60+m; })();
+        const closeMin = (() => { const [h,m] = (hoursRows[0].close_str || '18:00').split(':').map(Number); return h*60+m; })();
+
+        const [serviceRows] = await db.execute('SELECT duration FROM services WHERE id = ?', [service_id]);
+        const duration = serviceRows[0]?.duration ?? 30;
+
+        const slotMin = apptDate.getHours() * 60 + apptDate.getMinutes();
+
+        if (slotMin < openMin || slotMin + duration > closeMin) {
+            return res.status(400).json({ error: `Créneau hors des horaires d'ouverture (${String(Math.floor(openMin/60)).padStart(2,'0')}:${String(openMin%60).padStart(2,'0')} – ${String(Math.floor(closeMin/60)).padStart(2,'0')}:${String(closeMin%60).padStart(2,'0')}).` });
+        }
+
+        const sql = `INSERT INTO appointments (client_id, provider_id, service_id, appointment_date, status)
                      VALUES (?, ?, ?, ?, 'pending')`;
-        
+
         const [result] = await db.execute(sql, [client_id, provider_id, service_id, appointment_date]);
 
-        res.status(201).json({ 
-            message: "Rendez-vous créé avec succès !", 
-            appointmentId: result.insertId 
+        res.status(201).json({
+            message: "Rendez-vous créé avec succès !",
+            appointmentId: result.insertId
         });
     } catch (err) {
         console.error("Erreur SQL:", err);
@@ -43,7 +73,11 @@ router.get('/availability/:providerId/:date', async (req, res) => {
             .format(new Date(`${date}T12:00:00`)).toLowerCase(); // ex: "monday"
 
         const [hoursRows] = await db.execute(
-            'SELECT * FROM business_hours WHERE provider_id = ? AND LOWER(day_of_week) = ?',
+            `SELECT is_closed,
+                    TIME_FORMAT(open_time,  '%H:%i') AS open_str,
+                    TIME_FORMAT(close_time, '%H:%i') AS close_str
+             FROM business_hours
+             WHERE provider_id = ? AND LOWER(day_of_week) = ?`,
             [providerId, dayName]
         );
 
@@ -51,38 +85,39 @@ router.get('/availability/:providerId/:date', async (req, res) => {
             return res.json({ closed: true, slots: [] });
         }
 
-        const { open_time, close_time } = hoursRows[0];
+        const openStr  = hoursRows[0].open_str  || '09:00';
+        const closeStr = hoursRows[0].close_str || '18:00';
 
-        // Valeurs par défaut si NULL en base
-        const openStr  = open_time  ? String(open_time).substring(0, 5)  : '09:00';
-        const closeStr = close_time ? String(close_time).substring(0, 5) : '18:00';
+        const [oH, oM] = openStr.split(':').map(Number);
+        const [cH, cM] = closeStr.split(':').map(Number);
+        const openMinutes  = oH * 60 + oM;
+        const closeMinutes = cH * 60 + cM;
 
-        // 2. Récupérer les RDV déjà pris ce jour (via la table services pour remonter au provider)
+
+        // 2. Récupérer les RDV déjà pris ce jour
         const [bookedRows] = await db.execute(
-            `SELECT TIME(a.appointment_date) AS booked_time
+            `SELECT TIME_TO_SEC(TIME(a.appointment_date)) AS booked_sec
              FROM appointments a
-             JOIN services s ON a.service_id = s.id
-             WHERE s.provider_id = ? AND DATE(a.appointment_date) = ?`,
+             WHERE a.provider_id = ? AND DATE(a.appointment_date) = ?`,
             [providerId, date]
         );
 
         const bookedTimes = new Set(
-            bookedRows.map(r => r.booked_time.substring(0, 5))
+            bookedRows.map(r => Math.floor(r.booked_sec / 60))  // en minutes
         );
 
-        // 3. Générer les créneaux de 30 min
+        // 3. Générer les créneaux — condition stricte : slot_start >= open ET slot_end <= close
+        const duration = Math.max(15, parseInt(req.query.duration) || 30);
         const slots = [];
-        const [openH, openM] = openStr.split(':').map(Number);
-        const [closeH, closeM] = closeStr.split(':').map(Number);
-        const openMinutes = openH * 60 + openM;
-        const closeMinutes = closeH * 60 + closeM;
 
-        for (let m = openMinutes; m < closeMinutes; m += 30) {
+        for (let m = openMinutes; m + duration <= closeMinutes; m += duration) {
+            if (m < openMinutes || m + duration > closeMinutes) continue; // garde stricte
             const hh = String(Math.floor(m / 60)).padStart(2, '0');
             const mm = String(m % 60).padStart(2, '0');
             const time = `${hh}:${mm}`;
-            slots.push({ time, available: !bookedTimes.has(time) });
+            slots.push({ time, available: !bookedTimes.has(m) });
         }
+
 
         res.json({ closed: false, slots });
     } catch (err) {

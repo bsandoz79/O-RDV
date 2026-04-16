@@ -110,7 +110,8 @@ const HoursRow = ({ day, config, onChange }) => (
 );
 
 export default function ShopSettings() {
-  const [profile, setProfile] = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '' });
+  const [categories, setCategories] = useState([]);
+  const [profile, setProfile] = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '' });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [services, setServices] = useState([{ label: '', price: '', duration: '' }]);
@@ -119,10 +120,63 @@ export default function ShopSettings() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/shop/categories`)
+      .then((res) => res.json())
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
   const [user, setUser] = useState(null);
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (!savedUser) return;
+    const parsedUser = JSON.parse(savedUser);
+    setUser(parsedUser);
+
+    // Charger les données existantes du prestataire
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE_URL}/shop/info/${parsedUser.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setProfile({
+          name:        data.name        || '',
+          description: data.description || '',
+          address:     data.address     || '',
+          zipCode:     data.zip_code    || '',
+          city:        data.city        || '',
+          phone:       data.phone       || '',
+          categoryId:  data.category_id ? String(data.category_id) : '',
+        });
+        if (data.image_url) {
+          setImagePreview(`${API_BASE_URL.replace('/api', '')}${data.image_url}`);
+        }
+        if (data.services && data.services.length > 0) {
+          setServices(data.services.map((s) => ({
+            label:    s.label    || '',
+            price:    s.price    ?? '',
+            duration: s.duration ?? '',
+          })));
+        }
+        if (data.hours && data.hours.length > 0) {
+          const loadedHours = { ...INITIAL_HOURS };
+          data.hours.forEach((h) => {
+            const day = h.day_of_week?.toLowerCase();
+            if (day && loadedHours[day] !== undefined) {
+              loadedHours[day] = {
+                open:   h.open_time  ? String(h.open_time).substring(0, 5)  : '09:00',
+                close:  h.close_time ? String(h.close_time).substring(0, 5) : '18:00',
+                closed: !!h.is_closed,
+              };
+            }
+          });
+          setHours(loadedHours);
+        }
+      })
+      .catch(() => {}); // Silencieux : nouveau prestataire sans profil
   }, []);
 
   const setField = (key) => (e) => setProfile((p) => ({ ...p, [key]: e.target.value }));
@@ -200,6 +254,17 @@ export default function ShopSettings() {
             <ImageUploader preview={imagePreview} onFileChange={handleFileChange} onRemove={handleRemoveImage} />
             <div className="profile-grid">
               <div className="col-full"><Field label="Nom" icon={Building2} placeholder="Ex: Salon O'RDV" value={profile.name} onChange={setField('name')} required /></div>
+              <div className="col-full">
+                <label className="field-label">Catégorie</label>
+                <div className="input-wrapper">
+                  <select className="custom-input" value={profile.categoryId} onChange={setField('categoryId')}>
+                    <option value="">-- Choisir une catégorie --</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="col-full"><TextareaField label="Description" icon={FileText} placeholder="Ex: Spécialiste barbe et soins visage..." value={profile.description} onChange={setField('description')} /></div>
               <div className="col-full"><Field label="Adresse" icon={MapPin} placeholder="Ex: 15 rue de la Paix" value={profile.address} onChange={setField('address')} required /></div>
               <Field label="Code Postal" icon={Hash} placeholder="80000" value={profile.zipCode} onChange={setField('zipCode')} />
