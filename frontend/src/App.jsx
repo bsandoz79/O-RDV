@@ -7,6 +7,7 @@ import Navbar, { ScrollToTop } from "./components/Navbar";
 import UserDashboard from "./pages/user/UserDashboard";
 import BookingPage from "./components/BookingPage";
 import ShopSettings from "./pages/pro/ShopSettings";
+import ProviderProfile from "./pages/ProviderProfile";
 
 // --- COMPOSANT DE SÉCURITÉ (PROTECTED ROUTE) ---
 // Ce composant bloque l'accès aux pages si l'utilisateur n'a pas le bon rôle
@@ -41,6 +42,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/provider/:id" element={<ProviderProfile />} />
         <Route path="/booking/:providerId" element={<BookingPage />} />
 
         {/* --- ROUTES UTILISATEUR (Client) --- */}

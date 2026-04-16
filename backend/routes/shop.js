@@ -28,7 +28,40 @@ router.get('/all', async (req, res) => {
     }
 });
 
-// --- 3. RÉCUPÉRER LES INFOS D'UN PRESTATAIRE (DASHBOARD) ---
+// --- 3. PROFIL PUBLIC D'UN PRESTATAIRE (par provider.id) ---
+// Route publique : accessible sans token pour la page de détail client
+router.get('/profile/:providerId', async (req, res) => {
+    try {
+        const providerId = req.params.providerId;
+
+        const [providers] = await db.execute(
+            'SELECT * FROM providers WHERE id = ?',
+            [providerId]
+        );
+
+        if (providers.length === 0) {
+            return res.status(404).json({ error: "Prestataire introuvable" });
+        }
+
+        const provider = providers[0];
+
+        const [services] = await db.execute(
+            'SELECT * FROM services WHERE provider_id = ?',
+            [providerId]
+        );
+
+        const [hours] = await db.execute(
+            'SELECT * FROM business_hours WHERE provider_id = ? ORDER BY FIELD(day_of_week, "lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche")',
+            [providerId]
+        );
+
+        res.json({ ...provider, services, hours });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- 4. RÉCUPÉRER LES INFOS D'UN PRESTATAIRE (DASHBOARD) ---
 // On ajoute 'auth' pour protéger les données du pro
 router.get('/info/:userId', auth, async (req, res) => {
     try {
@@ -75,6 +108,7 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
         
         const profile = JSON.parse(req.body.profile);
         const hours = JSON.parse(req.body.hours);
+        const services = req.body.services ? JSON.parse(req.body.services) : [];
         const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
         const sqlProvider = `
@@ -98,6 +132,15 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
 
         const [rows] = await connection.execute('SELECT id FROM providers WHERE user_id = ?', [userId]);
         const providerId = rows[0].id;
+
+        // Supprimer et réinsérer les services
+        await connection.execute('DELETE FROM services WHERE provider_id = ?', [providerId]);
+        const sqlService = `INSERT INTO services (provider_id, label, price, duration) VALUES (?, ?, ?, ?)`;
+        for (const s of services) {
+            if (s.label && s.price) {
+                await connection.execute(sqlService, [providerId, s.label, s.price, s.duration || 30]);
+            }
+        }
 
         await connection.execute('DELETE FROM business_hours WHERE provider_id = ?', [providerId]);
 

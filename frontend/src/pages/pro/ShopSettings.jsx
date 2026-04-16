@@ -168,12 +168,17 @@ export default function ShopSettings() {
       }));
       formData.append('hours', JSON.stringify(hoursArray));
 
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/shop/setup`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Erreur serveur.");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || `Erreur serveur (${response.status}).`);
+      }
       setSuccess(true);
     } catch (err) {
       setError(err.message);
