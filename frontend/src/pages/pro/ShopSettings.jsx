@@ -179,24 +179,24 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
   const weekLabel  = `${monday.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${addDays(monday,6).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 bg-slate-900">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-            <Calendar size={15} className="text-violet-300" />
+          <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+            <Calendar size={15} className="text-violet-500" />
           </div>
           <div>
-            <h3 className="font-semibold text-white text-sm">Planning de la semaine</h3>
+            <h3 className="font-semibold text-slate-900 text-sm">Planning de la semaine</h3>
             <p className="text-xs text-slate-400">{weekLabel}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-violet-300 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
+          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 transition">
             Aujourd'hui
           </button>
-          <button onClick={() => setWeekOffset(o=>o-1)} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition text-slate-300"><ChevronLeft size={15}/></button>
-          <button onClick={() => setWeekOffset(o=>o+1)} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition text-slate-300"><ChevronRight size={15}/></button>
+          <button onClick={() => setWeekOffset(o=>o-1)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-slate-500"><ChevronLeft size={15}/></button>
+          <button onClick={() => setWeekOffset(o=>o+1)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-slate-500"><ChevronRight size={15}/></button>
         </div>
       </div>
 
@@ -205,16 +205,16 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
         <div style={{ minWidth: '680px' }}>
 
           {/* En-têtes jours */}
-          <div className="grid bg-gray-50 border-b border-gray-100" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
-            <div className="py-3 border-r border-gray-100" />
+          <div className="grid bg-slate-50 border-b border-slate-100" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
+            <div className="py-3 border-r border-slate-100" />
             {weekDates.map((date, i) => {
               const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
               const isToday  = ds === todayStr;
               const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
               return (
-                <div key={i} className={`py-3 text-center border-l border-gray-100 ${isClosed ? 'opacity-40' : ''}`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? 'text-violet-600' : 'text-gray-400'}`}>{WEEK_DAYS_FR[i]}</p>
-                  <div className={`w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-bold ${isToday ? 'bg-violet-600 text-white shadow-md shadow-violet-200' : 'text-gray-600'}`}>
+                <div key={i} className={`py-3 text-center border-l border-slate-100 ${isClosed ? 'opacity-40' : ''}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? 'text-rose-500' : 'text-slate-400'}`}>{WEEK_DAYS_FR[i]}</p>
+                  <div className={`w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-bold ${isToday ? 'bg-rose-500 text-white' : 'text-slate-700'}`}>
                     {date.getDate()}
                   </div>
                 </div>
@@ -228,12 +228,10 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
               const slotLabel = `${fmt(Math.floor(slotMin/60))}:${fmt(slotMin%60)}`;
               const isHour    = slotMin % 60 === 0;
               return (
-                <div key={slotMin} className={`grid ${isHour ? 'border-t border-gray-100' : ''}`} style={{ gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: '36px' }}>
-                  {/* Label heure */}
-                  <div className={`flex items-center justify-end pr-3 border-r border-gray-100 ${isHour ? 'text-gray-400 text-[11px] font-medium' : 'text-gray-200 text-[10px]'}`}>
+                <div key={slotMin} className={`grid ${isHour ? 'border-t border-slate-100' : ''}`} style={{ gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: '36px' }}>
+                  <div className={`flex items-center justify-end pr-3 border-r border-slate-100 ${isHour ? 'text-slate-400 text-[11px] font-medium' : 'text-slate-200 text-[10px]'}`}>
                     {isHour ? slotLabel : ''}
                   </div>
-                  {/* Cases */}
                   {weekDates.map((date, i) => {
                     const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
                     const appt     = apptIndex[`${ds} ${slotLabel}`];
@@ -248,12 +246,12 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
                     }
                     const out = isClosed || !inRange;
                     return (
-                      <div key={i} className={`border-l border-gray-100 px-1 py-0.5 flex items-center ${out ? 'bg-gray-50' : 'bg-white hover:bg-gray-50/50'} transition`}>
+                      <div key={i} className={`border-l border-slate-100 px-1 py-0.5 flex items-center ${out ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'} transition`}>
                         {appt && !out && (
                           <div className={`w-full rounded-md px-2 py-1 text-[10px] font-semibold leading-tight truncate ${
-                            appt.status === 'cancelled' ? 'bg-red-50 text-red-400 line-through border border-red-100'
-                            : appt.status === 'completed' ? 'bg-gray-100 text-gray-400 border border-gray-200'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            appt.status === 'cancelled' ? 'bg-red-50 text-red-500 line-through border border-red-100'
+                            : appt.status === 'completed' ? 'bg-slate-100 text-slate-400 border border-slate-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-100'
                           }`}>
                             {appt.client_first_name || appt.client_last_name
                               ? `${appt.client_first_name||''} ${appt.client_last_name||''}`.trim()
@@ -271,16 +269,16 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
       </div>
 
       {/* Légende */}
-      <div className="flex items-center gap-5 px-5 py-3 bg-gray-50 border-t border-gray-100">
-        <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Légende</span>
+      <div className="flex items-center gap-5 px-5 py-3 bg-slate-50 border-t border-slate-100">
+        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Légende</span>
         {[
-          { cls: 'bg-blue-50 border border-blue-200',  label: 'Réservé'  },
-          { cls: 'bg-gray-100 border border-gray-200', label: 'Fermé'    },
-          { cls: 'bg-red-50 border border-red-100',    label: 'Annulé'   },
+          { cls: 'bg-rose-50 border border-rose-200',   label: 'Réservé' },
+          { cls: 'bg-slate-100 border border-slate-200', label: 'Fermé'  },
+          { cls: 'bg-red-50 border border-red-100',      label: 'Annulé' },
         ].map(({ cls, label }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className={`w-3 h-3 rounded-sm inline-block ${cls}`} />
-            <span className="text-[10px] text-gray-400">{label}</span>
+            <span className="text-[10px] text-slate-400">{label}</span>
           </span>
         ))}
       </div>
@@ -330,32 +328,16 @@ function ProDashboard({ shopData, onEditShop }) {
     { icon: Euro,       label: "CA aujourd'hui",     value: caToday.toFixed(2),  unit: '€',   color: '#f59e0b' },
   ];
 
-  const glassCard = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    borderRadius: '1.5rem',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-  };
-
   return (
-    <div className="min-h-screen pt-20 pb-12 relative overflow-x-hidden" style={{
-      background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 40%, #1a0a2e 100%)',
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-    }}>
-      {/* Orbes décoratifs */}
-      <div className="fixed top-10 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.1) 0%, transparent 70%)', zIndex: 0 }} />
-      <div className="fixed bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%)', zIndex: 0 }} />
-
-      <div className="max-w-6xl mx-auto px-4 space-y-5 relative z-10">
+    <div className="min-h-screen bg-slate-50 pt-20 pb-12" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="max-w-6xl mx-auto px-4 space-y-5">
 
         {/* ── Topbar boutique ────────────────────────────────────────── */}
-        <div style={{ ...glassCard, borderRadius: '1.25rem', padding: '0' }} className="overflow-hidden">
-          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6,#3b82f6)' }} />
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6)' }} />
           <div className="flex items-center gap-4 px-6 py-4">
             {shopImage ? (
-              <img src={shopImage} alt={shopData.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.12)' }} />
+              <img src={shopImage} alt={shopData.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-slate-200" />
             ) : (
               <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#f43f5e,#8b5cf6)' }}>
                 <Store size={20} color="white" />
@@ -363,17 +345,14 @@ function ProDashboard({ shopData, onEditShop }) {
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold text-white truncate">{shopData.name}</h1>
-                <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>En ligne</span>
+                <h1 className="text-base font-bold text-slate-900 truncate">{shopData.name}</h1>
+                <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">En ligne</span>
               </div>
-              <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{shopData.city || ''} · Dashboard Pro</p>
+              <p className="text-xs text-slate-400 truncate">{shopData.city || ''} · Dashboard Pro</p>
             </div>
             <button
               onClick={onEditShop}
-              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold transition"
-              style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', padding: '7px 14px', borderRadius: '10px' }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-4 py-2 rounded-xl transition"
             >
               <Pencil size={13} /> Modifier la boutique
             </button>
@@ -383,13 +362,13 @@ function ProDashboard({ shopData, onEditShop }) {
         {/* ── KPIs ───────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map(({ icon: Icon, label, value, unit, color }) => (
-            <div key={label} style={glassCard} className="p-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}20` }}>
+            <div key={label} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
                 <Icon size={18} style={{ color }} />
               </div>
               <div className="min-w-0">
-                <p className="text-xl font-black text-white leading-none">{value} <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>{unit}</span></p>
-                <p className="text-xs font-medium mt-1 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                <p className="text-xl font-black text-slate-900 leading-none">{value} <span className="text-xs font-semibold text-slate-400">{unit}</span></p>
+                <p className="text-xs font-medium mt-1 text-slate-500 truncate">{label}</p>
               </div>
             </div>
           ))}
@@ -401,22 +380,21 @@ function ProDashboard({ shopData, onEditShop }) {
         )}
 
         {/* ── Liste des rendez-vous ──────────────────────────────────── */}
-        <div style={glassCard} className="overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(244,63,94,0.15)' }}>
-                <Calendar size={14} style={{ color: '#f43f5e' }} />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-50">
+                <Calendar size={14} className="text-rose-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-white text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{upcoming.length} à venir · {appointments.length} au total</p>
+                <h3 className="font-semibold text-slate-900 text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
+                <p className="text-xs text-slate-400">{upcoming.length} à venir · {appointments.length} au total</p>
               </div>
             </div>
             {appointments.length > 0 && (
               <button
                 onClick={() => setShowAll(v=>!v)}
-                className="flex items-center gap-1 text-xs font-semibold transition"
-                style={{ color: '#f43f5e', background: 'rgba(244,63,94,0.1)', padding: '5px 11px', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.2)' }}
+                className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition"
               >
                 {showAll ? 'Voir à venir' : `Tout voir (${appointments.length})`}
                 <ChevronRight size={11} />
@@ -426,14 +404,14 @@ function ProDashboard({ shopData, onEditShop }) {
 
           <div>
             {loading ? (
-              <div className="flex justify-center py-12"><Loader2 size={26} className="animate-spin" style={{ color: '#f43f5e' }} /></div>
+              <div className="flex justify-center py-12"><Loader2 size={26} className="animate-spin text-rose-500" /></div>
             ) : displayed.length === 0 ? (
               <div className="text-center py-14">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                  <Calendar size={22} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-100">
+                  <Calendar size={22} className="text-slate-300" />
                 </div>
-                <p className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Aucun rendez-vous à venir</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>Les nouvelles réservations apparaîtront ici.</p>
+                <p className="font-semibold text-sm text-slate-500">Aucun rendez-vous à venir</p>
+                <p className="text-xs mt-1 text-slate-400">Les nouvelles réservations apparaîtront ici.</p>
               </div>
             ) : (
               displayed.map((appt, idx) => {
@@ -443,28 +421,25 @@ function ProDashboard({ shopData, onEditShop }) {
                 return (
                   <div
                     key={appt.id}
-                    className="flex items-center gap-4 px-6 py-4 transition-all"
-                    style={{
-                      opacity: isPast || appt.status === 'cancelled' ? 0.4 : 1,
-                      borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                    }}
+                    className={`flex items-center gap-4 px-6 py-4 transition-all hover:bg-slate-50 ${idx > 0 ? 'border-t border-slate-100' : ''}`}
+                    style={{ opacity: isPast || appt.status === 'cancelled' ? 0.5 : 1 }}
                   >
                     {/* Bloc date */}
-                    <div className="flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center" style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.2)' }}>
-                      <span className="text-[8px] font-bold uppercase leading-none" style={{ color: 'rgba(244,63,94,0.8)' }}>
+                    <div className="flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center bg-rose-50 border border-rose-100">
+                      <span className="text-[8px] font-bold uppercase leading-none text-rose-400">
                         {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </span>
-                      <span className="text-lg font-black leading-tight" style={{ color: '#f43f5e' }}>{date.getDate()}</span>
+                      <span className="text-lg font-black leading-tight text-rose-500">{date.getDate()}</span>
                     </div>
                     {/* Infos */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-sm truncate">{appt.service_label}</p>
-                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      <p className="font-semibold text-slate-900 text-sm truncate">{appt.service_label}</p>
+                      <p className="text-xs flex items-center gap-1 mt-0.5 text-slate-500">
                         <Clock size={10} />
                         {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         {appt.duration ? ` · ${appt.duration} min` : ''}
                       </p>
-                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                      <p className="text-xs flex items-center gap-1 mt-0.5 text-slate-400">
                         <User size={10} />
                         {appt.client_first_name || ''} {appt.client_last_name || appt.client_email || '—'}
                       </p>
@@ -475,7 +450,7 @@ function ProDashboard({ shopData, onEditShop }) {
                         {st.label}
                       </span>
                       {appt.price && (
-                        <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>{Number(appt.price).toFixed(2)} €</span>
+                        <span className="text-xs font-bold text-slate-500">{Number(appt.price).toFixed(2)} €</span>
                       )}
                     </div>
                   </div>
@@ -616,7 +591,7 @@ export default function ShopSettings() {
   if (checkingShop) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 size={36} className="animate-spin text-rose-400" />
+        <Loader2 size={32} className="animate-spin text-rose-500" />
       </div>
     );
   }

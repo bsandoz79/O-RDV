@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   ShopSettings.css — Thème dark O'RDV
-   Palette : #1a0a2e / #2d1b4e (fond) · #f43f5e (rose) · #8b5cf6 (violet)
+   ShopSettings.css — Thème clair O'RDV (accessibilité optimisée)
+   Palette : #f8fafc (fond) · #0f172a (texte) · #f43f5e (rose) · #8b5cf6 (violet)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&display=swap');
@@ -8,25 +8,11 @@
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 .shop-settings-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 40%, #1a0a2e 100%);
+  background: #f8fafc;
   padding-top: 7rem;
   padding-bottom: 4rem;
   font-family: 'DM Sans', sans-serif;
-  position: relative;
-  color: white;
-  overflow-x: hidden;
-}
-
-/* ── Orbes décoratifs ───────────────────────────────────────────────────────── */
-.decor-orb-1 {
-  position: fixed; top: 8%; right: 3%; width: 520px; height: 520px;
-  background: radial-gradient(circle, rgba(244,63,94,0.12) 0%, transparent 70%);
-  border-radius: 50%; pointer-events: none; z-index: 0;
-}
-.decor-orb-2 {
-  position: fixed; bottom: 5%; left: -5%; width: 420px; height: 420px;
-  background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 65%);
-  border-radius: 50%; pointer-events: none; z-index: 0;
+  color: #0f172a;
 }
 
 /* ── Container ─────────────────────────────────────────────────────────────── */
@@ -34,8 +20,6 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 0 1rem;
-  position: relative;
-  z-index: 1;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────────── */
@@ -43,21 +27,16 @@
   margin-bottom: 2.5rem;
 }
 .shop-header h1 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 900;
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  background: linear-gradient(90deg, #fff 40%, #f9a8b8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-style: italic;
-  line-height: 1.15;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  color: #0f172a;
+  line-height: 1.2;
   margin: 0 0 0.5rem;
 }
 .shop-header p {
-  color: rgba(255,255,255,0.38);
+  color: #64748b;
   font-size: 14px;
-  font-style: italic;
   margin: 0;
 }
 
@@ -68,40 +47,37 @@
   gap: 1.25rem;
 }
 
-/* ── Section cards (glassmorphism) ─────────────────────────────────────────── */
+/* ── Section cards ─────────────────────────────────────────────────────────── */
 .section-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 2rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
   padding: 2rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.04) inset;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .card-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 .card-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 1.2rem;
-  color: white;
+  font-size: 1rem;
+  color: #0f172a;
   margin: 0;
 }
 
-/* ── Inputs & Labels ───────────────────────────────────────────────────────── */
+/* ── Labels & Inputs ───────────────────────────────────────────────────────── */
 .field-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.32);
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
   margin-bottom: 6px;
   display: block;
-  padding-left: 4px;
 }
 
 .input-wrapper {
@@ -113,11 +89,10 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255,255,255,0.2);
+  color: #94a3b8;
   pointer-events: none;
 }
 
-/* Pour les textarea, l'icône est alignée en haut */
 .textarea-icon {
   top: 14px;
   transform: none;
@@ -125,11 +100,11 @@
 
 .custom-input {
   width: 100%;
-  padding: 0.7rem 1rem;
-  border-radius: 0.875rem;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: white;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   outline: none;
@@ -137,61 +112,49 @@
   box-sizing: border-box;
 }
 .custom-input:focus {
-  border-color: rgba(244,63,94,0.5);
-  box-shadow: 0 0 0 3px rgba(244,63,94,0.12);
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244,63,94,0.1);
 }
 .custom-input:disabled {
-  opacity: 0.25;
+  opacity: 0.45;
   cursor: not-allowed;
+  background: #f8fafc;
 }
 .custom-input::placeholder {
-  color: rgba(255,255,255,0.18);
+  color: #94a3b8;
 }
 
-/* Textarea spécifique */
 .custom-textarea {
   resize: vertical;
   min-height: 88px;
   line-height: 1.5;
 }
 
-/* Supprime les flèches des inputs number */
 .custom-input[type=number]::-webkit-inner-spin-button,
 .custom-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-/* Select catégorie */
-.custom-input select,
 select.custom-input {
   appearance: none;
   -webkit-appearance: none;
-  background-color: rgba(255,255,255,0.08);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
-  color: white;
   cursor: pointer;
 }
 
 select.custom-input option {
-  background-color: #1e1b2e;
-  color: white;
+  background-color: #ffffff;
+  color: #0f172a;
   font-size: 14px;
-  padding: 8px;
 }
 
-select.custom-input option:disabled,
-select.custom-input option[value=""] {
-  color: rgba(255,255,255,0.4);
-}
-
-/* Icône de l'input time */
 input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.6) opacity(0.5);
+  opacity: 0.5;
   cursor: pointer;
 }
 
-/* ── Grille de profil ─────────────────────────────────────────────────────── */
+/* ── Grille profil ───────────────────────────────────────────────────────────── */
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -202,21 +165,20 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   grid-column: 1 / -1;
 }
 
-/* ── Upload image établissement ────────────────────────────────────────────── */
+/* ── Upload image ────────────────────────────────────────────────────────────── */
 .image-upload-zone {
-  border: 1.5px dashed rgba(255,255,255,0.15);
-  border-radius: 1.25rem;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 1rem;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   overflow: hidden;
-  background: rgba(255,255,255,0.02);
+  background: #f8fafc;
 }
 .image-upload-zone:hover:not(.has-preview) {
-  border-color: rgba(244,63,94,0.4);
-  background: rgba(244,63,94,0.04);
+  border-color: #f43f5e;
+  background: #fff1f2;
 }
 
-/* Mode vide — placeholder */
 .image-placeholder {
   display: flex;
   flex-direction: column;
@@ -226,20 +188,15 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   padding: 2rem 1rem;
 }
 .image-placeholder-icon {
-  color: rgba(255,255,255,0.2);
+  color: #94a3b8;
   margin-bottom: 0.25rem;
 }
 .image-placeholder-label {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255,255,255,0.5);
-}
-.image-placeholder-hint {
-  font-size: 11px;
-  color: rgba(255,255,255,0.22);
+  color: #64748b;
 }
 
-/* Mode avec image — preview */
 .image-preview-wrapper {
   position: relative;
   width: 100%;
@@ -252,7 +209,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   display: block;
 }
 
-/* Bouton X pour supprimer l'image */
 .image-remove-btn {
   position: absolute;
   top: 10px;
@@ -260,27 +216,26 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(15, 5, 30, 0.75);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: white;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(8px);
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, color 0.2s;
   z-index: 2;
 }
 .image-remove-btn:hover {
-  background: rgba(244,63,94,0.5);
-  border-color: rgba(244,63,94,0.6);
+  background: #fff1f2;
+  color: #f43f5e;
+  border-color: #fecdd3;
 }
 
-/* Overlay "Changer" au survol de la preview */
 .image-preview-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(15, 5, 30, 0.55);
+  background: rgba(15,23,42,0.45);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -298,26 +253,20 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 /* ── Services ──────────────────────────────────────────────────────────────── */
-.services-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .service-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.875rem;
   align-items: flex-end;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
   padding: 1.25rem;
   transition: background 0.2s, border-color 0.2s;
 }
 .service-row:hover {
-  background: rgba(244,63,94,0.04);
-  border-color: rgba(244,63,94,0.18);
+  background: #fff1f2;
+  border-color: #fecdd3;
 }
 
 /* ── Horaires ──────────────────────────────────────────────────────────────── */
@@ -325,19 +274,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.8rem 0.5rem;
+  padding: 0.75rem 0.5rem;
   flex-wrap: wrap;
   gap: 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: background 0.15s;
+  border-bottom: 1px solid #f1f5f9;
   border-radius: 0.75rem;
+  transition: background 0.15s;
 }
 .hours-row:last-child { border-bottom: none; }
-.hours-row--closed { opacity: 0.6; }
+.hours-row--closed { opacity: 0.5; }
 
 .day-label {
   font-weight: 600;
-  color: rgba(255,255,255,0.65);
+  color: #334155;
   width: 90px;
   font-size: 13px;
   flex-shrink: 0;
@@ -355,12 +304,11 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 .hours-separator {
-  color: rgba(255,255,255,0.18);
+  color: #94a3b8;
   font-size: 11px;
   font-weight: 700;
 }
 
-/* Checkbox "Fermé" */
 .closed-toggle {
   display: flex;
   align-items: center;
@@ -370,24 +318,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   user-select: none;
 }
 
-.closed-checkbox {
-  width: 15px !important;
-  height: 15px !important;
-  padding: 0 !important;
-  border-radius: 4px !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
-  background: rgba(255,255,255,0.05) !important;
-  accent-color: #f43f5e;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
 .closed-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
   transition: color 0.2s;
 }
 .closed-toggle:hover .closed-label { color: #f43f5e; }
@@ -409,7 +343,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   transition: background 0.2s;
 }
-.btn-add:hover { background: rgba(244,63,94,0.1); }
+.btn-add:hover { background: #fff1f2; }
 
 .btn-remove {
   padding: 10px;
@@ -417,40 +351,41 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: rgba(255,255,255,0.2);
+  color: #94a3b8;
   transition: color 0.2s, background 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.btn-remove:hover { color: #f43f5e; background: rgba(244,63,94,0.1); }
+.btn-remove:hover { color: #f43f5e; background: #fff1f2; }
 
 .btn-submit {
   width: 100%;
-  padding: 1.2rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #f43f5e, #e11d48);
   color: white;
-  border: 1px solid rgba(244,63,94,0.2);
-  border-radius: 1.25rem;
+  border: none;
+  border-radius: 1rem;
   font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 4px 24px rgba(244,63,94,0.35);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(244,63,94,0.25);
+  transition: all 0.2s ease;
 }
-.btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(244,63,94,0.45); }
+.btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244,63,94,0.35); }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-submit.success {
-  background: rgba(52,211,153,0.08);
-  border-color: rgba(52,211,153,0.25);
-  box-shadow: 0 4px 20px rgba(52,211,153,0.15);
+  background: #ecfdf5;
+  color: #059669;
+  box-shadow: none;
+  border: 1px solid #a7f3d0;
 }
 
 /* ── Feedback erreur ───────────────────────────────────────────────────────── */
@@ -459,10 +394,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 8px;
   padding: 0.875rem 1.25rem;
-  border-radius: 1rem;
-  background: rgba(244,63,94,0.1);
-  border: 1px solid rgba(244,63,94,0.25);
-  color: #fda4af;
+  border-radius: 0.875rem;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #e11d48;
   font-size: 13px;
   font-weight: 500;
 }
