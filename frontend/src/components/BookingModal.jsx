@@ -152,6 +152,28 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
       });
 
       if (res.ok) {
+        // Si un numéro a été saisi, on le sauvegarde dans le profil utilisateur
+        if (phone.trim()) {
+          // On récupère d'abord le profil complet pour ne pas écraser first_name / last_name
+          fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(profile => {
+              const payload = {
+                first_name: profile.first_name || null,
+                last_name:  profile.last_name  || null,
+                email:      profile.email,
+                phone:      phone.trim(),
+              };
+              fetch(`${API_BASE_URL}/user/update`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload),
+              }).catch(() => {});
+              // Mettre à jour le localStorage avec le numéro
+              const stored = JSON.parse(localStorage.getItem('user') || '{}');
+              localStorage.setItem('user', JSON.stringify({ ...stored, phone: phone.trim() }));
+            }).catch(() => {});
+        }
         setStep('done');
       } else {
         const data = await res.json();

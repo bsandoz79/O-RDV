@@ -30,7 +30,7 @@ router.get('/categories', async (req, res) => {
 // --- 3. RÉCUPÉRER TOUS LES PRESTATAIRES (RECHERCHE + FILTRE CATÉGORIE) ---
 router.get('/all', async (req, res) => {
     try {
-        const { category_id } = req.query;
+        const { category_id, city } = req.query;
 
         // Nom du jour courant en anglais minuscule (correspond aux valeurs en DB)
         const todayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
@@ -50,10 +50,10 @@ router.get('/all', async (req, res) => {
                 ON bh.provider_id = p.id AND LOWER(bh.day_of_week) = ?
         `;
         const params = [todayName];
-        if (category_id) {
-            sql += ' WHERE p.category_id = ?';
-            params.push(category_id);
-        }
+        const conditions = [];
+        if (category_id) conditions.push('p.category_id = ?') && params.push(category_id);
+        if (city) conditions.push('p.city LIKE ?') && params.push(`%${city}%`);
+        if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
         const [rows] = await db.execute(sql, params);
         res.json(rows);
     } catch (error) {

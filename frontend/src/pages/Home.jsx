@@ -25,11 +25,19 @@ export default function Home() {
   }, []);
 
   // ─── Charger les prestataires (re-fetch si filtre change) ──────
+  // Filtre ville envoyé au backend avec debounce 400ms
+  const [cityFilter, setCityFilter] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setCityFilter(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   useEffect(() => {
     setLoading(true);
-    const url = activeCategory
-      ? `${API_BASE_URL}/shop/all?category_id=${activeCategory}`
-      : `${API_BASE_URL}/shop/all`;
+    const params = new URLSearchParams();
+    if (activeCategory) params.set('category_id', activeCategory);
+    if (cityFilter)     params.set('city', cityFilter);
+    const url = `${API_BASE_URL}/shop/all${params.toString() ? '?' + params : ''}`;
 
     fetch(url)
       .then((res) => res.json())
@@ -44,17 +52,17 @@ export default function Home() {
           image: pro.image_url
             ? `${API_BASE_URL.replace('/api', '')}${pro.image_url}`
             : "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=280&fit=crop",
-          createdAt:      pro.created_at,
-          todayOpen:      pro.today_open,
-          todayClose:     pro.today_close,
-          todayIsClosed:  pro.today_is_closed,
+          createdAt:     pro.created_at,
+          todayOpen:     pro.today_open,
+          todayClose:    pro.today_close,
+          todayIsClosed: pro.today_is_closed,
         })));
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeCategory]);
+  }, [activeCategory, cityFilter]);
 
-  // ─── Filtrage texte local ──────────────────────────────────────
+  // Filtrage nom local (ville déjà filtrée côté backend)
   const filteredProviders = providers.filter((p) =>
     !searchQuery ||
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
