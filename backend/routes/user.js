@@ -74,7 +74,14 @@ router.get('/appointments', auth, async (req, res) => {
         let rows;
 
         if (req.auth.role === 'pro' || req.auth.role === 'admin') {
-            // Le pro voit les RDV de sa boutique
+            // Filtre optionnel : ?week=1 → seulement la semaine courante (lundi–dimanche)
+            const weekOnly = req.query.week === '1';
+            const params = [req.auth.userId];
+            let weekFilter = '';
+            if (weekOnly) {
+                weekFilter = `AND YEARWEEK(a.appointment_date, 1) = YEARWEEK(NOW(), 1)`;
+            }
+
             [rows] = await db.execute(`
                 SELECT
                     a.id,
@@ -90,9 +97,9 @@ router.get('/appointments', auth, async (req, res) => {
                 JOIN services s ON a.service_id = s.id
                 JOIN users    u ON a.client_id  = u.id
                 JOIN providers p ON p.user_id = ?
-                WHERE a.provider_id = p.id
+                WHERE a.provider_id = p.id ${weekFilter}
                 ORDER BY a.appointment_date ASC
-            `, [req.auth.userId]);
+            `, params);
         } else {
             // Le client voit ses propres réservations
             [rows] = await db.execute(`

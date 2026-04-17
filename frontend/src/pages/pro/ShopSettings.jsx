@@ -4,7 +4,7 @@ import {
   Building2, Loader2, CheckCircle, Phone,
   Camera, FileText, Hash, X, Calendar, User,
   ChevronRight, Pencil, LayoutDashboard, Ban,
-  TrendingUp, Users,
+  TrendingUp, Users, Euro, ChevronLeft, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import API_BASE_URL from "../../api/api";
 import './ShopSettings.css';
@@ -119,25 +119,240 @@ const HoursRow = ({ day, config, onChange }) => (
   </div>
 );
 
+// ─── Helpers planning ─────────────────────────────────────────────────────────
+
+// Lundi de la semaine contenant `date`
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=dim
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function fmt(n) { return String(n).padStart(2, '0'); }
+
+// Génère les créneaux de 30 min entre openMin et closeMin
+function buildSlots(openMin, closeMin) {
+  const slots = [];
+  for (let m = openMin; m < closeMin; m += 30) slots.push(m);
+  return slots;
+}
+
+const WEEK_DAYS_EN = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const WEEK_DAYS_FR = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+// ─── Composant Planning Hebdomadaire ──────────────────────────────────────────
+
+function WeeklyPlanning({ weekAppointments, shopHours }) {
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine courante
+
+  const monday = addDays(getMondayOf(new Date()), weekOffset * 7);
+  const weekDates = WEEK_DAYS_EN.map((_, i) => addDays(monday, i));
+
+  // Calculer la plage horaire globale à partir des business_hours
+  let globalOpenMin = 9 * 60, globalCloseMin = 19 * 60;
+  if (shopHours?.length) {
+    const opens  = shopHours.filter(h => !h.is_closed).map(h => {
+      const s = h.open_time ? String(h.open_time).substring(0, 5) : '09:00';
+      const [hh, mm] = s.split(':').map(Number); return hh * 60 + mm;
+    });
+    const closes = shopHours.filter(h => !h.is_closed).map(h => {
+      const s = h.close_time ? String(h.close_time).substring(0, 5) : '18:00';
+      const [hh, mm] = s.split(':').map(Number); return hh * 60 + mm;
+    });
+    if (opens.length)  globalOpenMin  = Math.min(...opens);
+    if (closes.length) globalCloseMin = Math.max(...closes);
+    // 00:00–00:00 = 24h
+    if (globalCloseMin === 0) globalCloseMin = 24 * 60;
+  }
+
+  const timeSlots = buildSlots(globalOpenMin, globalCloseMin);
+
+  // Index RDV par "YYYY-MM-DD HH:MM"
+  const apptIndex = {};
+  weekAppointments.forEach(a => {
+    const d = new Date(a.appointment_date);
+    const key = `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())} ${fmt(d.getHours())}:${fmt(d.getMinutes())}`;
+    apptIndex[key] = a;
+  });
+
+  // Vérifier si un jour est fermé
+  const closedDays = new Set(
+    (shopHours || []).filter(h => h.is_closed).map(h => h.day_of_week?.toLowerCase())
+  );
+
+  const todayStr = `${new Date().getFullYear()}-${fmt(new Date().getMonth()+1)}-${fmt(new Date().getDate())}`;
+
+  const weekLabel = `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${addDays(monday,6).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
+            <Calendar size={16} color="white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Planning de la semaine</h3>
+            <p className="text-xs text-slate-400">{weekLabel}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-rose-500 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-300 transition">
+            Aujourd'hui
+          </button>
+          <button onClick={() => setWeekOffset(o => o - 1)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-500"><ChevronLeft size={16} /></button>
+          <button onClick={() => setWeekOffset(o => o + 1)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-500"><ChevronRight size={16} /></button>
+        </div>
+      </div>
+
+      {/* Grille */}
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: '700px' }}>
+          {/* Entête colonnes jours */}
+          <div className="grid border-b border-slate-100" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
+            <div className="py-2" />
+            {weekDates.map((date, i) => {
+              const dateStr = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+              const isToday = dateStr === todayStr;
+              const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
+              return (
+                <div key={i} className={`py-2 text-center border-l border-slate-100 ${isClosed ? 'bg-slate-50' : ''}`}>
+                  <p className={`text-[11px] font-semibold uppercase ${isToday ? 'text-rose-500' : 'text-slate-400'}`}>{WEEK_DAYS_FR[i]}</p>
+                  <p className={`text-base font-black leading-tight ${isToday ? 'text-rose-500' : isClosed ? 'text-slate-300' : 'text-slate-700'}`}>{date.getDate()}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Lignes créneaux */}
+          <div className="max-h-96 overflow-y-auto">
+            {timeSlots.map(slotMin => {
+              const slotLabel = `${fmt(Math.floor(slotMin/60))}:${fmt(slotMin%60)}`;
+              return (
+                <div key={slotMin} className="grid border-b border-slate-50" style={{ gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: '40px' }}>
+                  {/* Heure */}
+                  <div className="flex items-center justify-end pr-3 text-[10px] font-medium text-slate-300 border-r border-slate-100">
+                    {slotLabel}
+                  </div>
+                  {/* Cases jours */}
+                  {weekDates.map((date, i) => {
+                    const dateStr = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+                    const key = `${dateStr} ${slotLabel}`;
+                    const appt = apptIndex[key];
+                    const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
+
+                    // Vérifier si ce jour a un horaire ouvert qui couvre ce créneau
+                    const dayHours = (shopHours || []).find(h => h.day_of_week?.toLowerCase() === WEEK_DAYS_EN[i]);
+                    let inRange = true;
+                    if (dayHours && !dayHours.is_closed) {
+                      const oStr = dayHours.open_time  ? String(dayHours.open_time).substring(0, 5)  : '09:00';
+                      const cStr = dayHours.close_time ? String(dayHours.close_time).substring(0, 5) : '18:00';
+                      const [oh, om] = oStr.split(':').map(Number);
+                      const [ch, cm] = cStr.split(':').map(Number);
+                      const oMin = oh * 60 + om;
+                      const cMin = (oMin === 0 && ch * 60 + cm === 0) ? 1440 : ch * 60 + cm;
+                      inRange = slotMin >= oMin && slotMin < cMin;
+                    }
+
+                    const outOfHours = isClosed || !inRange;
+
+                    return (
+                      <div
+                        key={i}
+                        className={`border-l border-slate-100 px-1 py-0.5 flex items-center ${outOfHours ? 'bg-slate-50' : ''}`}
+                      >
+                        {appt && !outOfHours ? (
+                          <div className={`w-full rounded-md px-1.5 py-1 text-[10px] leading-tight font-semibold truncate
+                            ${appt.status === 'cancelled'
+                              ? 'bg-red-50 text-red-400 line-through'
+                              : appt.status === 'completed'
+                              ? 'bg-slate-100 text-slate-400'
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
+                          >
+                            {appt.client_first_name || appt.client_last_name
+                              ? `${appt.client_first_name || ''} ${appt.client_last_name || ''}`.trim()
+                              : appt.client_email?.split('@')[0] || '—'}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Légende */}
+      <div className="flex items-center gap-4 px-6 py-3 border-t border-slate-100">
+        <span className="text-[10px] text-slate-400 font-medium">Légende :</span>
+        {[
+          { color: 'bg-blue-50 border border-blue-200', label: 'Réservé' },
+          { color: 'bg-slate-50',                       label: 'Fermé / Hors horaires' },
+          { color: 'bg-red-50',                         label: 'Annulé' },
+        ].map(({ color, label }) => (
+          <span key={label} className="flex items-center gap-1.5">
+            <span className={`w-3 h-3 rounded-sm inline-block ${color}`} />
+            <span className="text-[10px] text-slate-400">{label}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Dashboard Pro ─────────────────────────────────────────────────────────────
 
 function ProDashboard({ shopData, onEditShop }) {
   const token = localStorage.getItem('token');
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
+  const [appointments,     setAppointments]     = useState([]);
+  const [weekAppointments, setWeekAppointments] = useState([]);
+  const [loading,          setLoading]          = useState(true);
+  const [showAll,          setShowAll]          = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/user/appointments`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => { setAppointments(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      fetch(`${API_BASE_URL}/user/appointments`,         { headers }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/user/appointments?week=1`,  { headers }).then(r => r.json()),
+    ]).then(([all, week]) => {
+      setAppointments(Array.isArray(all)  ? all  : []);
+      setWeekAppointments(Array.isArray(week) ? week : []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const now = new Date();
-  const upcoming = appointments.filter(a => new Date(a.appointment_date) >= now && a.status !== 'cancelled');
-  const past     = appointments.filter(a => new Date(a.appointment_date) <  now || a.status === 'cancelled');
+  const todayStr = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}`;
+
+  const upcoming  = appointments.filter(a => new Date(a.appointment_date) >= now && a.status !== 'cancelled');
+  const completed = appointments.filter(a => a.status === 'completed');
   const displayed = showAll ? appointments : upcoming.slice(0, 5);
+
+  // ── CA prévisionnel ──────────────────────────────────────────────────────
+  const caTotal = appointments
+    .filter(a => a.status !== 'cancelled')
+    .reduce((sum, a) => sum + Number(a.price || 0), 0);
+
+  const caToday = appointments
+    .filter(a => {
+      if (a.status === 'cancelled') return false;
+      const d = new Date(a.appointment_date);
+      const ds = `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`;
+      return ds === todayStr;
+    })
+    .reduce((sum, a) => sum + Number(a.price || 0), 0);
 
   const shopImage = shopData.image_url
     ? `${API_BASE_URL.replace('/api', '')}${shopData.image_url}`
@@ -171,22 +386,32 @@ function ProDashboard({ shopData, onEditShop }) {
           </div>
         </div>
 
-        {/* Statistiques rapides */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Statistiques + CA */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {[
-            { icon: Calendar,    color: 'text-rose-500',    bg: 'bg-rose-50',    label: 'À venir',  value: upcoming.length },
-            { icon: Users,       color: 'text-violet-500',  bg: 'bg-violet-50',  label: 'Total RDV', value: appointments.length },
-            { icon: TrendingUp,  color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Terminés', value: past.filter(a => a.status === 'completed').length },
-          ].map(({ icon: Icon, color, bg, label, value }) => (
+            { icon: Calendar,   color: 'text-rose-500',    bg: 'bg-rose-50',    label: 'À venir',       value: upcoming.length,   unit: 'RDV' },
+            { icon: Users,      color: 'text-violet-500',  bg: 'bg-violet-50',  label: 'Total RDV',     value: appointments.length, unit: 'RDV' },
+            { icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'CA prévisionnel', value: caTotal.toFixed(2), unit: '€' },
+            { icon: Euro,       color: 'text-amber-500',   bg: 'bg-amber-50',   label: "CA du jour",    value: caToday.toFixed(2), unit: '€' },
+          ].map(({ icon: Icon, color, bg, label, value, unit }) => (
             <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
               <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mx-auto mb-2`}>
                 <Icon size={18} className={color} />
               </div>
-              <p className="text-2xl font-black text-slate-900">{value}</p>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">{label}</p>
+              <p className="text-2xl font-black text-slate-900 leading-tight">{value}</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{unit}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{label}</p>
             </div>
           ))}
         </div>
+
+        {/* Planning hebdomadaire */}
+        {!loading && (
+          <WeeklyPlanning
+            weekAppointments={weekAppointments}
+            shopHours={shopData.hours || []}
+          />
+        )}
 
         {/* Liste des rendez-vous */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -224,9 +449,9 @@ function ProDashboard({ shopData, onEditShop }) {
             ) : (
               <div className="space-y-3">
                 {displayed.map(appt => {
-                  const date     = new Date(appt.appointment_date);
-                  const isPast   = date < now;
-                  const st       = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
+                  const date  = new Date(appt.appointment_date);
+                  const isPast = date < now;
+                  const st    = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
                   return (
                     <div
                       key={appt.id}
@@ -236,17 +461,12 @@ function ProDashboard({ shopData, onEditShop }) {
                           : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'
                       }`}
                     >
-                      {/* Date bloc */}
                       <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
                         <span className="text-[10px] font-bold text-rose-400 uppercase">
                           {date.toLocaleDateString('fr-FR', { month: 'short' })}
                         </span>
-                        <span className="text-2xl font-black text-rose-500 leading-none">
-                          {date.getDate()}
-                        </span>
+                        <span className="text-2xl font-black text-rose-500 leading-none">{date.getDate()}</span>
                       </div>
-
-                      {/* Infos */}
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-slate-800 truncate">{appt.service_label}</p>
                         <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
@@ -259,16 +479,12 @@ function ProDashboard({ shopData, onEditShop }) {
                           {appt.client_first_name || ''} {appt.client_last_name || appt.client_email || '—'}
                         </p>
                       </div>
-
-                      {/* Statut + prix */}
                       <div className="flex flex-col items-end gap-1.5">
                         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
                           {st.label}
                         </span>
                         {appt.price && (
-                          <span className="text-xs font-bold text-slate-600">
-                            {Number(appt.price).toFixed(2)} €
-                          </span>
+                          <span className="text-xs font-bold text-slate-600">{Number(appt.price).toFixed(2)} €</span>
                         )}
                       </div>
                     </div>
