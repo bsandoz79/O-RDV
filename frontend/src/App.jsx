@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { AlertTriangle, X } from "lucide-react";
 import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -9,26 +10,42 @@ import BookingPage from "./components/BookingPage";
 import ShopSettings from "./pages/pro/ShopSettings";
 import ProviderProfile from "./pages/ProviderProfile";
 
-// --- COMPOSANT DE SÉCURITÉ (PROTECTED ROUTE) ---
-// Ce composant bloque l'accès aux pages si l'utilisateur n'a pas le bon rôle
+// Affiche un message quand l'utilisateur est redirigé depuis une route protégée
+function RedirectBanner() {
+  const [msg, setMsg] = useState(() => {
+    const m = sessionStorage.getItem('redirectMsg');
+    if (m) sessionStorage.removeItem('redirectMsg');
+    return m || '';
+  });
+  if (!msg) return null;
+  return (
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2 max-w-sm text-center">
+      <AlertTriangle size={16} className="flex-shrink-0" />
+      <span>{msg}</span>
+      <button onClick={() => setMsg('')} className="ml-2 text-amber-500 hover:text-amber-700" aria-label="Fermer">
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
   if (!token || !user) {
-    // Non connecté -> Direction Login
+    sessionStorage.setItem('redirectMsg', 'Veuillez vous connecter pour accéder à cette page.');
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Connecté mais pas le bon rôle -> Direction Accueil
+    sessionStorage.setItem('redirectMsg', "Vous n'avez pas accès à cette page.");
     return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-// Petits composants temporaires pour les routes non encore créées
 const DashboardPro = () => <div className="p-10"><h1>🏢 Interface Prestataire</h1></div>;
 const AdminPanel = () => <div className="p-10"><h1>🛡️ Administration</h1></div>;
 
@@ -37,6 +54,7 @@ function App() {
     <Router>
       <Navbar />
       <ScrollToTop />
+      <RedirectBanner />
       <Routes>
         {/* --- ROUTES PUBLIQUES --- */}
         <Route path="/" element={<Home />} />
@@ -46,44 +64,43 @@ function App() {
         <Route path="/booking/:providerId" element={<BookingPage />} />
 
         {/* --- ROUTES UTILISATEUR (Client) --- */}
-        <Route 
-          path="/account" 
+        <Route
+          path="/account"
           element={
             <ProtectedRoute allowedRoles={["user", "pro", "admin"]}>
               <UserDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* --- ROUTES PRESTATAIRE (Pro) --- */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute allowedRoles={["pro", "admin"]}>
               <DashboardPro />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/pro/settings" 
+        <Route
+          path="/pro/settings"
           element={
             <ProtectedRoute allowedRoles={["pro", "admin"]}>
               <ShopSettings />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* --- ROUTE ADMIN --- */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminPanel />
             </ProtectedRoute>
-          } 
+          }
         />
 
-        {/* Redirection automatique si la page n'existe pas */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   User, Mail, Lock, Save, KeyRound, Calendar, Clock,
   MapPin, ChevronDown, ChevronUp, CheckCircle2, AlertCircle,
-  Loader2, Pencil, X, Store, Scissors, Ban, Phone,
+  Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 
@@ -416,7 +417,21 @@ export default function UserDashboard() {
           {loadingAppts ? (
             <div className="flex justify-center py-8"><Loader2 size={28} className="animate-spin text-rose-400" /></div>
           ) : appointments.length === 0 ? (
-            <p className="text-center text-slate-400 text-sm py-6">Aucun rendez-vous pour le moment.</p>
+            <div className="text-center py-8">
+              <Search size={32} className="mx-auto mb-3 text-slate-300" />
+              <p className="text-slate-500 font-semibold text-sm mb-1">Aucun rendez-vous pour le moment.</p>
+              {role !== 'pro' && (
+                <>
+                  <p className="text-slate-400 text-xs mb-4">Trouvez un prestataire et réservez en quelques clics.</p>
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+                  >
+                    <Search size={14} /> Trouver un prestataire
+                  </Link>
+                </>
+              )}
+            </div>
           ) : (
             <>
               <div className="space-y-3">

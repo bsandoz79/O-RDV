@@ -574,13 +574,10 @@ export default function ShopSettings() {
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `Erreur serveur (${res.status}).`); }
 
       setSuccess(true);
-      // Après sauvegarde → basculer vers le dashboard
-      setTimeout(() => {
-        setShopData({ ...shopData, ...profile, name: profile.name });
-        setHasShop(true);
-        setView('dashboard');
-        setSuccess(false);
-      }, 1200);
+      setShopData({ ...shopData, ...profile, name: profile.name });
+      setHasShop(true);
+      setView('dashboard');
+      setTimeout(() => setSuccess(false), 100);
     } catch (err) {
       setError(err.message);
     } finally {

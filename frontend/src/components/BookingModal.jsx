@@ -347,14 +347,14 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
               ) : slots.length === 0 ? (
                 <p className="text-center text-slate-400 text-sm py-8">Aucun créneau disponible.</p>
               ) : (
-                <div className="grid grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
                   {slots.map(({ time, available }) => (
                     <button
                       key={time}
                       disabled={!available}
                       onClick={() => available && handleTimeClick(time)}
                       className={`
-                        flex items-center justify-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition
+                        flex items-center justify-center gap-1 min-h-[44px] rounded-xl text-xs font-semibold transition
                         ${available
                           ? 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-rose-400 hover:bg-rose-50 hover:text-rose-600'
                           : 'bg-slate-100 text-slate-300 cursor-not-allowed line-through'}
@@ -452,9 +452,11 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
                 )}
               </div>
 
-              {error && (
-                <p className="text-xs text-red-500 mb-3 text-center">{error}</p>
-              )}
+              <div aria-live="polite" aria-atomic="true">
+                {error && (
+                  <p className="text-xs text-red-500 mb-3 text-center">{error}</p>
+                )}
+              </div>
 
               <button
                 onClick={handleConfirm}

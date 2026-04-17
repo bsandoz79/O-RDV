@@ -15,6 +15,7 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   // ─── Charger les catégories ────────────────────────────────────
   useEffect(() => {
@@ -32,15 +33,16 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  useEffect(() => {
+  const fetchProviders = () => {
     setLoading(true);
+    setFetchError(false);
     const params = new URLSearchParams();
     if (activeCategory) params.set('category_id', activeCategory);
     if (cityFilter)     params.set('city', cityFilter);
     const url = `${API_BASE_URL}/shop/all${params.toString() ? '?' + params : ''}`;
 
     fetch(url)
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error('Erreur serveur'); return res.json(); })
       .then((data) => {
         setProviders(data.map((pro) => ({
           id: pro.id,
@@ -59,8 +61,10 @@ export default function Home() {
         })));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [activeCategory, cityFilter]);
+      .catch(() => { setFetchError(true); setLoading(false); });
+  };
+
+  useEffect(fetchProviders, [activeCategory, cityFilter]);
 
   // Filtrage nom local (ville déjà filtrée côté backend)
   const filteredProviders = providers.filter((p) =>
@@ -172,6 +176,18 @@ export default function Home() {
               <Loader2 size={40} className="animate-spin mb-4 text-rose-500" />
               <p className="font-medium">Récupération des données...</p>
             </div>
+          ) : fetchError ? (
+            <div className="text-center py-20 text-slate-400 bg-white rounded-[2rem] border border-dashed border-slate-200">
+              <Search size={40} className="mx-auto mb-3 opacity-30" />
+              <p className="font-bold text-slate-600">Impossible de charger les prestataires</p>
+              <p className="text-sm mt-1 mb-4">Vérifiez que votre serveur backend est lancé.</p>
+              <button
+                onClick={fetchProviders}
+                className="px-5 py-2.5 bg-rose-500 text-white text-sm font-semibold rounded-xl hover:bg-rose-600 transition"
+              >
+                Réessayer
+              </button>
+            </div>
           ) : filteredProviders.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredProviders.map((provider) => (
@@ -186,7 +202,13 @@ export default function Home() {
             <div className="text-center py-20 text-slate-400 bg-white rounded-[2rem] border border-dashed border-slate-200">
               <Search size={40} className="mx-auto mb-3 opacity-30" />
               <p className="font-bold text-slate-600">Aucun prestataire trouvé</p>
-              <p className="text-sm mt-1">Vérifiez que votre serveur Backend est lancé et que la BD contient des données.</p>
+              <p className="text-sm mt-1 mb-4">Essayez de modifier votre recherche ou de changer de catégorie.</p>
+              <button
+                onClick={() => { setActiveCategory(null); navigate('/'); }}
+                className="px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-rose-300 hover:text-rose-500 transition"
+              >
+                Voir tous les prestataires
+              </button>
             </div>
           )}
         </section>
