@@ -324,136 +324,163 @@ function ProDashboard({ shopData, onEditShop }) {
   const shopImage = shopData.image_url ? `${API_BASE_URL.replace('/api','')}${shopData.image_url}` : null;
 
   const kpis = [
-    { icon: Calendar,   label: 'RDV à venir',       value: upcoming.length,        unit: 'RDV', accent: 'border-blue-400',    iconBg: 'bg-blue-50',    iconColor: 'text-blue-500'    },
-    { icon: Users,      label: 'Total réservations', value: appointments.length,    unit: 'RDV', accent: 'border-violet-400',  iconBg: 'bg-violet-50',  iconColor: 'text-violet-500'  },
-    { icon: TrendingUp, label: 'CA prévisionnel',    value: caTotal.toFixed(2),     unit: '€',   accent: 'border-emerald-400', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
-    { icon: Euro,       label: "CA aujourd'hui",     value: caToday.toFixed(2),     unit: '€',   accent: 'border-amber-400',   iconBg: 'bg-amber-50',   iconColor: 'text-amber-500'   },
+    { icon: Calendar,   label: 'RDV à venir',       value: upcoming.length,     unit: 'RDV', color: '#f43f5e' },
+    { icon: Users,      label: 'Total réservations', value: appointments.length, unit: 'RDV', color: '#8b5cf6' },
+    { icon: TrendingUp, label: 'CA prévisionnel',    value: caTotal.toFixed(2),  unit: '€',   color: '#10b981' },
+    { icon: Euro,       label: "CA aujourd'hui",     value: caToday.toFixed(2),  unit: '€',   color: '#f59e0b' },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-12" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <div className="max-w-6xl mx-auto px-4 space-y-6">
+  const glassCard = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.09)',
+    borderRadius: '1.5rem',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+  };
 
-        {/* ── Topbar boutique ─────────────────────────────────────────── */}
-        <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-lg">
-          <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6,#3b82f6)' }} />
+  return (
+    <div className="min-h-screen pt-20 pb-12 relative overflow-x-hidden" style={{
+      background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 40%, #1a0a2e 100%)',
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+    }}>
+      {/* Orbes décoratifs */}
+      <div className="fixed top-10 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.1) 0%, transparent 70%)', zIndex: 0 }} />
+      <div className="fixed bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%)', zIndex: 0 }} />
+
+      <div className="max-w-6xl mx-auto px-4 space-y-5 relative z-10">
+
+        {/* ── Topbar boutique ────────────────────────────────────────── */}
+        <div style={{ ...glassCard, borderRadius: '1.25rem', padding: '0' }} className="overflow-hidden">
+          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6,#3b82f6)' }} />
           <div className="flex items-center gap-4 px-6 py-4">
             {shopImage ? (
-              <img src={shopImage} alt={shopData.name} className="w-12 h-12 rounded-xl object-cover border-2 border-white/10 flex-shrink-0" />
+              <img src={shopImage} alt={shopData.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.12)' }} />
             ) : (
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center flex-shrink-0">
-                <Store size={22} color="white" />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#f43f5e,#8b5cf6)' }}>
+                <Store size={20} color="white" />
               </div>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white truncate">{shopData.name}</h1>
-                <span className="flex-shrink-0 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">En ligne</span>
+                <h1 className="text-base font-bold text-white truncate">{shopData.name}</h1>
+                <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>En ligne</span>
               </div>
-              <p className="text-xs text-slate-400 truncate">{shopData.city || ''} · Dashboard Pro</p>
+              <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{shopData.city || ''} · Dashboard Pro</p>
             </div>
             <button
               onClick={onEditShop}
-              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition"
+              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold transition"
+              style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', padding: '7px 14px', borderRadius: '10px' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
             >
               <Pencil size={13} /> Modifier la boutique
             </button>
           </div>
         </div>
 
-        {/* ── KPIs ────────────────────────────────────────────────────── */}
+        {/* ── KPIs ───────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {kpis.map(({ icon: Icon, label, value, unit, accent, iconBg, iconColor }) => (
-            <div key={label} className={`bg-white rounded-2xl shadow-sm border-l-4 ${accent} p-5 flex items-center gap-4`}>
-              <div className={`w-11 h-11 ${iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                <Icon size={20} className={iconColor} />
+          {kpis.map(({ icon: Icon, label, value, unit, color }) => (
+            <div key={label} style={glassCard} className="p-5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}20` }}>
+                <Icon size={18} style={{ color }} />
               </div>
               <div className="min-w-0">
-                <p className="text-2xl font-black text-gray-900 leading-none">{value} <span className="text-sm font-semibold text-gray-400">{unit}</span></p>
-                <p className="text-xs text-gray-500 font-medium mt-1 truncate">{label}</p>
+                <p className="text-xl font-black text-white leading-none">{value} <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>{unit}</span></p>
+                <p className="text-xs font-medium mt-1 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── Planning hebdomadaire ───────────────────────────────────── */}
+        {/* ── Planning hebdomadaire ──────────────────────────────────── */}
         {!loading && (
           <WeeklyPlanning weekAppointments={weekAppointments} shopHours={shopData.hours || []} />
         )}
 
-        {/* ── Liste des rendez-vous ───────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Header section */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        {/* ── Liste des rendez-vous ──────────────────────────────────── */}
+        <div style={glassCard} className="overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
-                <Calendar size={15} className="text-rose-500" />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(244,63,94,0.15)' }}>
+                <Calendar size={14} style={{ color: '#f43f5e' }} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800 text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
-                <p className="text-xs text-gray-400">{upcoming.length} à venir · {appointments.length} au total</p>
+                <h3 className="font-semibold text-white text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{upcoming.length} à venir · {appointments.length} au total</p>
               </div>
             </div>
             {appointments.length > 0 && (
-              <button onClick={() => setShowAll(v=>!v)} className="text-xs font-semibold text-rose-500 hover:text-rose-700 flex items-center gap-1 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition">
+              <button
+                onClick={() => setShowAll(v=>!v)}
+                className="flex items-center gap-1 text-xs font-semibold transition"
+                style={{ color: '#f43f5e', background: 'rgba(244,63,94,0.1)', padding: '5px 11px', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.2)' }}
+              >
                 {showAll ? 'Voir à venir' : `Tout voir (${appointments.length})`}
-                <ChevronRight size={12} />
+                <ChevronRight size={11} />
               </button>
             )}
           </div>
 
-          <div className="divide-y divide-gray-50">
+          <div>
             {loading ? (
-              <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-rose-400" /></div>
+              <div className="flex justify-center py-12"><Loader2 size={26} className="animate-spin" style={{ color: '#f43f5e' }} /></div>
             ) : displayed.length === 0 ? (
-              <div className="text-center py-14 text-gray-400">
-                <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <Calendar size={24} className="opacity-40" />
+              <div className="text-center py-14">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <Calendar size={22} style={{ color: 'rgba(255,255,255,0.2)' }} />
                 </div>
-                <p className="font-semibold text-gray-500 text-sm">Aucun rendez-vous à venir</p>
-                <p className="text-xs mt-1 text-gray-400">Les nouvelles réservations apparaîtront ici.</p>
+                <p className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Aucun rendez-vous à venir</p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>Les nouvelles réservations apparaîtront ici.</p>
               </div>
             ) : (
-              <>
-                {displayed.map(appt => {
-                  const date   = new Date(appt.appointment_date);
-                  const isPast = date < now;
-                  const st     = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
-                  return (
-                    <div key={appt.id} className={`flex items-center gap-4 px-6 py-4 transition-all ${isPast || appt.status==='cancelled' ? 'opacity-50' : 'hover:bg-gray-50/60'}`}>
-                      {/* Bloc date */}
-                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
-                        <span className="text-[9px] font-bold text-rose-400 uppercase leading-none">
-                          {date.toLocaleDateString('fr-FR',{month:'short'})}
-                        </span>
-                        <span className="text-xl font-black text-rose-500 leading-tight">{date.getDate()}</span>
-                      </div>
-                      {/* Infos principales */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-800 text-sm truncate">{appt.service_label}</p>
-                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                          <Clock size={10} className="text-gray-400" />
-                          {date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-                          {appt.duration ? ` · ${appt.duration} min` : ''}
-                        </p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                          <User size={10} />
-                          {appt.client_first_name||''} {appt.client_last_name||appt.client_email||'—'}
-                        </p>
-                      </div>
-                      {/* Statut + prix */}
-                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                        <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
-                          {st.label}
-                        </span>
-                        {appt.price && (
-                          <span className="text-xs font-bold text-gray-600">{Number(appt.price).toFixed(2)} €</span>
-                        )}
-                      </div>
+              displayed.map((appt, idx) => {
+                const date   = new Date(appt.appointment_date);
+                const isPast = date < now;
+                const st     = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
+                return (
+                  <div
+                    key={appt.id}
+                    className="flex items-center gap-4 px-6 py-4 transition-all"
+                    style={{
+                      opacity: isPast || appt.status === 'cancelled' ? 0.4 : 1,
+                      borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    }}
+                  >
+                    {/* Bloc date */}
+                    <div className="flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center" style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.2)' }}>
+                      <span className="text-[8px] font-bold uppercase leading-none" style={{ color: 'rgba(244,63,94,0.8)' }}>
+                        {date.toLocaleDateString('fr-FR', { month: 'short' })}
+                      </span>
+                      <span className="text-lg font-black leading-tight" style={{ color: '#f43f5e' }}>{date.getDate()}</span>
                     </div>
-                  );
-                })}
-              </>
+                    {/* Infos */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm truncate">{appt.service_label}</p>
+                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        <Clock size={10} />
+                        {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        {appt.duration ? ` · ${appt.duration} min` : ''}
+                      </p>
+                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                        <User size={10} />
+                        {appt.client_first_name || ''} {appt.client_last_name || appt.client_email || '—'}
+                      </p>
+                    </div>
+                    {/* Statut + prix */}
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
+                        {st.label}
+                      </span>
+                      {appt.price && (
+                        <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>{Number(appt.price).toFixed(2)} €</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
