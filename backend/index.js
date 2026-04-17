@@ -6,7 +6,8 @@ require('dotenv').config();
 // --- IMPORT DES ROUTES EXTERNES ---
 const authRoutes = require('./routes/auth');        // Logique Login/Register
 const shopRoutes = require('./routes/shop');        // Configuration Boutique (Profil, Services, Horaires, Image)
-const appointmentRoutes = require('./routes/appointments'); 
+const appointmentRoutes = require('./routes/appointments');
+const userRoutes = require('./routes/user');        // Profil utilisateur & rendez-vous
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/user', userRoutes);
 
 // --- ROUTES PRINCIPALES ---
 

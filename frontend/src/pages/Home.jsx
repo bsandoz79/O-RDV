@@ -44,8 +44,10 @@ export default function Home() {
           image: pro.image_url
             ? `${API_BASE_URL.replace('/api', '')}${pro.image_url}`
             : "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=280&fit=crop",
-          badge: "Nouveau",
-          disponible: true,
+          createdAt:      pro.created_at,
+          todayOpen:      pro.today_open,
+          todayClose:     pro.today_close,
+          todayIsClosed:  pro.today_is_closed,
         })));
         setLoading(false);
       })

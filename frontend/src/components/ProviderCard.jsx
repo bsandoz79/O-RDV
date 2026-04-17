@@ -1,11 +1,56 @@
 import React from 'react';
 import { Star, ChevronRight, Navigation } from "lucide-react";
 
-// Sous-composant pour les étoiles (interne à ce fichier)
+// ─── Utilitaires ────────────────────────────────────────────────────────────
+
+// Convertit "HH:MM" en minutes depuis minuit
+function toMinutes(str) {
+  if (!str) return null;
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// Badge statut ouverture : { label, style }
+function getOpenBadge(todayOpen, todayClose, todayIsClosed) {
+  if (todayIsClosed || (!todayOpen && !todayClose)) {
+    return { label: 'Fermé', style: 'bg-red-500/90 text-white' };
+  }
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  const openMin  = toMinutes(todayOpen);
+  const closeMin = (todayOpen === '00:00' && todayClose === '00:00')
+    ? 1440  // ouvert 24h
+    : toMinutes(todayClose);
+
+  if (openMin === null || closeMin === null) {
+    return { label: 'Fermé', style: 'bg-red-500/90 text-white' };
+  }
+
+  if (nowMin >= openMin && nowMin < closeMin) {
+    return { label: 'Ouvert', style: 'bg-emerald-500/90 text-white' };
+  }
+
+  if (nowMin < openMin && openMin - nowMin <= 30) {
+    return { label: 'Ouvre bientôt', style: 'bg-orange-400/90 text-white' };
+  }
+
+  return { label: 'Fermé', style: 'bg-red-500/90 text-white' };
+}
+
+// Badge "Nouveau" si créé il y a moins de 30 jours
+function isNew(createdAt) {
+  if (!createdAt) return false;
+  const diff = Date.now() - new Date(createdAt).getTime();
+  return diff < 30 * 24 * 60 * 60 * 1000;
+}
+
+// ─── Étoiles ────────────────────────────────────────────────────────────────
+
 function StarRating({ note }) {
   const full = Math.floor(note);
   const hasHalf = note % 1 >= 0.5;
-  
   return (
     <span className="flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
@@ -25,8 +70,16 @@ function StarRating({ note }) {
   );
 }
 
-// Composant principal exporté
+// ─── Composant principal ─────────────────────────────────────────────────────
+
 export default function ProviderCard({ provider, onClick }) {
+  const openBadge = getOpenBadge(
+    provider.todayOpen,
+    provider.todayClose,
+    provider.todayIsClosed
+  );
+  const nouveau = isNew(provider.createdAt);
+
   return (
     <article
       onClick={onClick}
@@ -42,29 +95,21 @@ export default function ProviderCard({ provider, onClick }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
 
-        {provider.badge && (
-          <span className="absolute top-3 left-3 text-xs font-semibold bg-white/90 backdrop-blur-sm text-slate-800 px-2.5 py-1 rounded-full shadow-sm">
-            {provider.badge}
+        {/* Badge "Nouveau" — coin supérieur gauche */}
+        {nouveau && (
+          <span className="absolute top-3 left-3 text-xs font-semibold bg-blue-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full shadow-sm">
+            Nouveau
           </span>
         )}
 
-        <span
-          className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm ${
-            provider.disponible
-              ? "bg-emerald-500/90 text-white"
-              : "bg-slate-600/80 text-white"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              provider.disponible ? "bg-white animate-pulse" : "bg-slate-400"
-            }`}
-          />
-          {provider.disponible ? "Disponible" : "Complet"}
+        {/* Badge statut ouverture — coin supérieur droit */}
+        <span className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${openBadge.style}`}>
+          <span className={`w-1.5 h-1.5 rounded-full bg-white ${openBadge.label === 'Ouvert' ? 'animate-pulse' : 'opacity-60'}`} />
+          {openBadge.label}
         </span>
       </div>
 
-      {/* Détails du prestataire */}
+      {/* Détails */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <h3 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-rose-500 transition-colors">

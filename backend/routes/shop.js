@@ -31,12 +31,25 @@ router.get('/categories', async (req, res) => {
 router.get('/all', async (req, res) => {
     try {
         const { category_id } = req.query;
+
+        // Nom du jour courant en anglais minuscule (correspond aux valeurs en DB)
+        const todayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
+            .format(new Date()).toLowerCase();
+
         let sql = `
-            SELECT p.*, c.name AS category_name, c.icon AS category_icon
+            SELECT
+                p.*,
+                c.name AS category_name,
+                c.icon AS category_icon,
+                bh.is_closed      AS today_is_closed,
+                TIME_FORMAT(bh.open_time,  '%H:%i') AS today_open,
+                TIME_FORMAT(bh.close_time, '%H:%i') AS today_close
             FROM providers p
             LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN business_hours bh
+                ON bh.provider_id = p.id AND LOWER(bh.day_of_week) = ?
         `;
-        const params = [];
+        const params = [todayName];
         if (category_id) {
             sql += ' WHERE p.category_id = ?';
             params.push(category_id);

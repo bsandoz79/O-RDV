@@ -30,12 +30,18 @@ router.post('/', auth, checkRole(['user', 'admin']), async (req, res) => {
             [provider_id, dayName]
         );
 
-        if (hoursRows.length === 0 || hoursRows[0].is_closed) {
+        const postRow   = hoursRows[0];
+        const postOpen  = postRow?.open_str  || '00:00';
+        const postClose = postRow?.close_str || '00:00';
+
+        if (hoursRows.length === 0 || postRow.is_closed) {
             return res.status(400).json({ error: "Le prestataire est fermé ce jour-là." });
         }
 
-        const openMin  = (() => { const [h,m] = (hoursRows[0].open_str  || '09:00').split(':').map(Number); return h*60+m; })();
-        const closeMin = (() => { const [h,m] = (hoursRows[0].close_str || '18:00').split(':').map(Number); return h*60+m; })();
+        const openMin  = (() => { const [h,m] = postOpen.split(':').map(Number); return h*60+m; })();
+        // 00:00–00:00 = ouvert 24h
+        const closeMin = (postOpen === '00:00' && postClose === '00:00') ? 1440
+            : (() => { const [h,m] = postClose.split(':').map(Number); return h*60+m; })();
 
         const [serviceRows] = await db.execute('SELECT duration FROM services WHERE id = ?', [service_id]);
         const duration = serviceRows[0]?.duration ?? 30;
@@ -81,17 +87,21 @@ router.get('/availability/:providerId/:date', async (req, res) => {
             [providerId, dayName]
         );
 
-        if (hoursRows.length === 0 || hoursRows[0].is_closed) {
+        const row = hoursRows[0];
+
+        // Fermé uniquement si is_closed=true ou pas d'entrée en DB
+        if (hoursRows.length === 0 || row.is_closed) {
             return res.json({ closed: true, slots: [] });
         }
 
-        const openStr  = hoursRows[0].open_str  || '09:00';
-        const closeStr = hoursRows[0].close_str || '18:00';
+        const openStr  = row.open_str  || '00:00';
+        const closeStr = row.close_str || '00:00';
 
         const [oH, oM] = openStr.split(':').map(Number);
-        const [cH, cM] = closeStr.split(':').map(Number);
-        const openMinutes  = oH * 60 + oM;
-        const closeMinutes = cH * 60 + cM;
+        const openMinutes = oH * 60 + oM;
+        // 00:00–00:00 = ouvert 24h (1440 min)
+        const closeMinutes = (openStr === '00:00' && closeStr === '00:00') ? 1440
+            : (() => { const [cH, cM] = closeStr.split(':').map(Number); return cH * 60 + cM; })();
 
 
         // 2. Récupérer les RDV déjà pris ce jour
