@@ -152,138 +152,114 @@ const WEEK_DAYS_FR = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 // ─── Composant Planning Hebdomadaire ──────────────────────────────────────────
 
 function WeeklyPlanning({ weekAppointments, shopHours }) {
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine courante
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const monday = addDays(getMondayOf(new Date()), weekOffset * 7);
+  const monday    = addDays(getMondayOf(new Date()), weekOffset * 7);
   const weekDates = WEEK_DAYS_EN.map((_, i) => addDays(monday, i));
 
-  // Calculer la plage horaire globale à partir des business_hours
+  // Plage horaire globale depuis business_hours
   let globalOpenMin = 9 * 60, globalCloseMin = 19 * 60;
   if (shopHours?.length) {
-    const opens  = shopHours.filter(h => !h.is_closed).map(h => {
-      const s = h.open_time ? String(h.open_time).substring(0, 5) : '09:00';
-      const [hh, mm] = s.split(':').map(Number); return hh * 60 + mm;
-    });
-    const closes = shopHours.filter(h => !h.is_closed).map(h => {
-      const s = h.close_time ? String(h.close_time).substring(0, 5) : '18:00';
-      const [hh, mm] = s.split(':').map(Number); return hh * 60 + mm;
-    });
+    const opens  = shopHours.filter(h => !h.is_closed).map(h => { const [hh,mm] = (String(h.open_time||'').substring(0,5)||'09:00').split(':').map(Number); return hh*60+mm; });
+    const closes = shopHours.filter(h => !h.is_closed).map(h => { const [hh,mm] = (String(h.close_time||'').substring(0,5)||'18:00').split(':').map(Number); return hh*60+mm; });
     if (opens.length)  globalOpenMin  = Math.min(...opens);
-    if (closes.length) globalCloseMin = Math.max(...closes);
-    // 00:00–00:00 = 24h
-    if (globalCloseMin === 0) globalCloseMin = 24 * 60;
+    if (closes.length) globalCloseMin = Math.max(...closes) || 24*60;
   }
-
   const timeSlots = buildSlots(globalOpenMin, globalCloseMin);
 
-  // Index RDV par "YYYY-MM-DD HH:MM"
+  // Index RDV
   const apptIndex = {};
   weekAppointments.forEach(a => {
     const d = new Date(a.appointment_date);
-    const key = `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())} ${fmt(d.getHours())}:${fmt(d.getMinutes())}`;
-    apptIndex[key] = a;
+    apptIndex[`${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())} ${fmt(d.getHours())}:${fmt(d.getMinutes())}`] = a;
   });
 
-  // Vérifier si un jour est fermé
-  const closedDays = new Set(
-    (shopHours || []).filter(h => h.is_closed).map(h => h.day_of_week?.toLowerCase())
-  );
-
-  const todayStr = `${new Date().getFullYear()}-${fmt(new Date().getMonth()+1)}-${fmt(new Date().getDate())}`;
-
-  const weekLabel = `${monday.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${addDays(monday,6).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  const closedDays = new Set((shopHours||[]).filter(h=>h.is_closed).map(h=>h.day_of_week?.toLowerCase()));
+  const todayStr   = `${new Date().getFullYear()}-${fmt(new Date().getMonth()+1)}-${fmt(new Date().getDate())}`;
+  const weekLabel  = `${monday.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${addDays(monday,6).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}`;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 py-4 bg-slate-900">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
-            <Calendar size={16} color="white" />
+          <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+            <Calendar size={15} className="text-violet-300" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-800">Planning de la semaine</h3>
+            <h3 className="font-semibold text-white text-sm">Planning de la semaine</h3>
             <p className="text-xs text-slate-400">{weekLabel}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-rose-500 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 hover:border-rose-300 transition">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-violet-300 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
             Aujourd'hui
           </button>
-          <button onClick={() => setWeekOffset(o => o - 1)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-500"><ChevronLeft size={16} /></button>
-          <button onClick={() => setWeekOffset(o => o + 1)} className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-500"><ChevronRight size={16} /></button>
+          <button onClick={() => setWeekOffset(o=>o-1)} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition text-slate-300"><ChevronLeft size={15}/></button>
+          <button onClick={() => setWeekOffset(o=>o+1)} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition text-slate-300"><ChevronRight size={15}/></button>
         </div>
       </div>
 
       {/* Grille */}
       <div className="overflow-x-auto">
-        <div style={{ minWidth: '700px' }}>
-          {/* Entête colonnes jours */}
-          <div className="grid border-b border-slate-100" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
-            <div className="py-2" />
+        <div style={{ minWidth: '680px' }}>
+
+          {/* En-têtes jours */}
+          <div className="grid bg-gray-50 border-b border-gray-100" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
+            <div className="py-3 border-r border-gray-100" />
             {weekDates.map((date, i) => {
-              const dateStr = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
-              const isToday = dateStr === todayStr;
+              const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+              const isToday  = ds === todayStr;
               const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
               return (
-                <div key={i} className={`py-2 text-center border-l border-slate-100 ${isClosed ? 'bg-slate-50' : ''}`}>
-                  <p className={`text-[11px] font-semibold uppercase ${isToday ? 'text-rose-500' : 'text-slate-400'}`}>{WEEK_DAYS_FR[i]}</p>
-                  <p className={`text-base font-black leading-tight ${isToday ? 'text-rose-500' : isClosed ? 'text-slate-300' : 'text-slate-700'}`}>{date.getDate()}</p>
+                <div key={i} className={`py-3 text-center border-l border-gray-100 ${isClosed ? 'opacity-40' : ''}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? 'text-violet-600' : 'text-gray-400'}`}>{WEEK_DAYS_FR[i]}</p>
+                  <div className={`w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-bold ${isToday ? 'bg-violet-600 text-white shadow-md shadow-violet-200' : 'text-gray-600'}`}>
+                    {date.getDate()}
+                  </div>
                 </div>
               );
             })}
           </div>
 
           {/* Lignes créneaux */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[380px] overflow-y-auto">
             {timeSlots.map(slotMin => {
               const slotLabel = `${fmt(Math.floor(slotMin/60))}:${fmt(slotMin%60)}`;
+              const isHour    = slotMin % 60 === 0;
               return (
-                <div key={slotMin} className="grid border-b border-slate-50" style={{ gridTemplateColumns: '56px repeat(7, 1fr)', minHeight: '40px' }}>
-                  {/* Heure */}
-                  <div className="flex items-center justify-end pr-3 text-[10px] font-medium text-slate-300 border-r border-slate-100">
-                    {slotLabel}
+                <div key={slotMin} className={`grid ${isHour ? 'border-t border-gray-100' : ''}`} style={{ gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: '36px' }}>
+                  {/* Label heure */}
+                  <div className={`flex items-center justify-end pr-3 border-r border-gray-100 ${isHour ? 'text-gray-400 text-[11px] font-medium' : 'text-gray-200 text-[10px]'}`}>
+                    {isHour ? slotLabel : ''}
                   </div>
-                  {/* Cases jours */}
+                  {/* Cases */}
                   {weekDates.map((date, i) => {
-                    const dateStr = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
-                    const key = `${dateStr} ${slotLabel}`;
-                    const appt = apptIndex[key];
+                    const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+                    const appt     = apptIndex[`${ds} ${slotLabel}`];
                     const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
-
-                    // Vérifier si ce jour a un horaire ouvert qui couvre ce créneau
-                    const dayHours = (shopHours || []).find(h => h.day_of_week?.toLowerCase() === WEEK_DAYS_EN[i]);
-                    let inRange = true;
-                    if (dayHours && !dayHours.is_closed) {
-                      const oStr = dayHours.open_time  ? String(dayHours.open_time).substring(0, 5)  : '09:00';
-                      const cStr = dayHours.close_time ? String(dayHours.close_time).substring(0, 5) : '18:00';
-                      const [oh, om] = oStr.split(':').map(Number);
-                      const [ch, cm] = cStr.split(':').map(Number);
-                      const oMin = oh * 60 + om;
-                      const cMin = (oMin === 0 && ch * 60 + cm === 0) ? 1440 : ch * 60 + cm;
+                    const dayH     = (shopHours||[]).find(h=>h.day_of_week?.toLowerCase()===WEEK_DAYS_EN[i]);
+                    let inRange    = true;
+                    if (dayH && !dayH.is_closed) {
+                      const [oh,om] = (String(dayH.open_time||'').substring(0,5)||'09:00').split(':').map(Number);
+                      const [ch,cm] = (String(dayH.close_time||'').substring(0,5)||'18:00').split(':').map(Number);
+                      const oMin = oh*60+om, cMin = (oMin===0 && ch*60+cm===0) ? 1440 : ch*60+cm;
                       inRange = slotMin >= oMin && slotMin < cMin;
                     }
-
-                    const outOfHours = isClosed || !inRange;
-
+                    const out = isClosed || !inRange;
                     return (
-                      <div
-                        key={i}
-                        className={`border-l border-slate-100 px-1 py-0.5 flex items-center ${outOfHours ? 'bg-slate-50' : ''}`}
-                      >
-                        {appt && !outOfHours ? (
-                          <div className={`w-full rounded-md px-1.5 py-1 text-[10px] leading-tight font-semibold truncate
-                            ${appt.status === 'cancelled'
-                              ? 'bg-red-50 text-red-400 line-through'
-                              : appt.status === 'completed'
-                              ? 'bg-slate-100 text-slate-400'
-                              : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
-                          >
+                      <div key={i} className={`border-l border-gray-100 px-1 py-0.5 flex items-center ${out ? 'bg-gray-50' : 'bg-white hover:bg-gray-50/50'} transition`}>
+                        {appt && !out && (
+                          <div className={`w-full rounded-md px-2 py-1 text-[10px] font-semibold leading-tight truncate ${
+                            appt.status === 'cancelled' ? 'bg-red-50 text-red-400 line-through border border-red-100'
+                            : appt.status === 'completed' ? 'bg-gray-100 text-gray-400 border border-gray-200'
+                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          }`}>
                             {appt.client_first_name || appt.client_last_name
-                              ? `${appt.client_first_name || ''} ${appt.client_last_name || ''}`.trim()
+                              ? `${appt.client_first_name||''} ${appt.client_last_name||''}`.trim()
                               : appt.client_email?.split('@')[0] || '—'}
                           </div>
-                        ) : null}
+                        )}
                       </div>
                     );
                   })}
@@ -295,16 +271,16 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
       </div>
 
       {/* Légende */}
-      <div className="flex items-center gap-4 px-6 py-3 border-t border-slate-100">
-        <span className="text-[10px] text-slate-400 font-medium">Légende :</span>
+      <div className="flex items-center gap-5 px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Légende</span>
         {[
-          { color: 'bg-blue-50 border border-blue-200', label: 'Réservé' },
-          { color: 'bg-slate-50',                       label: 'Fermé / Hors horaires' },
-          { color: 'bg-red-50',                         label: 'Annulé' },
-        ].map(({ color, label }) => (
+          { cls: 'bg-blue-50 border border-blue-200',  label: 'Réservé'  },
+          { cls: 'bg-gray-100 border border-gray-200', label: 'Fermé'    },
+          { cls: 'bg-red-50 border border-red-100',    label: 'Annulé'   },
+        ].map(({ cls, label }) => (
           <span key={label} className="flex items-center gap-1.5">
-            <span className={`w-3 h-3 rounded-sm inline-block ${color}`} />
-            <span className="text-[10px] text-slate-400">{label}</span>
+            <span className={`w-3 h-3 rounded-sm inline-block ${cls}`} />
+            <span className="text-[10px] text-gray-400">{label}</span>
           </span>
         ))}
       </div>
@@ -324,8 +300,8 @@ function ProDashboard({ shopData, onEditShop }) {
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
     Promise.all([
-      fetch(`${API_BASE_URL}/user/appointments`,         { headers }).then(r => r.json()),
-      fetch(`${API_BASE_URL}/user/appointments?week=1`,  { headers }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/user/appointments`,        { headers }).then(r=>r.json()),
+      fetch(`${API_BASE_URL}/user/appointments?week=1`, { headers }).then(r=>r.json()),
     ]).then(([all, week]) => {
       setAppointments(Array.isArray(all)  ? all  : []);
       setWeekAppointments(Array.isArray(week) ? week : []);
@@ -333,164 +309,151 @@ function ProDashboard({ shopData, onEditShop }) {
     }).catch(() => setLoading(false));
   }, []);
 
-  const now = new Date();
+  const now      = new Date();
   const todayStr = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}`;
+  const upcoming = appointments.filter(a => new Date(a.appointment_date) >= now && a.status !== 'cancelled');
+  const displayed = showAll ? appointments : upcoming.slice(0, 6);
 
-  const upcoming  = appointments.filter(a => new Date(a.appointment_date) >= now && a.status !== 'cancelled');
-  const completed = appointments.filter(a => a.status === 'completed');
-  const displayed = showAll ? appointments : upcoming.slice(0, 5);
+  const caTotal = appointments.filter(a=>a.status!=='cancelled').reduce((s,a)=>s+Number(a.price||0),0);
+  const caToday = appointments.filter(a => {
+    if (a.status==='cancelled') return false;
+    const d = new Date(a.appointment_date);
+    return `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}` === todayStr;
+  }).reduce((s,a)=>s+Number(a.price||0),0);
 
-  // ── CA prévisionnel ──────────────────────────────────────────────────────
-  const caTotal = appointments
-    .filter(a => a.status !== 'cancelled')
-    .reduce((sum, a) => sum + Number(a.price || 0), 0);
+  const shopImage = shopData.image_url ? `${API_BASE_URL.replace('/api','')}${shopData.image_url}` : null;
 
-  const caToday = appointments
-    .filter(a => {
-      if (a.status === 'cancelled') return false;
-      const d = new Date(a.appointment_date);
-      const ds = `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`;
-      return ds === todayStr;
-    })
-    .reduce((sum, a) => sum + Number(a.price || 0), 0);
-
-  const shopImage = shopData.image_url
-    ? `${API_BASE_URL.replace('/api', '')}${shopData.image_url}`
-    : null;
+  const kpis = [
+    { icon: Calendar,   label: 'RDV à venir',       value: upcoming.length,        unit: 'RDV', accent: 'border-blue-400',    iconBg: 'bg-blue-50',    iconColor: 'text-blue-500'    },
+    { icon: Users,      label: 'Total réservations', value: appointments.length,    unit: 'RDV', accent: 'border-violet-400',  iconBg: 'bg-violet-50',  iconColor: 'text-violet-500'  },
+    { icon: TrendingUp, label: 'CA prévisionnel',    value: caTotal.toFixed(2),     unit: '€',   accent: 'border-emerald-400', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+    { icon: Euro,       label: "CA aujourd'hui",     value: caToday.toFixed(2),     unit: '€',   accent: 'border-amber-400',   iconBg: 'bg-amber-50',   iconColor: 'text-amber-500'   },
+  ];
 
   return (
-    <div className="shop-settings-page">
-      <div className="shop-container">
+    <div className="min-h-screen bg-gray-50 pt-20 pb-12" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
 
-        {/* En-tête boutique */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-          <div className="h-2 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6)' }} />
-          <div className="flex items-center gap-4 px-6 py-5">
+        {/* ── Topbar boutique ─────────────────────────────────────────── */}
+        <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-lg">
+          <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6,#3b82f6)' }} />
+          <div className="flex items-center gap-4 px-6 py-4">
             {shopImage ? (
-              <img src={shopImage} alt={shopData.name} className="w-16 h-16 rounded-xl object-cover border border-slate-100" />
+              <img src={shopImage} alt={shopData.name} className="w-12 h-12 rounded-xl object-cover border-2 border-white/10 flex-shrink-0" />
             ) : (
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center">
-                <Store size={28} color="white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center flex-shrink-0">
+                <Store size={22} color="white" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-black text-slate-900 truncate">{shopData.name}</h1>
-              <p className="text-sm text-slate-400 truncate">{shopData.city || ''}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-white truncate">{shopData.name}</h1>
+                <span className="flex-shrink-0 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">En ligne</span>
+              </div>
+              <p className="text-xs text-slate-400 truncate">{shopData.city || ''} · Dashboard Pro</p>
             </div>
             <button
               onClick={onEditShop}
-              className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-500 border border-slate-200 hover:border-rose-300 px-4 py-2 rounded-xl transition"
+              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition"
             >
-              <Pencil size={14} /> Modifier la boutique
+              <Pencil size={13} /> Modifier la boutique
             </button>
           </div>
         </div>
 
-        {/* Statistiques + CA */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {[
-            { icon: Calendar,   color: 'text-rose-500',    bg: 'bg-rose-50',    label: 'À venir',       value: upcoming.length,   unit: 'RDV' },
-            { icon: Users,      color: 'text-violet-500',  bg: 'bg-violet-50',  label: 'Total RDV',     value: appointments.length, unit: 'RDV' },
-            { icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'CA prévisionnel', value: caTotal.toFixed(2), unit: '€' },
-            { icon: Euro,       color: 'text-amber-500',   bg: 'bg-amber-50',   label: "CA du jour",    value: caToday.toFixed(2), unit: '€' },
-          ].map(({ icon: Icon, color, bg, label, value, unit }) => (
-            <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
-              <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mx-auto mb-2`}>
-                <Icon size={18} className={color} />
+        {/* ── KPIs ────────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpis.map(({ icon: Icon, label, value, unit, accent, iconBg, iconColor }) => (
+            <div key={label} className={`bg-white rounded-2xl shadow-sm border-l-4 ${accent} p-5 flex items-center gap-4`}>
+              <div className={`w-11 h-11 ${iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                <Icon size={20} className={iconColor} />
               </div>
-              <p className="text-2xl font-black text-slate-900 leading-tight">{value}</p>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{unit}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{label}</p>
+              <div className="min-w-0">
+                <p className="text-2xl font-black text-gray-900 leading-none">{value} <span className="text-sm font-semibold text-gray-400">{unit}</span></p>
+                <p className="text-xs text-gray-500 font-medium mt-1 truncate">{label}</p>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Planning hebdomadaire */}
+        {/* ── Planning hebdomadaire ───────────────────────────────────── */}
         {!loading && (
-          <WeeklyPlanning
-            weekAppointments={weekAppointments}
-            shopHours={shopData.hours || []}
-          />
+          <WeeklyPlanning weekAppointments={weekAppointments} shopHours={shopData.hours || []} />
         )}
 
-        {/* Liste des rendez-vous */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        {/* ── Liste des rendez-vous ───────────────────────────────────── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* Header section */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg,#f43f5e,#e11d48)' }}>
-                <Calendar size={16} color="white" />
+              <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                <Calendar size={15} className="text-rose-500" />
               </div>
-              <h3 className="font-bold text-slate-800">
-                {showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}
-              </h3>
+              <div>
+                <h3 className="font-semibold text-gray-800 text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
+                <p className="text-xs text-gray-400">{upcoming.length} à venir · {appointments.length} au total</p>
+              </div>
             </div>
             {appointments.length > 0 && (
-              <button
-                onClick={() => setShowAll(v => !v)}
-                className="text-xs font-semibold text-rose-500 hover:text-rose-700 flex items-center gap-1 transition"
-              >
-                {showAll ? 'Voir à venir' : `Voir tout (${appointments.length})`}
-                <ChevronRight size={13} />
+              <button onClick={() => setShowAll(v=>!v)} className="text-xs font-semibold text-rose-500 hover:text-rose-700 flex items-center gap-1 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition">
+                {showAll ? 'Voir à venir' : `Tout voir (${appointments.length})`}
+                <ChevronRight size={12} />
               </button>
             )}
           </div>
 
-          <div className="p-4">
+          <div className="divide-y divide-gray-50">
             {loading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 size={28} className="animate-spin text-rose-400" />
-              </div>
+              <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-rose-400" /></div>
             ) : displayed.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
-                <Calendar size={36} className="mx-auto mb-3 opacity-30" />
-                <p className="font-semibold text-slate-500">Aucun rendez-vous à venir</p>
-                <p className="text-xs mt-1">Les nouvelles réservations apparaîtront ici.</p>
+              <div className="text-center py-14 text-gray-400">
+                <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Calendar size={24} className="opacity-40" />
+                </div>
+                <p className="font-semibold text-gray-500 text-sm">Aucun rendez-vous à venir</p>
+                <p className="text-xs mt-1 text-gray-400">Les nouvelles réservations apparaîtront ici.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <>
                 {displayed.map(appt => {
-                  const date  = new Date(appt.appointment_date);
+                  const date   = new Date(appt.appointment_date);
                   const isPast = date < now;
-                  const st    = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
+                  const st     = STATUS_STYLES[appt.status] || STATUS_STYLES.pending;
                   return (
-                    <div
-                      key={appt.id}
-                      className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
-                        isPast || appt.status === 'cancelled'
-                          ? 'border-slate-100 opacity-55'
-                          : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'
-                      }`}
-                    >
-                      <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
-                        <span className="text-[10px] font-bold text-rose-400 uppercase">
-                          {date.toLocaleDateString('fr-FR', { month: 'short' })}
+                    <div key={appt.id} className={`flex items-center gap-4 px-6 py-4 transition-all ${isPast || appt.status==='cancelled' ? 'opacity-50' : 'hover:bg-gray-50/60'}`}>
+                      {/* Bloc date */}
+                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-bold text-rose-400 uppercase leading-none">
+                          {date.toLocaleDateString('fr-FR',{month:'short'})}
                         </span>
-                        <span className="text-2xl font-black text-rose-500 leading-none">{date.getDate()}</span>
+                        <span className="text-xl font-black text-rose-500 leading-tight">{date.getDate()}</span>
                       </div>
+                      {/* Infos principales */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 truncate">{appt.service_label}</p>
-                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                          <Clock size={11} />
-                          {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        <p className="font-semibold text-gray-800 text-sm truncate">{appt.service_label}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <Clock size={10} className="text-gray-400" />
+                          {date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
                           {appt.duration ? ` · ${appt.duration} min` : ''}
                         </p>
-                        <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                          <User size={11} />
-                          {appt.client_first_name || ''} {appt.client_last_name || appt.client_email || '—'}
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <User size={10} />
+                          {appt.client_first_name||''} {appt.client_last_name||appt.client_email||'—'}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end gap-1.5">
-                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
+                      {/* Statut + prix */}
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
                           {st.label}
                         </span>
                         {appt.price && (
-                          <span className="text-xs font-bold text-slate-600">{Number(appt.price).toFixed(2)} €</span>
+                          <span className="text-xs font-bold text-gray-600">{Number(appt.price).toFixed(2)} €</span>
                         )}
                       </div>
                     </div>
                   );
                 })}
-              </div>
+              </>
             )}
           </div>
         </div>
