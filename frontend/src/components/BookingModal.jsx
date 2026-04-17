@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2, Bell } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 
 const MONTHS_FR = [
@@ -51,6 +51,12 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
   const [closedDayNames, setClosedDayNames] = useState(new Set());
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState(null);
+
+  // ─── SMS reminder — pré-rempli depuis le profil utilisateur ────────
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const [phone, setPhone] = useState(storedUser.phone || '');
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   // ─── Charger les jours fermés du prestataire ────────────────────────
   useEffect(() => {
@@ -118,11 +124,21 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
     setBooking(true);
     setError(null);
 
+    // Validation téléphone uniquement si renseigné
+    if (phone && !/^(\+?\d[\s\-.]?){7,15}$/.test(phone.trim())) {
+      setPhoneError('Format invalide (ex : 06 12 34 56 78)');
+      setBooking(false);
+      return;
+    }
+    setPhoneError('');
+
     const dateStr = toDateString(selectedDate);
     const payload = {
       provider_id: provider.id,
       service_id: selectedService.id,
       appointment_date: `${dateStr} ${selectedTime}:00`,
+      phone: phone.trim() || null,
+      send_sms_reminder: smsConsent && phone.trim() ? true : false,
     };
 
     try {
@@ -367,6 +383,50 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
                       {Number(selectedService.price).toFixed(2)} €
                     </span>
                   </div>
+                )}
+              </div>
+
+              {/* Bloc SMS rappel (optionnel, RGPD) */}
+              <div className="mb-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Bell size={14} className="text-rose-400 flex-shrink-0" />
+                  <span className="text-xs font-semibold text-slate-700">Rappel par SMS</span>
+                  <span className="ml-auto text-[10px] text-slate-400 font-medium bg-white border border-slate-200 rounded-full px-2 py-0.5">Optionnel</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                  Recevez un rappel par SMS 24h avant votre rendez-vous pour ne rien oublier.
+                </p>
+                <div className="relative mb-1">
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (phoneError) setPhoneError('');
+                    }}
+                    placeholder="06 12 34 56 78"
+                    className={`w-full text-sm px-3 py-2.5 rounded-xl border outline-none transition
+                      ${phoneError
+                        ? 'border-red-300 bg-red-50 text-red-700 placeholder:text-red-300'
+                        : 'border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:border-rose-300'
+                      }`}
+                  />
+                </div>
+                {phoneError && (
+                  <p className="text-[11px] text-red-500 mb-2">{phoneError}</p>
+                )}
+                {phone.trim() && !phoneError && (
+                  <label className="flex items-start gap-2 cursor-pointer mt-2">
+                    <input
+                      type="checkbox"
+                      checked={smsConsent}
+                      onChange={(e) => setSmsConsent(e.target.checked)}
+                      className="mt-0.5 accent-rose-500 flex-shrink-0"
+                    />
+                    <span className="text-[11px] text-slate-500 leading-relaxed">
+                      J'accepte de recevoir un SMS de rappel pour ce rendez-vous.
+                    </span>
+                  </label>
                 )}
               </div>
 

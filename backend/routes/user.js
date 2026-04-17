@@ -9,7 +9,7 @@ const db = require('../db');
 router.get('/me', auth, async (req, res) => {
     try {
         const [rows] = await db.execute(
-            'SELECT id, first_name, last_name, email, role, created_at FROM users WHERE id = ?',
+            'SELECT id, first_name, last_name, email, phone, role, created_at FROM users WHERE id = ?',
             [req.auth.userId]
         );
         if (rows.length === 0) return res.status(404).json({ error: "Utilisateur introuvable" });
@@ -22,7 +22,7 @@ router.get('/me', auth, async (req, res) => {
 // --- PUT /api/user/update ---
 // Met à jour les infos personnelles
 router.put('/update', auth, async (req, res) => {
-    const { first_name, last_name, email } = req.body;
+    const { first_name, last_name, email, phone } = req.body;
     if (!email) return res.status(400).json({ error: "L'email est obligatoire." });
 
     try {
@@ -34,8 +34,8 @@ router.put('/update', auth, async (req, res) => {
         if (existing.length > 0) return res.status(400).json({ error: "Cet email est déjà utilisé." });
 
         await db.execute(
-            'UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
-            [first_name || null, last_name || null, email, req.auth.userId]
+            'UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?',
+            [first_name || null, last_name || null, email, phone || null, req.auth.userId]
         );
         res.json({ message: "Profil mis à jour avec succès." });
     } catch (err) {
@@ -115,6 +115,39 @@ router.get('/appointments', auth, async (req, res) => {
         }
 
         res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- PATCH /api/user/appointments/:id/cancel ---
+// Annule un RDV — sécurisé : seul le client propriétaire peut annuler
+router.patch('/appointments/:id/cancel', auth, async (req, res) => {
+    const apptId = req.params.id;
+    try {
+        // Vérification IDOR : le RDV doit appartenir à l'utilisateur connecté
+        const [rows] = await db.execute(
+            'SELECT id, status, appointment_date FROM appointments WHERE id = ?',
+            [apptId]
+        );
+        if (rows.length === 0) return res.status(404).json({ error: "Rendez-vous introuvable." });
+
+        const appt = rows[0];
+
+        // Seul le client propriétaire ou un admin peut annuler
+        if (req.auth.role !== 'admin') {
+            const [ownership] = await db.execute(
+                'SELECT id FROM appointments WHERE id = ? AND client_id = ?',
+                [apptId, req.auth.userId]
+            );
+            if (ownership.length === 0) return res.status(403).json({ error: "Accès refusé." });
+        }
+
+        if (appt.status === 'cancelled') return res.status(400).json({ error: "Ce rendez-vous est déjà annulé." });
+        if (new Date(appt.appointment_date) < new Date()) return res.status(400).json({ error: "Impossible d'annuler un rendez-vous passé." });
+
+        await db.execute("UPDATE appointments SET status = 'cancelled' WHERE id = ?", [apptId]);
+        res.json({ message: "Rendez-vous annulé avec succès." });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

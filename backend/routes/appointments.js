@@ -8,7 +8,7 @@ const checkRole = require('../middlewares/roleGuard'); // VERROU 2 : Vérifie le
 // On ajoute 'auth' : Seuls les gens connectés peuvent prendre RDV
 // On ajoute 'checkRole' : Ici, on autorise 'user' (le client) et 'admin'
 router.post('/', auth, checkRole(['user', 'admin']), async (req, res) => {
-    const { provider_id, service_id, appointment_date } = req.body;
+    const { provider_id, service_id, appointment_date, phone, send_sms_reminder } = req.body;
     const client_id = req.auth.userId; // Sécurité : toujours depuis le token
 
     if (!provider_id || !service_id || !appointment_date) {
@@ -52,10 +52,24 @@ router.post('/', auth, checkRole(['user', 'admin']), async (req, res) => {
             return res.status(400).json({ error: `Créneau hors des horaires d'ouverture (${String(Math.floor(openMin/60)).padStart(2,'0')}:${String(openMin%60).padStart(2,'0')} – ${String(Math.floor(closeMin/60)).padStart(2,'0')}:${String(closeMin%60).padStart(2,'0')}).` });
         }
 
-        const sql = `INSERT INTO appointments (client_id, provider_id, service_id, appointment_date, status)
-                     VALUES (?, ?, ?, ?, 'pending')`;
+        // Anti-doublon : vérifier qu'aucun RDV n'existe déjà pour ce prestataire à cette date/heure
+        const [conflict] = await db.execute(
+            `SELECT id FROM appointments
+             WHERE provider_id = ? AND appointment_date = ? AND status != 'cancelled'`,
+            [provider_id, appointment_date]
+        );
+        if (conflict.length > 0) {
+            return res.status(409).json({ error: "Ce créneau vient d'être réservé. Veuillez en choisir un autre." });
+        }
 
-        const [result] = await db.execute(sql, [client_id, provider_id, service_id, appointment_date]);
+        const sql = `INSERT INTO appointments (client_id, provider_id, service_id, appointment_date, status, phone, send_sms_reminder)
+                     VALUES (?, ?, ?, ?, 'pending', ?, ?)`;
+
+        // phone et send_sms_reminder sont optionnels
+        const smsPhone   = (send_sms_reminder && phone) ? phone.trim() : null;
+        const smsConsent = (send_sms_reminder && phone) ? 1 : 0;
+
+        const [result] = await db.execute(sql, [client_id, provider_id, service_id, appointment_date, smsPhone, smsConsent]);
 
         res.status(201).json({
             message: "Rendez-vous créé avec succès !",
