@@ -33,10 +33,7 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(data.user));
         window.dispatchEvent(new Event("authChange"));
 
-        const role = data.user.role;
-        if (role === "admin") navigate("/admin");
-        else if (role === "pro") navigate("/dashboard");
-        else navigate("/account");
+        navigate("/");
       } else {
         setError(data.error || "Une erreur est survenue lors de la connexion.");
       }

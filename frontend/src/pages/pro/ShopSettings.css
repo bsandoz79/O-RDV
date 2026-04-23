@@ -50,10 +50,10 @@
 /* ── Section cards ─────────────────────────────────────────────────────────── */
 .section-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: none;
   border-radius: 1.25rem;
   padding: 2rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
 }
 .card-header {
   display: flex;

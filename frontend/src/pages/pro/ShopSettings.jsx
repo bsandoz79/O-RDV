@@ -3,8 +3,8 @@ import {
   Store, Plus, Trash2, Clock, Save, MapPin,
   Building2, Loader2, CheckCircle, Phone,
   Camera, FileText, Hash, X, Calendar, User,
-  ChevronRight, Pencil, LayoutDashboard, Ban,
-  TrendingUp, Users, Euro, ChevronLeft, ChevronDown, ChevronUp,
+  ChevronRight, Pencil, LayoutDashboard,
+  TrendingUp, Users, Euro, ChevronLeft, Ban, Archive,
 } from 'lucide-react';
 import API_BASE_URL from "../../api/api";
 import './ShopSettings.css';
@@ -25,10 +25,11 @@ const INITIAL_HOURS = {
 };
 
 const STATUS_STYLES = {
-  pending:   { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'En attente' },
-  confirmed: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Confirmé'   },
-  cancelled: { bg: 'bg-red-100',     text: 'text-red-500',     label: 'Annulé'     },
-  completed: { bg: 'bg-slate-100',   text: 'text-slate-500',   label: 'Terminé'    },
+  pending:          { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'En attente' },
+  confirmed:        { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Confirmé'   },
+  cancelled:        { bg: 'bg-red-100',     text: 'text-red-500',     label: 'Annulé'     },
+  cancelled_by_pro: { bg: 'bg-orange-100',  text: 'text-orange-600',  label: 'Refusé'     },
+  completed:        { bg: 'bg-slate-100',   text: 'text-slate-500',   label: 'Terminé'    },
 };
 
 // ─── Sous-composants formulaire ────────────────────────────────────────────────
@@ -139,25 +140,110 @@ function addDays(date, n) {
 
 function fmt(n) { return String(n).padStart(2, '0'); }
 
-// Génère les créneaux de 30 min entre openMin et closeMin
-function buildSlots(openMin, closeMin) {
-  const slots = [];
-  for (let m = openMin; m < closeMin; m += 30) slots.push(m);
-  return slots;
-}
 
 const WEEK_DAYS_EN = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 const WEEK_DAYS_FR = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 // ─── Composant Planning Hebdomadaire ──────────────────────────────────────────
 
-function WeeklyPlanning({ weekAppointments, shopHours }) {
-  const [weekOffset, setWeekOffset] = useState(0);
+function AppointmentPopover({ appt, onClose, onRefuse }) {
+  if (!appt) return null;
+  const date    = new Date(appt.appointment_date);
+  const canRefuse = !['cancelled', 'cancelled_by_pro', 'completed'].includes(appt.status);
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(15,23,42,0.25)', backdropFilter: 'blur(2px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl p-5 w-72 shadow-xl"
+        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center">
+              <Calendar size={13} className="text-rose-500" />
+            </div>
+            <span className="font-semibold text-slate-900 text-sm">Détail du rendez-vous</span>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition">
+            <X size={14} />
+          </button>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50">
+            <User size={14} className="text-slate-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Client</p>
+              <p className="text-sm font-semibold text-slate-800 truncate">
+                {appt.client_first_name || ''} {appt.client_last_name || appt.client_email?.split('@')[0] || '—'}
+              </p>
+            </div>
+          </div>
+          {appt.client_phone && (
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50">
+              <Phone size={14} className="text-slate-400 flex-shrink-0" />
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Téléphone</p>
+                <p className="text-sm font-semibold text-slate-800">{appt.client_phone}</p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50">
+            <Store size={14} className="text-slate-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Service</p>
+              <p className="text-sm font-semibold text-slate-800 truncate">{appt.service_label}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-slate-50">
+              <Clock size={14} className="text-slate-400" />
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Heure</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+            {appt.duration && (
+              <div className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-slate-50">
+                <TrendingUp size={14} className="text-slate-400" />
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Durée</p>
+                  <p className="text-sm font-semibold text-slate-800">{appt.duration} min</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {canRefuse && (
+          <button
+            onClick={() => { onClose(); onRefuse(appt.id); }}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 hover:border-orange-400 text-sm font-semibold py-2.5 rounded-xl transition"
+          >
+            <Ban size={14} /> Refuser ce rendez-vous
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const SLOT_H = 44; // px par tranche de 30 min
+
+function WeeklyPlanning({ weekAppointments, shopHours, onRefuse }) {
+  const [weekOffset,   setWeekOffset]   = useState(0);
+  const [selectedAppt, setSelectedAppt] = useState(null);
+  const scrollRef = useRef(null);
 
   const monday    = addDays(getMondayOf(new Date()), weekOffset * 7);
   const weekDates = WEEK_DAYS_EN.map((_, i) => addDays(monday, i));
 
-  // Plage horaire globale depuis business_hours
+  // Plage horaire globale
   let globalOpenMin = 9 * 60, globalCloseMin = 19 * 60;
   if (shopHours?.length) {
     const opens  = shopHours.filter(h => !h.is_closed).map(h => { const [hh,mm] = (String(h.open_time||'').substring(0,5)||'09:00').split(':').map(Number); return hh*60+mm; });
@@ -165,26 +251,42 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
     if (opens.length)  globalOpenMin  = Math.min(...opens);
     if (closes.length) globalCloseMin = Math.max(...closes) || 24*60;
   }
-  const timeSlots = buildSlots(globalOpenMin, globalCloseMin);
+  const totalSlots  = Math.ceil((globalCloseMin - globalOpenMin) / 30);
+  const totalHeight = totalSlots * SLOT_H;
 
-  // Index RDV
-  const apptIndex = {};
+  // Index RDV par jour
+  const apptsByDay = {};
   weekAppointments.forEach(a => {
-    const d = new Date(a.appointment_date);
-    apptIndex[`${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())} ${fmt(d.getHours())}:${fmt(d.getMinutes())}`] = a;
+    const d   = new Date(a.appointment_date);
+    const key = `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`;
+    if (!apptsByDay[key]) apptsByDay[key] = [];
+    apptsByDay[key].push(a);
   });
 
   const closedDays = new Set((shopHours||[]).filter(h=>h.is_closed).map(h=>h.day_of_week?.toLowerCase()));
-  const todayStr   = `${new Date().getFullYear()}-${fmt(new Date().getMonth()+1)}-${fmt(new Date().getDate())}`;
+  const now        = new Date();
+  const todayStr   = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}`;
+  const nowMin     = now.getHours() * 60 + now.getMinutes();
+  const nowTop     = ((nowMin - globalOpenMin) / 30) * SLOT_H;
+  const showNow    = nowMin >= globalOpenMin && nowMin <= globalCloseMin;
   const weekLabel  = `${monday.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${addDays(monday,6).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}`;
 
+  // Auto-scroll vers l'heure actuelle au montage
+  useEffect(() => {
+    if (scrollRef.current && weekOffset === 0 && showNow) {
+      scrollRef.current.scrollTop = Math.max(0, nowTop - 120);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-      {/* Header */}
+    <div className="bg-white rounded-2xl overflow-hidden mb-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
+
+      {/* ── En-tête de la carte ──────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-            <Calendar size={15} className="text-violet-500" />
+          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+            <Calendar size={15} className="text-blue-500" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 text-sm">Planning de la semaine</h3>
@@ -192,7 +294,7 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 transition">
+          <button onClick={() => setWeekOffset(0)} className="text-xs font-semibold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition">
             Aujourd'hui
           </button>
           <button onClick={() => setWeekOffset(o=>o-1)} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition text-slate-500"><ChevronLeft size={15}/></button>
@@ -200,87 +302,288 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
         </div>
       </div>
 
-      {/* Grille */}
+      {/* ── Grille ──────────────────────────────────────────────────── */}
       <div className="overflow-x-auto">
         <div style={{ minWidth: '680px' }}>
 
-          {/* En-têtes jours */}
-          <div className="grid bg-slate-50 border-b border-slate-100" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
-            <div className="py-3 border-r border-slate-100" />
+          {/* En-têtes jours — hors du scroll pour ne pas bloquer les RDV */}
+          <div className="grid bg-white border-b border-slate-100 shadow-sm" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
+            <div className="py-3 border-r border-slate-100 bg-white" />
             {weekDates.map((date, i) => {
               const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
               const isToday  = ds === todayStr;
               const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
               return (
-                <div key={i} className={`py-3 text-center border-l border-slate-100 ${isClosed ? 'opacity-40' : ''}`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? 'text-rose-500' : 'text-slate-400'}`}>{WEEK_DAYS_FR[i]}</p>
-                  <div className={`w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-bold ${isToday ? 'bg-rose-500 text-white' : 'text-slate-700'}`}>
+                <div key={i} className={`py-2.5 text-center border-l border-slate-100 ${isClosed ? 'bg-slate-50' : 'bg-white'}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? 'text-blue-500' : isClosed ? 'text-slate-300' : 'text-slate-400'}`}>
+                    {WEEK_DAYS_FR[i]}
+                  </p>
+                  <div className={`w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-bold ${isToday ? 'bg-blue-500 text-white' : isClosed ? 'text-slate-300' : 'text-slate-700'}`}>
                     {date.getDate()}
                   </div>
+                  {isClosed && (
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">Fermé</p>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Lignes créneaux */}
-          <div className="max-h-[380px] overflow-y-auto">
-            {timeSlots.map(slotMin => {
-              const slotLabel = `${fmt(Math.floor(slotMin/60))}:${fmt(slotMin%60)}`;
-              const isHour    = slotMin % 60 === 0;
-              return (
-                <div key={slotMin} className={`grid ${isHour ? 'border-t border-slate-100' : ''}`} style={{ gridTemplateColumns: '52px repeat(7, 1fr)', minHeight: '36px' }}>
-                  <div className={`flex items-center justify-end pr-3 border-r border-slate-100 ${isHour ? 'text-slate-400 text-[11px] font-medium' : 'text-slate-200 text-[10px]'}`}>
-                    {isHour ? slotLabel : ''}
-                  </div>
-                  {weekDates.map((date, i) => {
-                    const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
-                    const appt     = apptIndex[`${ds} ${slotLabel}`];
-                    const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
-                    const dayH     = (shopHours||[]).find(h=>h.day_of_week?.toLowerCase()===WEEK_DAYS_EN[i]);
-                    let inRange    = true;
-                    if (dayH && !dayH.is_closed) {
-                      const [oh,om] = (String(dayH.open_time||'').substring(0,5)||'09:00').split(':').map(Number);
-                      const [ch,cm] = (String(dayH.close_time||'').substring(0,5)||'18:00').split(':').map(Number);
-                      const oMin = oh*60+om, cMin = (oMin===0 && ch*60+cm===0) ? 1440 : ch*60+cm;
-                      inRange = slotMin >= oMin && slotMin < cMin;
-                    }
-                    const out = isClosed || !inRange;
-                    return (
-                      <div key={i} className={`border-l border-slate-100 px-1 py-0.5 flex items-center ${out ? 'bg-slate-50' : 'bg-white hover:bg-slate-50'} transition`}>
-                        {appt && !out && (
-                          <div className={`w-full rounded-md px-2 py-1 text-[10px] font-semibold leading-tight truncate ${
-                            appt.status === 'cancelled' ? 'bg-red-50 text-red-500 line-through border border-red-100'
-                            : appt.status === 'completed' ? 'bg-slate-100 text-slate-400 border border-slate-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-100'
-                          }`}>
-                            {appt.client_first_name || appt.client_last_name
-                              ? `${appt.client_first_name||''} ${appt.client_last_name||''}`.trim()
-                              : appt.client_email?.split('@')[0] || '—'}
-                          </div>
-                        )}
+          {/* Corps scrollable — grille des RDV uniquement */}
+          <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: '460px' }}>
+            <div className="relative grid" style={{ gridTemplateColumns: '52px repeat(7, 1fr)', height: totalHeight }}>
+
+              {/* Axe horaire */}
+              <div className="relative border-r border-slate-100">
+                {Array.from({ length: totalSlots + 1 }).map((_, slot) => {
+                  const m = globalOpenMin + slot * 30;
+                  if (m % 60 !== 0) return null;
+                  return (
+                    <div
+                      key={m}
+                      className="absolute w-full flex items-center justify-end pr-2.5"
+                      style={{ top: slot * SLOT_H - 7, height: 14 }}
+                    >
+                      <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                        {`${fmt(Math.floor(m/60))}:${fmt(m%60)}`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Colonnes jours */}
+              {weekDates.map((date, i) => {
+                const ds       = `${date.getFullYear()}-${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+                const isToday  = ds === todayStr;
+                const isClosed = closedDays.has(WEEK_DAYS_EN[i]);
+                const dayH     = (shopHours||[]).find(h => h.day_of_week?.toLowerCase() === WEEK_DAYS_EN[i]);
+                const dayAppts = apptsByDay[ds] || [];
+
+                // Limites horaires du jour
+                let dayOpenMin = globalOpenMin, dayCloseMin = globalCloseMin;
+                if (dayH && !dayH.is_closed) {
+                  const [oh,om] = (String(dayH.open_time||'').substring(0,5)||'09:00').split(':').map(Number);
+                  const [ch,cm] = (String(dayH.close_time||'').substring(0,5)||'18:00').split(':').map(Number);
+                  dayOpenMin  = oh*60+om;
+                  dayCloseMin = (dayOpenMin===0 && ch*60+cm===0) ? 1440 : ch*60+cm;
+                }
+
+                return (
+                  <div key={i} className="relative border-l border-slate-100" style={{ overflow: 'visible' }}>
+
+                    {/* Fond hachuré jours fermés */}
+                    {isClosed && (
+                      <div className="absolute inset-0 z-0" style={{
+                        backgroundColor: '#f8fafc',
+                        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 7px, rgba(148,163,184,0.12) 7px, rgba(148,163,184,0.12) 14px)',
+                        pointerEvents: 'none',
+                      }} />
+                    )}
+
+                    {/* Lignes de grille (30 min) */}
+                    {Array.from({ length: totalSlots }).map((_, slot) => {
+                      const slotMin     = globalOpenMin + slot * 30;
+                      const isHourLine  = slotMin % 60 === 0;
+                      const isOutOfHours = !isClosed && (slotMin < dayOpenMin || slotMin >= dayCloseMin);
+                      return (
+                        <div
+                          key={slot}
+                          className={`absolute w-full transition-colors ${
+                            isHourLine ? 'border-t border-slate-100' : 'border-t border-slate-50'
+                          }`}
+                          style={{
+                            top: slot * SLOT_H,
+                            height: SLOT_H,
+                            backgroundColor: isOutOfHours ? 'rgba(241,245,249,0.6)' : undefined,
+                            zIndex: 1,
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Texte vertical FERMÉ */}
+                    {isClosed && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <span
+                          className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-300 select-none"
+                          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                        >
+                          Fermé
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                    )}
+
+                    {/* Ligne de l'heure courante */}
+                    {isToday && showNow && !isClosed && (
+                      <div
+                        className="absolute z-30 w-full flex items-center pointer-events-none"
+                        style={{ top: nowTop }}
+                      >
+                        <div className="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0" style={{ marginLeft: '-4px' }} />
+                        <div className="flex-1 h-px bg-rose-400" style={{ boxShadow: '0 0 4px rgba(244,63,94,0.4)' }} />
+                      </div>
+                    )}
+
+                    {/* Blocs rendez-vous */}
+                    {!isClosed && dayAppts.map(appt => {
+                      const d        = new Date(appt.appointment_date);
+                      const apptMin  = d.getHours() * 60 + d.getMinutes();
+                      const duration = Number(appt.duration) || 30;
+                      const topPx    = ((apptMin - globalOpenMin) / 30) * SLOT_H;
+                      const heightPx = Math.max((duration / 30) * SLOT_H - 4, SLOT_H - 4);
+                      const clientName = (appt.client_first_name || appt.client_last_name)
+                        ? `${appt.client_first_name||''} ${appt.client_last_name||''}`.trim()
+                        : appt.client_email?.split('@')[0] || '—';
+
+                      const isCancelled = appt.status === 'cancelled';
+                      const isCompleted = appt.status === 'completed';
+
+                      const colors = isCancelled
+                        ? { bg: '#fff1f2', border: '#f87171', time: '#f87171', name: '#ef4444', service: '#fca5a5', line: 'line-through' }
+                        : isCompleted
+                        ? { bg: '#f8fafc', border: '#94a3b8', time: '#94a3b8', name: '#64748b', service: '#94a3b8', line: '' }
+                        : { bg: '#eff6ff', border: '#3b82f6', time: '#2563eb', name: '#1d4ed8', service: '#60a5fa', line: '' };
+
+                      return (
+                        <button
+                          key={appt.id}
+                          onClick={() => setSelectedAppt(appt)}
+                          className="absolute rounded-lg text-left transition-all hover:brightness-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          style={{
+                            top: topPx + 2,
+                            height: heightPx,
+                            left: 3,
+                            right: 3,
+                            zIndex: 20,
+                            backgroundColor: colors.bg,
+                            borderLeft: `3px solid ${colors.border}`,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                          }}
+                        >
+                          <div className="h-full flex flex-col justify-start px-1.5 py-1 overflow-hidden">
+                            <span className="text-[10px] font-bold leading-none tabular-nums" style={{ color: colors.time }}>
+                              {`${fmt(d.getHours())}:${fmt(d.getMinutes())}`}
+                            </span>
+                            {heightPx > 26 && (
+                              <span className={`text-[10px] font-semibold truncate leading-snug mt-0.5 ${colors.line}`} style={{ color: colors.name }}>
+                                {clientName}
+                              </span>
+                            )}
+                            {heightPx > 52 && (
+                              <span className="text-[9px] truncate leading-tight mt-0.5 opacity-80" style={{ color: colors.service }}>
+                                {appt.service_label}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Légende */}
-      <div className="flex items-center gap-5 px-5 py-3 bg-slate-50 border-t border-slate-100">
+      {/* ── Légende ──────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-4 px-5 py-3 bg-slate-50 border-t border-slate-100">
         <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Légende</span>
         {[
-          { cls: 'bg-rose-50 border border-rose-200',   label: 'Réservé' },
-          { cls: 'bg-slate-100 border border-slate-200', label: 'Fermé'  },
-          { cls: 'bg-red-50 border border-red-100',      label: 'Annulé' },
-        ].map(({ cls, label }) => (
+          { bg: '#eff6ff', border: '#3b82f6', label: 'Réservé'  },
+          { bg: '#f8fafc', border: '#94a3b8', label: 'Terminé'  },
+          { bg: '#fff1f2', border: '#f87171', label: 'Annulé'   },
+        ].map(({ bg, border, label }) => (
           <span key={label} className="flex items-center gap-1.5">
-            <span className={`w-3 h-3 rounded-sm inline-block ${cls}`} />
+            <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ backgroundColor: bg, borderLeft: `2px solid ${border}` }} />
             <span className="text-[10px] text-slate-400">{label}</span>
           </span>
         ))}
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-px bg-rose-400 inline-block" />
+          <span className="text-[10px] text-slate-400">Maintenant</span>
+        </span>
+        <span className="ml-auto text-[10px] text-slate-400 italic hidden sm:block">Cliquer sur un RDV pour le détail</span>
+      </div>
+
+      <AppointmentPopover appt={selectedAppt} onClose={() => setSelectedAppt(null)} onRefuse={onRefuse} />
+    </div>
+  );
+}
+
+// ─── Modal de refus ───────────────────────────────────────────────────────────
+
+function RefusalModal({ onConfirm, onClose }) {
+  const [reason,  setReason]  = useState('');
+  const [release, setRelease] = useState(true);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(2px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl p-6 w-80 shadow-xl"
+        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center">
+              <Ban size={13} className="text-orange-500" />
+            </div>
+            <span className="font-semibold text-slate-900 text-sm">Refuser le rendez-vous</span>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition">
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 mb-1.5 block">
+              Motif du refus <span className="font-normal text-slate-400">(optionnel)</span>
+            </label>
+            <textarea
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-400 resize-none"
+              rows={3}
+              placeholder="Ex : Imprévu personnel, horaire indisponible..."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+            />
+          </div>
+
+          <label className="flex items-start gap-2.5 cursor-pointer select-none p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+            <input
+              type="checkbox"
+              checked={release}
+              onChange={e => setRelease(e.target.checked)}
+              className="mt-0.5 accent-orange-500"
+            />
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Libérer ce créneau</p>
+              <p className="text-xs text-slate-400 mt-0.5">Un autre client pourra réserver ce créneau.</p>
+            </div>
+          </label>
+        </div>
+
+        <div className="flex gap-3 mt-5">
+          <button
+            onClick={() => onConfirm(reason.trim(), release)}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition"
+          >
+            Confirmer le refus
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl transition"
+          >
+            Annuler
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -291,41 +594,129 @@ function WeeklyPlanning({ weekAppointments, shopHours }) {
 function ProDashboard({ shopData, onEditShop }) {
   const token = localStorage.getItem('token');
   const [appointments,     setAppointments]     = useState([]);
-  const [weekAppointments, setWeekAppointments] = useState([]);
+  const [newClients,       setNewClients]       = useState([]);
   const [loading,          setLoading]          = useState(true);
   const [showAll,          setShowAll]          = useState(false);
+  const [refusalTarget,    setRefusalTarget]    = useState(null);
+
+  const fetchAppointments = (headers) =>
+    fetch(`${API_BASE_URL}/user/appointments`, { headers })
+      .then(r => r.json())
+      .then(all => { setAppointments(Array.isArray(all) ? all : []); });
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
     Promise.all([
-      fetch(`${API_BASE_URL}/user/appointments`,        { headers }).then(r=>r.json()),
-      fetch(`${API_BASE_URL}/user/appointments?week=1`, { headers }).then(r=>r.json()),
-    ]).then(([all, week]) => {
-      setAppointments(Array.isArray(all)  ? all  : []);
-      setWeekAppointments(Array.isArray(week) ? week : []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+      fetchAppointments(headers),
+      fetch(`${API_BASE_URL}/user/new-clients`, { headers }).then(r => r.json()),
+    ]).then(([, clients]) => {
+      setNewClients(Array.isArray(clients) ? clients : []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const now      = new Date();
-  const todayStr = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}`;
-  const upcoming = appointments.filter(a => new Date(a.appointment_date) >= now && a.status !== 'cancelled');
-  const displayed = showAll ? appointments : upcoming.slice(0, 6);
+  const handleRefuseConfirm = async (reason, release) => {
+    const id = refusalTarget;
+    setRefusalTarget(null);
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/appointments/${id}/refuse`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ reason, release }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      fetchAppointments({ Authorization: `Bearer ${token}` }).catch(() => {});
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
-  const caTotal = appointments.filter(a=>a.status!=='cancelled').reduce((s,a)=>s+Number(a.price||0),0);
-  const caToday = appointments.filter(a => {
-    if (a.status==='cancelled') return false;
-    const d = new Date(a.appointment_date);
-    return `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}` === todayStr;
-  }).reduce((s,a)=>s+Number(a.price||0),0);
+  // ── Calcul des KPIs depuis les données déjà chargées ─────────────────────
+  const now       = new Date();
+  const nowMs     = now.getTime();
+  const thisMonth = now.getMonth();
+  const thisYear  = now.getFullYear();
+  const in7DaysMs = nowMs + 7 * 24 * 60 * 60 * 1000;
 
-  const shopImage = shopData.image_url ? `${API_BASE_URL.replace('/api','')}${shopData.image_url}` : null;
+  // CA prévisionnel : mois en cours, non annulé, somme des prix
+  const ca_previsionnel = appointments
+    .filter(a => {
+      const d = new Date(a.appointment_date);
+      return a.status !== 'cancelled'
+        && d.getMonth()    === thisMonth
+        && d.getFullYear() === thisYear;
+    })
+    .reduce((sum, a) => sum + Number(a.price || 0), 0);
+
+  // RDV à venir : non annulé, entre maintenant et J+7
+  const upcoming_7d = appointments.filter(a => {
+    const t = new Date(a.appointment_date).getTime();
+    return a.status !== 'cancelled' && t >= nowMs && t < in7DaysMs;
+  }).length;
+
+  // Nouveaux clients ce mois : clients dont le PREMIER RDV connu est ce mois-ci
+  const firstApptByClient = {};
+  appointments.forEach(a => {
+    const key = a.client_email;
+    if (!key) return;
+    const t = new Date(a.appointment_date).getTime();
+    if (firstApptByClient[key] === undefined || t < firstApptByClient[key]) {
+      firstApptByClient[key] = t;
+    }
+  });
+  const new_clients = Object.values(firstApptByClient).filter(t => {
+    const d = new Date(t);
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+  }).length;
+
+  // Taux d'occupation semaine : minutes réservées / minutes totales disponibles
+  const weekStart = getMondayOf(new Date());
+  const weekEnd   = addDays(weekStart, 7);
+  const bookedMinutes = appointments
+    .filter(a => {
+      const d = new Date(a.appointment_date);
+      return !['cancelled', 'cancelled_by_pro'].includes(a.status) && d >= weekStart && d < weekEnd;
+    })
+    .reduce((sum, a) => sum + Number(a.duration || 30), 0);
+
+  let totalMinutes = 0;
+  const parseHHMM = val => {
+    const str = String(val || '').substring(0, 5);
+    const [hh = 0, mm = 0] = str.split(':').map(Number);
+    return hh * 60 + mm;
+  };
+  (shopData.hours || []).forEach(h => {
+    if (h.is_closed) return;
+    const openMin  = parseHHMM(h.open_time);
+    const closeMin = parseHHMM(h.close_time);
+    const effective = (openMin === 0 && closeMin === 0) ? 1440 : closeMin;
+    if (effective > openMin) totalMinutes += effective - openMin;
+  });
+  const occupation_rate = totalMinutes > 0
+    ? Math.min(100, Math.round((bookedMinutes / totalMinutes) * 100))
+    : 0;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  const CANCELLED_STATUSES = ['cancelled', 'cancelled_by_pro'];
+  const upcoming  = appointments.filter(a =>
+    new Date(a.appointment_date) > now &&
+    !CANCELLED_STATUSES.includes(a.status) &&
+    a.status !== 'completed'
+  );
+  const displayed = showAll ? upcoming : upcoming.slice(0, 6);
+  const history   = [...appointments]
+    .filter(a => a.status === 'completed' || CANCELLED_STATUSES.includes(a.status))
+    .sort((a, b) => new Date(b.appointment_date) - new Date(a.appointment_date))
+    .slice(0, 30);
+  const shopImage  = shopData.image_url ? `${API_BASE_URL.replace('/api','')}${shopData.image_url}` : null;
 
   const kpis = [
-    { icon: Calendar,   label: 'RDV à venir',       value: upcoming.length,     unit: 'RDV', color: '#f43f5e' },
-    { icon: Users,      label: 'Total réservations', value: appointments.length, unit: 'RDV', color: '#8b5cf6' },
-    { icon: TrendingUp, label: 'CA prévisionnel',    value: caTotal.toFixed(2),  unit: '€',   color: '#10b981' },
-    { icon: Euro,       label: "CA aujourd'hui",     value: caToday.toFixed(2),  unit: '€',   color: '#f59e0b' },
+    { icon: Users,      label: 'Nouveaux clients',   value: new_clients,              unit: 'ce mois',         color: '#8b5cf6' },
+    { icon: TrendingUp, label: "Taux d'occupation",  value: occupation_rate,           unit: '% cette semaine', color: '#10b981' },
+    { icon: Calendar,   label: 'RDV à venir',        value: upcoming_7d,               unit: '7 prochains jours', color: '#f43f5e' },
+    { icon: Euro,       label: 'CA prévisionnel',    value: ca_previsionnel.toFixed(2), unit: '€',               color: '#f59e0b' },
   ];
 
   return (
@@ -333,7 +724,7 @@ function ProDashboard({ shopData, onEditShop }) {
       <div className="max-w-6xl mx-auto px-4 space-y-5">
 
         {/* ── Topbar boutique ────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
           <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6)' }} />
           <div className="flex items-center gap-4 px-6 py-4">
             {shopImage ? (
@@ -362,12 +753,22 @@ function ProDashboard({ shopData, onEditShop }) {
         {/* ── KPIs ───────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map(({ icon: Icon, label, value, unit, color }) => (
-            <div key={label} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center gap-3">
+            <div key={label} className="bg-white rounded-2xl p-5 flex items-center gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
                 <Icon size={18} style={{ color }} />
               </div>
               <div className="min-w-0">
-                <p className="text-xl font-black text-slate-900 leading-none">{value} <span className="text-xs font-semibold text-slate-400">{unit}</span></p>
+                {loading ? (
+                  <div className="flex items-center gap-2 h-7">
+                    <Loader2 size={16} className="animate-spin" style={{ color }} />
+                    <span className="text-xs text-slate-400">Calcul…</span>
+                  </div>
+                ) : (
+                  <p className="text-xl font-black text-slate-900 leading-none">
+                    {value}
+                    <span className="text-xs font-semibold text-slate-400 ml-1">{unit}</span>
+                  </p>
+                )}
                 <p className="text-xs font-medium mt-1 text-slate-500 truncate">{label}</p>
               </div>
             </div>
@@ -376,27 +777,27 @@ function ProDashboard({ shopData, onEditShop }) {
 
         {/* ── Planning hebdomadaire ──────────────────────────────────── */}
         {!loading && (
-          <WeeklyPlanning weekAppointments={weekAppointments} shopHours={shopData.hours || []} />
+          <WeeklyPlanning weekAppointments={appointments} shopHours={shopData.hours || []} onRefuse={id => setRefusalTarget(id)} />
         )}
 
         {/* ── Liste des rendez-vous ──────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-50">
                 <Calendar size={14} className="text-rose-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 text-sm">{showAll ? 'Tous les rendez-vous' : 'Prochains rendez-vous'}</h3>
-                <p className="text-xs text-slate-400">{upcoming.length} à venir · {appointments.length} au total</p>
+                <h3 className="font-semibold text-slate-900 text-sm">{showAll ? 'Tous les RDV à venir' : 'Prochains rendez-vous'}</h3>
+                <p className="text-xs text-slate-400">{upcoming.length} à venir</p>
               </div>
             </div>
-            {appointments.length > 0 && (
+            {upcoming.length > 6 && (
               <button
                 onClick={() => setShowAll(v=>!v)}
                 className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition"
               >
-                {showAll ? 'Voir à venir' : `Tout voir (${appointments.length})`}
+                {showAll ? 'Réduire' : `Voir tout (${upcoming.length})`}
                 <ChevronRight size={11} />
               </button>
             )}
@@ -422,7 +823,7 @@ function ProDashboard({ shopData, onEditShop }) {
                   <div
                     key={appt.id}
                     className={`flex items-center gap-4 px-6 py-4 transition-all hover:bg-slate-50 ${idx > 0 ? 'border-t border-slate-100' : ''}`}
-                    style={{ opacity: isPast || appt.status === 'cancelled' ? 0.5 : 1 }}
+                    style={{ opacity: isPast || CANCELLED_STATUSES.includes(appt.status) ? 0.5 : 1 }}
                   >
                     {/* Bloc date */}
                     <div className="flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center bg-rose-50 border border-rose-100">
@@ -444,13 +845,21 @@ function ProDashboard({ shopData, onEditShop }) {
                         {appt.client_first_name || ''} {appt.client_last_name || appt.client_email || '—'}
                       </p>
                     </div>
-                    {/* Statut + prix */}
+                    {/* Statut + prix + action */}
                     <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                       <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
                         {st.label}
                       </span>
                       {appt.price && (
                         <span className="text-xs font-bold text-slate-500">{Number(appt.price).toFixed(2)} €</span>
+                      )}
+                      {!isPast && !CANCELLED_STATUSES.includes(appt.status) && appt.status !== 'completed' && (
+                        <button
+                          onClick={() => setRefusalTarget(appt.id)}
+                          className="flex items-center gap-1 text-[10px] font-semibold text-orange-500 hover:text-orange-700 border border-orange-200 hover:border-orange-400 px-2 py-1 rounded-lg transition"
+                        >
+                          <Ban size={10} /> Refuser
+                        </button>
                       )}
                     </div>
                   </div>
@@ -459,6 +868,151 @@ function ProDashboard({ shopData, onEditShop }) {
             )}
           </div>
         </div>
+
+        {/* ── Historique des rendez-vous ────────────────────────────── */}
+        {!loading && (
+          <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-100">
+                <Archive size={14} className="text-slate-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 text-sm">Historique</h3>
+                <p className="text-xs text-slate-400">{history.length} rendez-vous terminés ou annulés</p>
+              </div>
+            </div>
+            {history.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-100">
+                  <Archive size={18} className="text-slate-300" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">Aucun historique pour le moment</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" style={{ minWidth: '580px' }}>
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50">
+                      {['Date', 'Client', 'Téléphone', 'Prestation', 'Statut'].map((h, i) => (
+                        <th key={h} className={`py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wide ${i === 0 ? 'pl-6 pr-4 text-left' : i === 4 ? 'pr-6 pl-4 text-right' : 'px-4 text-left'}`}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((appt, idx) => {
+                      const date = new Date(appt.appointment_date);
+                      const st   = STATUS_STYLES[appt.status] || STATUS_STYLES.completed;
+                      const initials = (appt.client_first_name?.[0] || appt.client_email?.[0] || '?').toUpperCase();
+                      const avatarUrl = appt.client_profile_picture
+                        ? `${API_BASE_URL.replace('/api', '')}${appt.client_profile_picture}`
+                        : null;
+                      return (
+                        <tr key={appt.id} className={`hover:bg-slate-50 transition ${idx > 0 ? 'border-t border-slate-100' : ''}`}>
+                          <td className="pl-6 pr-4 py-3.5 whitespace-nowrap">
+                            <p className="text-sm font-semibold text-slate-800">
+                              {date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              {avatarUrl ? (
+                                <img src={avatarUrl} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                  {initials}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-800 text-sm truncate">
+                                  {`${appt.client_first_name || ''} ${appt.client_last_name || appt.client_email?.split('@')[0] || '—'}`.trim()}
+                                </p>
+                                <p className="text-xs text-slate-400 truncate max-w-[140px]">{appt.client_email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                            {appt.client_phone || <span className="text-slate-300">—</span>}
+                          </td>
+                          <td className="px-4 py-3.5 text-sm text-slate-600 max-w-[160px] truncate">
+                            {appt.service_label}
+                          </td>
+                          <td className="pr-6 pl-4 py-3.5 text-right">
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${st.bg} ${st.text}`}>
+                              {st.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Nouveaux clients du mois ──────────────────────────────── */}
+        {!loading && (
+          <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-violet-50">
+                  <Users size={14} className="text-violet-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 text-sm">Derniers clients inscrits</h3>
+                  <p className="text-xs text-slate-400">{newClients.length} nouveau{newClients.length !== 1 ? 'x' : ''} ce mois-ci</p>
+                </div>
+              </div>
+            </div>
+            {newClients.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-slate-100">
+                  <Users size={18} className="text-slate-300" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">Aucun nouveau client ce mois-ci</p>
+              </div>
+            ) : (
+              <div>
+                {newClients.map((client, idx) => (
+                  <div
+                    key={client.id}
+                    className={`flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition ${idx > 0 ? 'border-t border-slate-100' : ''}`}
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white" style={{ background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)' }}>
+                      {(client.first_name?.[0] || client.email?.[0] || '?').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900 text-sm truncate">
+                        {client.first_name || ''} {client.last_name || client.email?.split('@')[0] || '—'}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate">{client.email}</p>
+                    </div>
+                    {client.phone && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 flex-shrink-0">
+                        <Phone size={11} />
+                        {client.phone}
+                      </div>
+                    )}
+                    <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">
+                      Nouveau
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {refusalTarget !== null && (
+          <RefusalModal
+            onConfirm={handleRefuseConfirm}
+            onClose={() => setRefusalTarget(null)}
+          />
+        )}
 
       </div>
     </div>

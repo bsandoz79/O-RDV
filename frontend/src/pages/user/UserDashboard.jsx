@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   User, Mail, Lock, Save, KeyRound, Calendar, Clock,
   MapPin, ChevronDown, ChevronUp, CheckCircle2, AlertCircle,
-  Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search,
+  Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search, Camera,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 
@@ -16,14 +16,18 @@ function formatTime(dateStr) {
 function isPast(dateStr) { return new Date(dateStr) < new Date(); }
 
 const STATUS_STYLES = {
-  pending:   'bg-amber-100 text-amber-600',
-  confirmed: 'bg-emerald-100 text-emerald-600',
-  cancelled: 'bg-red-100 text-red-500',
-  completed: 'bg-slate-100 text-slate-500',
+  pending:          'bg-amber-100 text-amber-600',
+  confirmed:        'bg-emerald-100 text-emerald-600',
+  cancelled:        'bg-red-100 text-red-500',
+  cancelled_by_pro: 'bg-orange-100 text-orange-600',
+  completed:        'bg-slate-100 text-slate-500',
 };
 const STATUS_LABELS = {
-  pending: 'En attente', confirmed: 'Confirmé',
-  cancelled: 'Annulé',   completed: 'Terminé',
+  pending:          'En attente',
+  confirmed:        'Confirmé',
+  cancelled:        'Annulé',
+  cancelled_by_pro: 'Refusé',
+  completed:        'Terminé',
 };
 
 const DAY_LABELS = {
@@ -59,9 +63,10 @@ function SectionCard({ icon: Icon, color, title, children }) {
 
 function AppointmentCard({ appt, role, onCancel }) {
   const past = isPast(appt.appointment_date);
-  const cancellable = !past && appt.status !== 'cancelled' && appt.status !== 'completed';
+  const isRefused = appt.status === 'cancelled_by_pro';
+  const cancellable = !past && appt.status !== 'cancelled' && appt.status !== 'completed' && !isRefused;
   return (
-    <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' ? 'border-slate-100 opacity-60' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
+    <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' || isRefused ? 'border-slate-100 opacity-70' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
       <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
         <span className="text-[10px] font-bold text-rose-400 uppercase">
           {new Date(appt.appointment_date).toLocaleDateString('fr-FR', { month: 'short' })}
@@ -85,6 +90,11 @@ function AppointmentCard({ appt, role, onCancel }) {
             {appt.provider_city && <><MapPin size={11} className="ml-1" />{appt.provider_city}</>}
           </p>
         )}
+        {isRefused && appt.refusal_reason && (
+          <p className="text-xs mt-1.5 px-2 py-1 rounded-lg bg-orange-50 text-orange-600 border border-orange-100">
+            Motif : {appt.refusal_reason}
+          </p>
+        )}
       </div>
       <div className="flex flex-col items-end gap-2">
         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${STATUS_STYLES[appt.status] || STATUS_STYLES.pending}`}>
@@ -98,6 +108,58 @@ function AppointmentCard({ appt, role, onCancel }) {
             <Ban size={10} /> Annuler
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal notification refus ───────────────────────────────────────────────
+
+function RefusalNotificationModal({ refusals, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+            <AlertCircle size={22} className="text-orange-500" />
+          </div>
+          <div>
+            <h2 className="font-black text-slate-800 text-lg leading-tight">
+              {refusals.length > 1 ? 'Rendez-vous refusés' : 'Rendez-vous refusé'}
+            </h2>
+            <p className="text-xs text-slate-400">
+              {refusals.length > 1 ? `${refusals.length} notifications non lues` : '1 notification non lue'}
+            </p>
+          </div>
+        </div>
+        <div className="space-y-3 mb-5 max-h-72 overflow-y-auto pr-1">
+          {refusals.map(appt => (
+            <div key={appt.id} className="p-4 rounded-xl bg-orange-50 border border-orange-100">
+              <div className="flex items-center gap-2 mb-1">
+                <Store size={13} className="text-orange-500 flex-shrink-0" />
+                <span className="font-bold text-sm text-slate-800">{appt.provider_name}</span>
+              </div>
+              <p className="text-xs text-slate-500 mb-2">
+                {new Date(appt.appointment_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {' · '}{formatTime(appt.appointment_date)}
+                {' · '}{appt.service_label}
+              </p>
+              {appt.refusal_reason ? (
+                <p className="text-xs px-3 py-2 rounded-lg bg-white border border-orange-100 text-orange-700">
+                  <span className="font-semibold">Motif : </span>{appt.refusal_reason}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aucun motif renseigné.</p>
+              )}
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition text-sm"
+        >
+          J'ai compris
+        </button>
       </div>
     </div>
   );
@@ -199,11 +261,14 @@ export default function UserDashboard() {
   const token = localStorage.getItem('token');
   const role = storedUser.role;
 
+  const avatarInputRef = React.useRef(null);
+
   const [userInfo, setUserInfo]     = useState(null);
   const [editMode, setEditMode]     = useState(false);
   const [editForm, setEditForm]     = useState({ first_name: '', last_name: '', email: '', phone: '' });
   const [profileMsg, setProfileMsg] = useState({ type: '', text: '' });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const [pwForm, setPwForm]   = useState({ current_password: '', new_password: '', confirm: '' });
   const [pwMsg, setPwMsg]     = useState({ type: '', text: '' });
@@ -213,6 +278,7 @@ export default function UserDashboard() {
   const [loadingAppts, setLoadingAppts] = useState(true);
   const [showAll, setShowAll]           = useState(false);
   const [apptMsg, setApptMsg]           = useState({ type: '', text: '' });
+  const [unreadRefusals, setUnreadRefusals] = useState([]);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -227,7 +293,14 @@ export default function UserDashboard() {
     setLoadingAppts(true);
     fetch(`${API_BASE_URL}/user/appointments`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(data => { setAppointments(Array.isArray(data) ? data : []); setLoadingAppts(false); })
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        setAppointments(list);
+        if (role !== 'pro') {
+          setUnreadRefusals(list.filter(a => a.status === 'cancelled_by_pro' && a.is_read === 0));
+        }
+        setLoadingAppts(false);
+      })
       .catch(() => setLoadingAppts(false));
   };
   useEffect(loadAppointments, []);
@@ -269,6 +342,45 @@ export default function UserDashboard() {
     finally { setSavingPw(false); }
   };
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/profile-picture`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur upload');
+      setUserInfo(u => ({ ...u, profile_picture: data.profile_picture }));
+      setProfileMsg({ type: 'success', text: 'Photo de profil mise à jour !' });
+    } catch (err) {
+      setProfileMsg({ type: 'error', text: err.message });
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleMarkRefusalsRead = async () => {
+    await Promise.all(
+      unreadRefusals.map(appt =>
+        fetch(`${API_BASE_URL}/user/appointments/${appt.id}/mark-read`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+    );
+    setUnreadRefusals([]);
+    setAppointments(prev => prev.map(a =>
+      unreadRefusals.some(r => r.id === a.id) ? { ...a, is_read: 1 } : a
+    ));
+  };
+
   const handleCancel = async (id) => {
     if (!window.confirm('Confirmer l\'annulation de ce rendez-vous ?')) return;
     try {
@@ -291,8 +403,35 @@ export default function UserDashboard() {
 
         {/* En-tête */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-rose-200">
-            {initials}
+          <div className="relative flex-shrink-0">
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
+            {userInfo?.profile_picture ? (
+              <img
+                src={`${API_BASE_URL.replace('/api', '')}${userInfo.profile_picture}`}
+                alt="Avatar"
+                className="w-14 h-14 rounded-2xl object-cover shadow-lg border-2 border-white"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-rose-200">
+                {initials}
+              </div>
+            )}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-rose-50 transition"
+              title="Changer la photo"
+            >
+              {avatarUploading
+                ? <Loader2 size={11} className="animate-spin text-rose-400" />
+                : <Camera size={11} className="text-slate-500" />}
+            </button>
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900">
@@ -452,6 +591,10 @@ export default function UserDashboard() {
         </SectionCard>
 
       </div>
+
+      {role !== 'pro' && unreadRefusals.length > 0 && (
+        <RefusalNotificationModal refusals={unreadRefusals} onClose={handleMarkRefusalsRead} />
+      )}
     </div>
   );
 }
