@@ -1,7 +1,6 @@
 {
   "name": "ordv-frontend",
   "version": "1.0.0",
-  "type": "module",
   "private": true,
   "dependencies": {
     "lucide-react": "^0.344.0",
@@ -13,7 +12,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "jest --config jest.standalone.config.js --forceExit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -34,11 +33,24 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.{js,jsx}",
+      "<rootDir>/src/**/*.{spec,test}.{js,jsx}"
+    ]
+  },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "@babel/preset-react": "^7.28.5",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "autoprefixer": "^10.4.27",
+    "babel-jest": "^27.5.1",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.5.1",
+    "jest-environment-jsdom": "^27.5.1",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.19"
   }
