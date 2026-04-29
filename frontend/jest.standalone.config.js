@@ -6,7 +6,7 @@ module.exports = {
   roots: [src],
   testMatch: ['**/__tests__/**/*.{js,jsx}'],
   transform: {
-    '^.+\\.(js|jsx)$': 'babel-jest',
+    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.test.config.js' }],
   },
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
