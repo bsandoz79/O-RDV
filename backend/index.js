@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const migrate = require('./migrate');
+
 // --- IMPORT DES ROUTES EXTERNES ---
 const authRoutes = require('./routes/auth');        // Logique Login/Register
 const shopRoutes = require('./routes/shop');        // Configuration Boutique (Profil, Services, Horaires, Image)
@@ -42,10 +44,11 @@ app.use((req, res) => {
 
 // --- LANCEMENT DU SERVEUR ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`--------------------------------------------------`);
     console.log(`✅ Serveur démarré sur : http://localhost:${PORT}`);
     console.log(`📂 Dossier uploads : ${path.join(__dirname, 'uploads')}`);
     console.log(`🗄️  Base de données cible : ${process.env.DB_NAME}`);
     console.log(`--------------------------------------------------`);
+    await migrate().catch(err => console.error('Migration échouée:', err.message));
 });

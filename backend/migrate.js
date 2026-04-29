@@ -1,15 +1,6 @@
-const mysql = require('mysql2');
+const db = require('./db');
 
-const conn = mysql.createConnection({
-  host: 'maglev.proxy.rlwy.net',
-  port: 21763,
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'railway',
-  multipleStatements: true,
-});
-
-const sql = `
+const SQL = `
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) DEFAULT NULL,
@@ -27,14 +18,6 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(100) NOT NULL UNIQUE,
     icon VARCHAR(50) NOT NULL DEFAULT 'Store'
 );
-
-INSERT IGNORE INTO categories (name, icon) VALUES
-    ('Coiffeur',        'Scissors'),
-    ('Barbier',         'Zap'),
-    ('Institut beauté', 'Sparkles'),
-    ('Tatoueur',        'Palette'),
-    ('Nail Art',        'Heart'),
-    ('Spa & Bien-être', 'Smile');
 
 CREATE TABLE IF NOT EXISTS providers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -88,13 +71,22 @@ CREATE TABLE IF NOT EXISTS appointments (
     FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE,
     FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
 );
+
+INSERT IGNORE INTO categories (name, icon) VALUES
+    ('Coiffeur',        'Scissors'),
+    ('Barbier',         'Zap'),
+    ('Institut beauté', 'Sparkles'),
+    ('Tatoueur',        'Palette'),
+    ('Nail Art',        'Heart'),
+    ('Spa & Bien-être', 'Smile');
 `;
 
-conn.query(sql, (err) => {
-  if (err) {
-    console.error('Erreur:', err.message);
-  } else {
-    console.log('Tables créées avec succès dans railway !');
-  }
-  conn.end();
-});
+async function migrate() {
+    const stmts = SQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    for (const stmt of stmts) {
+        await db.execute(stmt);
+    }
+    console.log('✅ Base de données initialisée automatiquement.');
+}
+
+module.exports = migrate;
