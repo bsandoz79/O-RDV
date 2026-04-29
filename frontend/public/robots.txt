@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /pro/settings
+Disallow: /dashboard
+Disallow: /admin
+
+Sitemap: https://portfolio-sandoz-baptiste.vercel.app/sitemap.xml
