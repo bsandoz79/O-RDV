@@ -6,10 +6,10 @@ require('dotenv').config();
 const migrate = require('./migrate');
 
 // --- IMPORT DES ROUTES EXTERNES ---
-const authRoutes = require('./routes/auth');        // Logique Login/Register
-const shopRoutes = require('./routes/shop');        // Configuration Boutique (Profil, Services, Horaires, Image)
+const authRoutes = require('./routes/auth');
+const shopRoutes = require('./routes/shop');
 const appointmentRoutes = require('./routes/appointments');
-const userRoutes = require('./routes/user');        // Profil utilisateur & rendez-vous
+const userRoutes = require('./routes/user');
 
 const app = express();
 

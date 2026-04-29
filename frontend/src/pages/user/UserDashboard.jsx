@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   User, Mail, Lock, Save, KeyRound, Calendar, Clock,
@@ -6,6 +6,7 @@ import {
   Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search, Camera,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
+import { buildGoogleCalendarUrl } from '../../utils/googleCalendar';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -107,6 +108,21 @@ function AppointmentCard({ appt, role, onCancel }) {
           >
             <Ban size={10} /> Annuler
           </button>
+        )}
+        {role !== 'pro' && !past && appt.status !== 'cancelled' && appt.status !== 'cancelled_by_pro' && (
+          <a
+            href={buildGoogleCalendarUrl({
+              title: `RDV O'RDV — ${appt.service_label}`,
+              description: `Prestataire : ${appt.provider_name}`,
+              startDate: appt.appointment_date,
+              durationMinutes: appt.duration,
+            })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[10px] font-semibold text-blue-500 hover:text-blue-700 border border-blue-200 hover:border-blue-400 px-2 py-1 rounded-lg transition"
+          >
+            <Calendar size={10} /> Google Agenda
+          </a>
         )}
       </div>
     </div>
@@ -303,7 +319,11 @@ export default function UserDashboard() {
       })
       .catch(() => setLoadingAppts(false));
   };
-  useEffect(loadAppointments, []);
+  useEffect(() => {
+    loadAppointments();
+    const interval = setInterval(loadAppointments, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleProfileSave = async () => {
     setSavingProfile(true); setProfileMsg({ type: '', text: '' });

@@ -79,6 +79,10 @@ INSERT IGNORE INTO categories (name, icon) VALUES
     ('Tatoueur',        'Palette'),
     ('Nail Art',        'Heart'),
     ('Spa & Bien-être', 'Smile');
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_access_token TEXT DEFAULT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_refresh_token TEXT DEFAULT NULL;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS google_event_id VARCHAR(255) DEFAULT NULL;
 `;
 
 async function migrate() {

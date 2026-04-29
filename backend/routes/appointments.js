@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); 
-const auth = require('../middlewares/auth'); // VERROU 1 : Vérifie si on est connecté
-const checkRole = require('../middlewares/roleGuard'); // VERROU 2 : Vérifie le rôle
+const db = require('../db');
+const auth = require('../middlewares/auth');
+const checkRole = require('../middlewares/roleGuard');
 
 // --- CRÉER UN RENDEZ-VOUS ---
 // On ajoute 'auth' : Seuls les gens connectés peuvent prendre RDV
