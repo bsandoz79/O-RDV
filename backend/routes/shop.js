@@ -147,7 +147,7 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
                     provider_id: provider.id,
                     label: s.label,
                     price: parseFloat(s.price),
-                    duration: s.duration || 30,
+                    duration: parseInt(s.duration) || 30,
                 })),
             });
         }
