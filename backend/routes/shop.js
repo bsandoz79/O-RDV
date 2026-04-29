@@ -6,6 +6,14 @@ const multer = require('multer');
 const path = require('path');
 const prisma = require('../prisma/client');
 
+// Prisma retourne les colonnes TIME MySQL sous forme de Date — on extrait HH:MM
+function fmtTime(t) {
+    if (!t) return null;
+    if (typeof t === 'string') return t.substring(0, 5);
+    const d = new Date(t);
+    return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
@@ -42,7 +50,6 @@ router.get('/all', async (req, res) => {
 
         const result = providers.map(p => {
             const bh = p.businessHours[0];
-            const fmtTime = (t) => t ? String(t).substring(0, 5) : null;
             return {
                 ...p,
                 category_name: p.category?.name || null,
@@ -70,7 +77,8 @@ router.get('/profile/:providerId', async (req, res) => {
         });
         if (!provider) return res.status(404).json({ error: "Prestataire introuvable" });
         const { businessHours, ...rest } = provider;
-        res.json({ ...rest, hours: businessHours });
+        const hours = businessHours.map(h => ({ ...h, open_time: fmtTime(h.open_time), close_time: fmtTime(h.close_time) }));
+        res.json({ ...rest, hours });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -89,7 +97,8 @@ router.get('/info/:userId', auth, async (req, res) => {
         });
         if (!provider) return res.status(404).json({ error: "Profil non trouvé" });
         const { businessHours, ...rest } = provider;
-        res.json({ ...rest, hours: businessHours });
+        const hours = businessHours.map(h => ({ ...h, open_time: fmtTime(h.open_time), close_time: fmtTime(h.close_time) }));
+        res.json({ ...rest, hours });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
