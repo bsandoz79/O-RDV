@@ -105,7 +105,7 @@ Pour créer un admin manuellement, utiliser le script suivant depuis la racine d
 
 ```powershell
 # PowerShell
-$env:DB_PASSWORD = "TONMOTDEPASSE"
+$env:DB_PASSWORD = "MONMOTDEPASSE"
 node backend/init-db.js
 ```
 
