@@ -1,24 +1,43 @@
 version: '3.8'
 services:
-  # Base de données pour la gestion relationnelle des agendas 
   db:
     image: mysql:8.0
     environment:
       MYSQL_DATABASE: ordv_db
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: ordv_user
+      MYSQL_PASSWORD: ordv_pass
     ports:
       - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  # API Backend Node.js 
   backend:
     build: ./backend
     ports:
       - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ordv_db
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      PORT: 5000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  # Frontend React.js 
   frontend:
     build: ./frontend
     ports:
       - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+
+volumes:
+  mysql_data:
