@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2, Bell } from 'lucide-react';
 import API_BASE_URL from '../api/api';
+import { buildGoogleCalendarUrl } from '../utils/googleCalendar';
 
 const MONTHS_FR = [
   'Janvier','Février','Mars','Avril','Mai','Juin',
@@ -241,12 +242,34 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
                 {selectedDate?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}{' '}
                 à {selectedTime}
               </p>
-              <button
-                onClick={onClose}
-                className="mt-4 bg-rose-500 text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-rose-600 transition"
-              >
-                Fermer
-              </button>
+
+              <p className="text-xs text-slate-400 mt-1">Ajouter à votre agenda :</p>
+              <div className="flex gap-2">
+                <a
+                  href={buildGoogleCalendarUrl({
+                    title: `RDV O'RDV — ${selectedService?.label}`,
+                    description: `Prestataire : ${provider.name}`,
+                    startDate: (() => {
+                      const d = new Date(selectedDate);
+                      const [h, m] = selectedTime.split(':');
+                      d.setHours(Number(h), Number(m), 0, 0);
+                      return d.toISOString();
+                    })(),
+                    durationMinutes: selectedService?.duration || 30,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-xl transition"
+                >
+                  <CalendarDays size={15} /> Google Agenda
+                </a>
+                <button
+                  onClick={onClose}
+                  className="bg-slate-100 text-slate-600 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 transition"
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           )}
 
