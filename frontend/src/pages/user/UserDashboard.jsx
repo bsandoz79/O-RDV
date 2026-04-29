@@ -399,7 +399,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
 
         {/* En-tête */}
         <div className="flex items-center gap-4">

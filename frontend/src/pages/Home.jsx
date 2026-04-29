@@ -83,7 +83,7 @@ export default function Home() {
         <div className="hero-orb absolute -top-16 -right-16 w-96 h-96 rounded-full pointer-events-none" />
         <div className="hero-orb-2 absolute -bottom-12 -left-12 w-72 h-72 rounded-full pointer-events-none" />
 
-        <div className="relative z-10 max-w-2xl mx-auto text-center">
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-4">
             Votre{" "}
             <span
@@ -121,7 +121,7 @@ export default function Home() {
       </section>
 
       {/* Zone de Contenu */}
-      <div className="max-w-5xl mx-auto px-4 mt-10">
+      <div className="max-w-7xl mx-auto px-6 mt-10">
         
         {/* Catégories */}
         {categories.length > 0 && (
@@ -189,7 +189,7 @@ export default function Home() {
               </button>
             </div>
           ) : filteredProviders.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredProviders.map((provider) => (
                 <ProviderCard
                   key={provider.id}
