@@ -7,6 +7,7 @@
     "test": "jest --testPathPatterns=tests/ --forceExit"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -14,7 +15,8 @@
     "googleapis": "^171.4.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
-    "mysql2": "^3.20.0"
+    "mysql2": "^3.20.0",
+    "prisma": "^5.22.0"
   },
   "description": "",
   "main": "index.js",
