@@ -154,12 +154,19 @@ router.post('/setup', auth, checkRole(['pro', 'admin']), upload.single('image'),
 
         // Remplace les horaires
         await prisma.businessHour.deleteMany({ where: { provider_id: provider.id } });
+        const toDateTime = (t) => {
+            const [hh, mm] = (t || '00:00').split(':').map(Number);
+            const d = new Date(0);
+            d.setUTCHours(hh, mm, 0, 0);
+            return d;
+        };
+
         await prisma.businessHour.createMany({
             data: hours.map(h => ({
                 provider_id: provider.id,
                 day_of_week: h.day_of_week,
-                open_time: h.open || '09:00',
-                close_time: h.close || '18:00',
+                open_time: toDateTime(h.open || '09:00'),
+                close_time: toDateTime(h.close || '18:00'),
                 is_closed: h.closed ? true : false,
             })),
         });
