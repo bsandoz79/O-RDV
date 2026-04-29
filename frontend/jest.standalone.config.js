@@ -6,7 +6,12 @@ module.exports = {
   roots: [src],
   testMatch: ['**/__tests__/**/*.{js,jsx}'],
   transform: {
-    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.test.config.js' }],
+    '^.+\\.(js|jsx)$': ['babel-jest', {
+      presets: [
+        ['@babel/preset-env', { targets: { node: 'current' } }],
+        ['@babel/preset-react', { runtime: 'automatic' }],
+      ],
+    }],
   },
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
