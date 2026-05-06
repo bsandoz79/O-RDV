@@ -247,8 +247,8 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
               <div className="flex gap-2">
                 <a
                   href={buildGoogleCalendarUrl({
-                    title: `RDV O'RDV — ${selectedService?.label}`,
-                    description: `Prestataire : ${provider.name}`,
+                    title: `${provider.name} — ${selectedService?.label}`,
+                    description: `Prestation : ${selectedService?.label}\nDurée : ${selectedService?.duration} min\nPrix : ${selectedService?.price} €\n\nRéservé via O'RDV`,
                     startDate: (() => {
                       const d = new Date(selectedDate);
                       const [h, m] = selectedTime.split(':');

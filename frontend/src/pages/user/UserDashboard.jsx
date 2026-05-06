@@ -112,8 +112,8 @@ function AppointmentCard({ appt, role, onCancel }) {
         {role !== 'pro' && !past && appt.status !== 'cancelled' && appt.status !== 'cancelled_by_pro' && (
           <a
             href={buildGoogleCalendarUrl({
-              title: `RDV O'RDV — ${appt.service_label}`,
-              description: `Prestataire : ${appt.provider_name}`,
+              title: `${appt.provider_name} — ${appt.service_label}`,
+              description: `Prestation : ${appt.service_label}\nDurée : ${appt.duration} min\nPrix : ${appt.price} €\n\nRéservé via O'RDV`,
               startDate: appt.appointment_date,
               durationMinutes: appt.duration,
             })}
