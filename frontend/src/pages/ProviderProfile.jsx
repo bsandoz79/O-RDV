@@ -82,7 +82,7 @@ export default function ProviderProfile() {
   }
 
   const imageUrl = provider.image_url
-    ? `${API_BASE_URL.replace('/api', '')}${provider.image_url}`
+    ? (provider.image_url.startsWith('http') ? provider.image_url : `${API_BASE_URL.replace('/api', '')}${provider.image_url}`)
     : 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=400&fit=crop';
 
   const handleReserve = (service) => {

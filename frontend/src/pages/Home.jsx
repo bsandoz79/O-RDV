@@ -52,7 +52,7 @@ export default function Home() {
           avis: 12,
           distance: pro.city || "Amiens",
           image: pro.image_url
-            ? `${API_BASE_URL.replace('/api', '')}${pro.image_url}`
+            ? (pro.image_url.startsWith('http') ? pro.image_url : `${API_BASE_URL.replace('/api', '')}${pro.image_url}`)
             : "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=280&fit=crop",
           createdAt:     pro.created_at,
           todayOpen:     pro.today_open,

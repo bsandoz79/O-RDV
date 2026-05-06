@@ -433,7 +433,7 @@ export default function UserDashboard() {
             />
             {userInfo?.profile_picture ? (
               <img
-                src={`${API_BASE_URL.replace('/api', '')}${userInfo.profile_picture}`}
+                src={userInfo.profile_picture.startsWith('http') ? userInfo.profile_picture : `${API_BASE_URL.replace('/api', '')}${userInfo.profile_picture}`}
                 alt="Avatar"
                 className="w-14 h-14 rounded-2xl object-cover shadow-lg border-2 border-white"
               />

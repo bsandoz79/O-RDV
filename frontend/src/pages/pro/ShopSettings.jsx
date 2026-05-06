@@ -710,7 +710,8 @@ function ProDashboard({ shopData, onEditShop }) {
     .filter(a => a.status === 'completed' || CANCELLED_STATUSES.includes(a.status))
     .sort((a, b) => new Date(b.appointment_date) - new Date(a.appointment_date))
     .slice(0, 30);
-  const shopImage  = shopData.image_url ? `${API_BASE_URL.replace('/api','')}${shopData.image_url}` : null;
+  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `${API_BASE_URL.replace('/api', '')}${url}`) : null;
+  const shopImage  = resolveUrl(shopData.image_url);
 
   const kpis = [
     { icon: Users,      label: 'Nouveaux clients',   value: new_clients,              unit: 'ce mois',         color: '#8b5cf6' },
@@ -904,7 +905,7 @@ function ProDashboard({ shopData, onEditShop }) {
                       const st   = STATUS_STYLES[appt.status] || STATUS_STYLES.completed;
                       const initials = (appt.client_first_name?.[0] || appt.client_email?.[0] || '?').toUpperCase();
                       const avatarUrl = appt.client_profile_picture
-                        ? `${API_BASE_URL.replace('/api', '')}${appt.client_profile_picture}`
+                        ? resolveUrl(appt.client_profile_picture)
                         : null;
                       return (
                         <tr key={appt.id} className={`hover:bg-slate-50 transition ${idx > 0 ? 'border-t border-slate-100' : ''}`}>
@@ -1081,7 +1082,7 @@ export default function ShopSettings() {
           phone:       data.phone       || '',
           categoryId:  data.category_id ? String(data.category_id) : '',
         });
-        if (data.image_url) setImagePreview(`${API_BASE_URL.replace('/api', '')}${data.image_url}`);
+        if (data.image_url) setImagePreview(data.image_url.startsWith('http') ? data.image_url : `${API_BASE_URL.replace('/api', '')}${data.image_url}`);
         if (data.services?.length > 0) {
           setServices(data.services.map(s => ({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '' })));
         }
