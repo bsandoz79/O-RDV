@@ -127,17 +127,33 @@ const setupShop = async (req, res) => {
             },
         });
 
-        await prisma.service.deleteMany({ where: { provider_id: provider.id } });
         const validServices = services.filter(s => s.label && s.price);
-        if (validServices.length > 0) {
-            await prisma.service.createMany({
-                data: validServices.map(s => ({
-                    provider_id: provider.id,
-                    label: s.label,
-                    price: parseFloat(s.price),
-                    duration: parseInt(s.duration) || 30,
-                })),
-            });
+        const existingServices = await prisma.service.findMany({ where: { provider_id: provider.id } });
+
+        // Supprimer uniquement les services sans RDV associés
+        const labelsNew = validServices.map(s => s.label);
+        for (const existing of existingServices) {
+            if (!labelsNew.includes(existing.label)) {
+                const count = await prisma.appointment.count({ where: { service_id: existing.id } });
+                if (count === 0) {
+                    await prisma.service.delete({ where: { id: existing.id } });
+                }
+            }
+        }
+
+        // Mettre à jour ou créer chaque service
+        for (const s of validServices) {
+            const match = existingServices.find(e => e.label === s.label);
+            if (match) {
+                await prisma.service.update({
+                    where: { id: match.id },
+                    data: { price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
+                });
+            } else {
+                await prisma.service.create({
+                    data: { provider_id: provider.id, label: s.label, price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
+                });
+            }
         }
 
         await prisma.businessHour.deleteMany({ where: { provider_id: provider.id } });
