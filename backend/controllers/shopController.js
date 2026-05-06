@@ -1,5 +1,21 @@
 const prisma = require('../prisma/client');
 
+async function geocodeAddress(address, zipCode, city) {
+    if (!address && !city) return { latitude: null, longitude: null };
+    const query = [address, zipCode, city].filter(Boolean).join(', ');
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+            { headers: { 'User-Agent': 'ORDV-App/1.0' } }
+        );
+        const data = await res.json();
+        if (data.length === 0) return { latitude: null, longitude: null };
+        return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    } catch {
+        return { latitude: null, longitude: null };
+    }
+}
+
 function fmtTime(t) {
     if (!t) return null;
     if (typeof t === 'string') return t.substring(0, 5);
@@ -25,7 +41,7 @@ const getCategories = async (req, res) => {
 
 const getAllProviders = async (req, res) => {
     try {
-        const { category_id, city } = req.query;
+        const { category_id, city, lat, lng } = req.query;
         const todayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
             .format(new Date()).toLowerCase();
 
@@ -40,8 +56,21 @@ const getAllProviders = async (req, res) => {
             },
         });
 
-        const result = providers.map(p => {
+        const userLat = lat ? parseFloat(lat) : null;
+        const userLng = lng ? parseFloat(lng) : null;
+
+        const calcDistance = (pLat, pLng) => {
+            if (!userLat || !userLng || !pLat || !pLng) return null;
+            const R = 6371;
+            const dLat = (pLat - userLat) * Math.PI / 180;
+            const dLng = (pLng - userLng) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(userLat*Math.PI/180) * Math.cos(pLat*Math.PI/180) * Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+
+        let result = providers.map(p => {
             const bh = p.businessHours[0];
+            const distance = calcDistance(p.latitude, p.longitude);
             return {
                 ...p,
                 category_name: p.category?.name || null,
@@ -49,10 +78,19 @@ const getAllProviders = async (req, res) => {
                 today_is_closed: bh?.is_closed ?? null,
                 today_open: fmtTime(bh?.open_time),
                 today_close: fmtTime(bh?.close_time),
+                distance_km: distance !== null ? Math.round(distance * 10) / 10 : null,
                 businessHours: undefined,
                 category: undefined,
             };
         });
+
+        if (userLat && userLng) {
+            result.sort((a, b) => {
+                if (a.distance_km === null) return 1;
+                if (b.distance_km === null) return -1;
+                return a.distance_km - b.distance_km;
+            });
+        }
 
         res.json(result);
     } catch {
@@ -102,6 +140,8 @@ const setupShop = async (req, res) => {
         const services = req.body.services ? JSON.parse(req.body.services) : [];
         const imageUrl = req.file ? req.file.path : null;
 
+        const { latitude, longitude } = await geocodeAddress(profile.address, profile.zipCode, profile.city);
+
         const provider = await prisma.provider.upsert({
             where: { user_id: userId },
             update: {
@@ -112,6 +152,8 @@ const setupShop = async (req, res) => {
                 zip_code: profile.zipCode,
                 city: profile.city,
                 phone: profile.phone,
+                latitude,
+                longitude,
                 ...(imageUrl ? { image_url: imageUrl } : {}),
             },
             create: {
@@ -124,6 +166,8 @@ const setupShop = async (req, res) => {
                 city: profile.city,
                 phone: profile.phone,
                 image_url: imageUrl,
+                latitude,
+                longitude,
             },
         });
 

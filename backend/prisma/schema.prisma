@@ -43,6 +43,8 @@ model Provider {
   description  String?        @db.Text
   phone        String?        @db.VarChar(20)
   image_url    String?        @db.VarChar(255)
+  latitude     Float?
+  longitude    Float?
   created_at   DateTime       @default(now())
   user         User?          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   category     Category?      @relation(fields: [category_id], references: [id], onDelete: SetNull)

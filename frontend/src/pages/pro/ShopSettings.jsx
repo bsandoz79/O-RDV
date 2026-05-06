@@ -1115,6 +1115,24 @@ export default function ShopSettings() {
     e.preventDefault();
     if (!user) return setError("Session expirée.");
     setLoading(true); setError('');
+
+    // Validation adresse via Nominatim
+    if (profile.address && profile.city) {
+      const query = [profile.address, profile.zipCode, profile.city].filter(Boolean).join(', ');
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+          { headers: { 'User-Agent': 'ORDV-App/1.0' } }
+        );
+        const geoData = await geoRes.json();
+        if (geoData.length === 0) {
+          setLoading(false);
+          return setError("Adresse introuvable. Vérifiez que l'adresse existe (rue, code postal, ville).");
+        }
+      } catch {
+        // Si Nominatim inaccessible, on laisse passer
+      }
+    }
     try {
       const formData = new FormData();
       if (imageFile) formData.append('image', imageFile);

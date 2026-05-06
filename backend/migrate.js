@@ -80,6 +80,8 @@ INSERT IGNORE INTO categories (name, icon) VALUES
     ('Nail Art',        'Heart'),
     ('Spa & Bien-être', 'Smile');
 
+ALTER TABLE providers ADD COLUMN IF NOT EXISTS latitude DOUBLE DEFAULT NULL;
+ALTER TABLE providers ADD COLUMN IF NOT EXISTS longitude DOUBLE DEFAULT NULL;
 `;
 
 async function migrate() {
