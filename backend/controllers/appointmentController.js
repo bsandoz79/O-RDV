@@ -85,8 +85,8 @@ const createAppointment = async (req, res) => {
 
         res.status(201).json({ message: "Rendez-vous créé avec succès !", appointmentId });
     } catch (err) {
-        console.error("Erreur:", err);
-        res.status(500).json({ error: "Erreur lors de l'enregistrement du rendez-vous" });
+        console.error("[createAppointment] Erreur complète:", err);
+        res.status(500).json({ error: err.message || "Erreur lors de l'enregistrement du rendez-vous" });
     }
 };
 
