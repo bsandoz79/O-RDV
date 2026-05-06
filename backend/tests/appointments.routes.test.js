@@ -2,9 +2,19 @@ const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 
-jest.mock('../db', () => ({ execute: jest.fn() }));
+jest.mock('../prisma/client', () => ({
+    $queryRaw: jest.fn(),
+    $executeRaw: jest.fn(),
+    service: { findUnique: jest.fn() },
+    appointment: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        findMany: jest.fn(),
+    },
+}));
 
-const db = require('../db');
+const prisma = require('../prisma/client');
 const appointmentRoutes = require('../routes/appointments');
 
 const SECRET = 'test_secret';
@@ -34,7 +44,7 @@ describe('POST /api/appointments', () => {
         const res = await request(app)
             .post('/api/appointments')
             .set('Authorization', `Bearer ${makeUserToken()}`)
-            .send({ provider_id: 1 }); // service_id et date manquants
+            .send({ provider_id: 1 });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/obligatoires/i);
@@ -52,8 +62,7 @@ describe('POST /api/appointments', () => {
     });
 
     test('retourne 400 si prestataire fermé ce jour', async () => {
-        // business_hours : fermé
-        db.execute.mockResolvedValueOnce([[{ is_closed: 1, open_str: '09:00', close_str: '18:00' }]]);
+        prisma.$queryRaw.mockResolvedValueOnce([{ is_closed: true, open_str: '09:00', close_str: '18:00' }]);
 
         const res = await request(app)
             .post('/api/appointments')
@@ -65,16 +74,12 @@ describe('POST /api/appointments', () => {
     });
 
     test('retourne 201 pour une réservation valide', async () => {
-        // 1. business_hours : ouvert
-        db.execute.mockResolvedValueOnce([[{ is_closed: 0, open_str: '00:00', close_str: '00:00' }]]);
-        // 2. durée du service
-        db.execute.mockResolvedValueOnce([[{ duration: 30 }]]);
-        // 3. pas de conflit
-        db.execute.mockResolvedValueOnce([[]]);
-        // 4. pas de créneau libéré
-        db.execute.mockResolvedValueOnce([[]]);
-        // 5. INSERT
-        db.execute.mockResolvedValueOnce([{ insertId: 99 }]);
+        prisma.$queryRaw
+            .mockResolvedValueOnce([{ is_closed: false, open_str: '00:00', close_str: '00:00' }]) // horaires
+            .mockResolvedValueOnce([]); // pas de conflit
+        prisma.service.findUnique.mockResolvedValueOnce({ duration: 30 });
+        prisma.appointment.findFirst.mockResolvedValueOnce(null); // pas de créneau libéré
+        prisma.appointment.create.mockResolvedValueOnce({ id: 99 });
 
         const res = await request(app)
             .post('/api/appointments')
@@ -86,9 +91,10 @@ describe('POST /api/appointments', () => {
     });
 
     test('retourne 409 si conflit de créneau', async () => {
-        db.execute.mockResolvedValueOnce([[{ is_closed: 0, open_str: '00:00', close_str: '00:00' }]]);
-        db.execute.mockResolvedValueOnce([[{ duration: 30 }]]);
-        db.execute.mockResolvedValueOnce([[{ id: 55 }]]); // conflit !
+        prisma.$queryRaw
+            .mockResolvedValueOnce([{ is_closed: false, open_str: '00:00', close_str: '00:00' }])
+            .mockResolvedValueOnce([{ id: 55 }]); // conflit
+        prisma.service.findUnique.mockResolvedValueOnce({ duration: 30 });
 
         const res = await request(app)
             .post('/api/appointments')
@@ -100,11 +106,11 @@ describe('POST /api/appointments', () => {
     });
 });
 
-// ── GET /api/appointments/availability/:providerId/:date ──────────────────────
+// ── GET /api/appointments/availability ───────────────────────────────────────
 
 describe('GET /api/appointments/availability', () => {
     test('retourne closed:true si fermé ce jour', async () => {
-        db.execute.mockResolvedValueOnce([[{ is_closed: 1 }]]);
+        prisma.$queryRaw.mockResolvedValueOnce([{ is_closed: true }]);
 
         const res = await request(app)
             .get('/api/appointments/availability/1/2030-06-02');
@@ -115,9 +121,9 @@ describe('GET /api/appointments/availability', () => {
     });
 
     test('retourne des créneaux si ouvert', async () => {
-        db.execute
-            .mockResolvedValueOnce([[{ is_closed: 0, open_str: '09:00', close_str: '11:00' }]])
-            .mockResolvedValueOnce([[]]); // aucun RDV
+        prisma.$queryRaw
+            .mockResolvedValueOnce([{ is_closed: false, open_str: '09:00', close_str: '11:00' }])
+            .mockResolvedValueOnce([]); // aucun RDV
 
         const res = await request(app)
             .get('/api/appointments/availability/1/2030-06-02?duration=60');

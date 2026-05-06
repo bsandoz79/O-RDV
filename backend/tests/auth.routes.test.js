@@ -1,12 +1,14 @@
 const request = require('supertest');
 const express = require('express');
 
-// Mock DB avant tout require des routes
-jest.mock('../db', () => ({
-    execute: jest.fn(),
+jest.mock('../prisma/client', () => ({
+    user: {
+        findUnique: jest.fn(),
+        create: jest.fn(),
+    },
 }));
 
-const db = require('../db');
+const prisma = require('../prisma/client');
 const authRoutes = require('../routes/auth');
 
 const app = express();
@@ -22,7 +24,7 @@ beforeEach(() => {
 
 describe('POST /api/auth/register', () => {
     test('retourne 400 si email déjà utilisé', async () => {
-        db.execute.mockResolvedValueOnce([[{ id: 1 }]]); // email existe
+        prisma.user.findUnique.mockResolvedValueOnce({ id: 1, email: 'test@test.com' });
 
         const res = await request(app)
             .post('/api/auth/register')
@@ -33,9 +35,8 @@ describe('POST /api/auth/register', () => {
     });
 
     test('retourne 201 et un token pour un nouvel utilisateur', async () => {
-        db.execute
-            .mockResolvedValueOnce([[]])            // email libre
-            .mockResolvedValueOnce([{ insertId: 5 }]); // INSERT
+        prisma.user.findUnique.mockResolvedValueOnce(null);
+        prisma.user.create.mockResolvedValueOnce({ id: 5, email: 'nouveau@test.com', role: 'user' });
 
         const res = await request(app)
             .post('/api/auth/register')
@@ -47,9 +48,8 @@ describe('POST /api/auth/register', () => {
     });
 
     test("force le rôle 'user' si on envoie 'admin'", async () => {
-        db.execute
-            .mockResolvedValueOnce([[]])
-            .mockResolvedValueOnce([{ insertId: 6 }]);
+        prisma.user.findUnique.mockResolvedValueOnce(null);
+        prisma.user.create.mockResolvedValueOnce({ id: 6, email: 'hacker@test.com', role: 'user' });
 
         const res = await request(app)
             .post('/api/auth/register')
@@ -64,7 +64,7 @@ describe('POST /api/auth/register', () => {
 
 describe('POST /api/auth/login', () => {
     test('retourne 401 si email inconnu', async () => {
-        db.execute.mockResolvedValueOnce([[]]); // aucun utilisateur
+        prisma.user.findUnique.mockResolvedValueOnce(null);
 
         const res = await request(app)
             .post('/api/auth/login')
@@ -77,7 +77,7 @@ describe('POST /api/auth/login', () => {
     test('retourne 401 si mot de passe incorrect', async () => {
         const bcrypt = require('bcrypt');
         const hash = await bcrypt.hash('correct_password', 10);
-        db.execute.mockResolvedValueOnce([[{ id: 1, email: 'x@x.com', password: hash, role: 'user' }]]);
+        prisma.user.findUnique.mockResolvedValueOnce({ id: 1, email: 'x@x.com', password: hash, role: 'user' });
 
         const res = await request(app)
             .post('/api/auth/login')
@@ -89,10 +89,10 @@ describe('POST /api/auth/login', () => {
     test('retourne 200 et un token si identifiants corrects', async () => {
         const bcrypt = require('bcrypt');
         const hash = await bcrypt.hash('secret', 10);
-        db.execute.mockResolvedValueOnce([[{
+        prisma.user.findUnique.mockResolvedValueOnce({
             id: 2, email: 'user@test.com', password: hash, role: 'pro',
             first_name: 'Alice', last_name: 'Martin', phone: null,
-        }]]);
+        });
 
         const res = await request(app)
             .post('/api/auth/login')
