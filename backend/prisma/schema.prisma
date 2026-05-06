@@ -89,7 +89,6 @@ model Appointment {
   is_read          Boolean           @default(true)
   phone            String?           @db.VarChar(20)
   send_sms_reminder Boolean          @default(false)
-  google_event_id  String?           @db.VarChar(255)
   created_at       DateTime          @default(now())
   client           User              @relation("ClientAppointments", fields: [client_id], references: [id], onDelete: Cascade)
   provider         Provider          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
