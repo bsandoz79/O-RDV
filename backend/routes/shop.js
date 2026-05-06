@@ -9,6 +9,14 @@ router.get('/categories', getCategories);
 router.get('/all', getAllProviders);
 router.get('/profile/:providerId', getProviderProfile);
 router.get('/info/:userId', auth, getShopInfo);
-router.post('/setup', auth, checkRole(['pro', 'admin']), uploadShopImage.single('image'), setupShop);
+router.post('/setup', auth, checkRole(['pro', 'admin']), (req, res, next) => {
+    uploadShopImage.single('image')(req, res, (err) => {
+        if (err) {
+            console.error('[Cloudinary upload error]', err.message);
+            return res.status(500).json({ error: 'Erreur upload image : ' + err.message });
+        }
+        next();
+    });
+}, setupShop);
 
 module.exports = router;
