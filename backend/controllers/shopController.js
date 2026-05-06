@@ -100,7 +100,7 @@ const setupShop = async (req, res) => {
         const profile = JSON.parse(req.body.profile);
         const hours = JSON.parse(req.body.hours);
         const services = req.body.services ? JSON.parse(req.body.services) : [];
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+        const imageUrl = req.file ? req.file.path : null;
 
         const provider = await prisma.provider.upsert({
             where: { user_id: userId },

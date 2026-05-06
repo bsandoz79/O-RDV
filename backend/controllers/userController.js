@@ -16,7 +16,7 @@ const getMe = async (req, res) => {
 
 const uploadProfilePicture = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Aucun fichier envoyé.' });
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = req.file.path;
     try {
         await prisma.user.update({ where: { id: req.auth.userId }, data: { profile_picture: imageUrl } });
         res.json({ profile_picture: imageUrl });
