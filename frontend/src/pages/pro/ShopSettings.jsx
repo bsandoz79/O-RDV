@@ -612,6 +612,11 @@ function ProDashboard({ shopData, onEditShop }) {
     ]).then(([, clients]) => {
       setNewClients(Array.isArray(clients) ? clients : []);
     }).catch(() => {}).finally(() => setLoading(false));
+
+    const interval = setInterval(() => {
+      fetchAppointments({ Authorization: `Bearer ${token}` }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
