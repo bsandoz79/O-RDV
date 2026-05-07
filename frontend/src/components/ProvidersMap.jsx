@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 // Fix icônes Leaflet avec webpack
 delete L.Icon.Default.prototype._getIconUrl;
