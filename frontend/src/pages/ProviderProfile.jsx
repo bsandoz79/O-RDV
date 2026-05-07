@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
+
+const ProviderMap = lazy(() => import('../components/ProviderMap'));
 
 const DAYS = [
   { key: 'monday',    label: 'Lundi' },
@@ -224,6 +226,20 @@ export default function ProviderProfile() {
             </div>
 
           </div>
+
+          {/* ── Carte + itinéraire (pleine largeur) ─── */}
+          {provider.latitude && provider.longitude && (
+            <div className="mt-6">
+              <Suspense fallback={
+                <div className="bg-white rounded-2xl shadow-sm p-6 h-48 flex items-center justify-center text-slate-400 text-sm">
+                  <Loader2 size={20} className="animate-spin text-rose-400 mr-2" /> Chargement de la carte...
+                </div>
+              }>
+                <ProviderMap provider={provider} />
+              </Suspense>
+            </div>
+          )}
+
         </div>
       </div>
 
