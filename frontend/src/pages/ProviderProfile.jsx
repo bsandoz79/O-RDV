@@ -8,6 +8,7 @@ import {
   Loader2,
   CalendarPlus,
   ChevronRight,
+  Scissors,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
@@ -161,33 +162,43 @@ export default function ProviderProfile() {
           <h2 className="text-base font-semibold text-slate-900 mb-4">Prestations</h2>
 
           {provider.services && provider.services.length > 0 ? (
-            <ul className="divide-y divide-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {provider.services.map((service) => (
-                <li key={service.id} className="py-3.5 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{service.label}</p>
-                    {service.duration && (
-                      <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-400">
-                        <Clock size={11} />
-                        {formatDuration(service.duration)}
-                      </div>
-                    )}
+                <div key={service.id} className="flex gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50/30 transition group">
+                  {/* Photo de la prestation */}
+                  {service.image_url ? (
+                    <img
+                      src={service.image_url}
+                      alt={service.label}
+                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-slate-100"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <Scissors size={20} className="text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 truncate">{service.label}</p>
+                      {service.duration && (
+                        <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-400">
+                          <Clock size={10} /> {formatDuration(service.duration)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm font-bold text-slate-900">{formatPrice(service.price)}</span>
+                      <button
+                        onClick={() => handleReserve(service)}
+                        className="flex items-center gap-1 text-xs font-semibold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-500 hover:text-white px-2.5 py-1 rounded-lg transition"
+                      >
+                        Réserver <ChevronRight size={11} />
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="text-sm font-bold text-slate-900">
-                      {formatPrice(service.price)}
-                    </span>
-                    <button
-                      onClick={() => handleReserve(service)}
-                      className="flex items-center gap-1 text-xs font-semibold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-500 hover:text-white px-3 py-1.5 rounded-lg transition"
-                    >
-                      Réserver <ChevronRight size={12} />
-                    </button>
-                  </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="text-sm text-slate-400 italic">Aucune prestation renseignée.</p>
           )}

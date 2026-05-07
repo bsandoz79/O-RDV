@@ -1262,29 +1262,22 @@ export default function ShopSettings() {
             </div>
           </SectionCard>
 
-          {/* Layout split : Catalogue à gauche, Horaires à droite */}
-          <div className="flex gap-6 flex-col lg:flex-row items-start">
-            <div className="flex-1 min-w-0">
-              <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue de prestations">
-                {services.map((s, i) => (
-                  <ServiceRow key={i} service={s} index={i} onChange={(idx, field, val) => {
-                    const updated = [...services]; updated[idx][field] = val; setServices(updated);
-                  }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
-                ))}
-                <button type="button" className="btn-add" onClick={() => setServices([...services, { label: '', price: '', duration: '', image_url: '' }])}>
-                  <Plus size={15} /> Ajouter une prestation
-                </button>
-              </SectionCard>
-            </div>
+          <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
+            {services.map((s, i) => (
+              <ServiceRow key={i} service={s} index={i} onChange={(idx, field, val) => {
+                const updated = [...services]; updated[idx][field] = val; setServices(updated);
+              }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
+            ))}
+            <button type="button" className="btn-add" onClick={() => setServices([...services, { label: '', price: '', duration: '', image_url: '' }])}>
+              <Plus size={15} /> Ajouter une prestation
+            </button>
+          </SectionCard>
 
-            <div style={{ width: '100%', maxWidth: '380px' }}>
-              <SectionCard icon={Clock} gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" title="Horaires d'ouverture">
-                {Object.keys(hours).map(day => (
-                  <HoursRow key={day} day={day} config={hours[day]} onChange={(d, f, v) => setHours(prev => ({ ...prev, [d]: { ...prev[d], [f]: v } }))} />
-                ))}
-              </SectionCard>
-            </div>
-          </div>
+          <SectionCard icon={Clock} gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" title="Horaires d'ouverture">
+            {Object.keys(hours).map(day => (
+              <HoursRow key={day} day={day} config={hours[day]} onChange={(d, f, v) => setHours(prev => ({ ...prev, [d]: { ...prev[d], [f]: v } }))} />
+            ))}
+          </SectionCard>
 
           {error && <div className="form-error">{error}</div>}
 
