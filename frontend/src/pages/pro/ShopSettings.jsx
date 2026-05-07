@@ -707,7 +707,6 @@ function ProDashboard({ shopData, onEditShop }) {
   const CANCELLED_STATUSES = ['cancelled', 'cancelled_by_pro'];
   const upcoming  = appointments.filter(a =>
     new Date(a.appointment_date) > now &&
-    !CANCELLED_STATUSES.includes(a.status) &&
     a.status !== 'completed'
   );
   const displayed = showAll ? upcoming : upcoming.slice(0, 6);
