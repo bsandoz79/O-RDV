@@ -5,4 +5,4 @@ Disallow: /pro/settings
 Disallow: /dashboard
 Disallow: /admin
 
-Sitemap: https://portfolio-sandoz-baptiste.vercel.app/sitemap.xml
+Sitemap: https://o-rdv.vercel.app/sitemap.xml
