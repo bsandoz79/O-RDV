@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, List, Map } from "lucide-react";
+import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, Maximize2, Minimize2 } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
 import API_BASE_URL from '../api/api';
 
@@ -12,7 +12,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const [categories, setCategories] = useState([]);
   const [providers, setProviders] = useState([]);
@@ -20,7 +20,6 @@ export default function Home() {
   const [fetchError, setFetchError] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
 
-  // Géolocalisation
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -56,7 +55,7 @@ export default function Home() {
     const url = `${API_BASE_URL}/shop/all${params.toString() ? '?' + params : ''}`;
 
     fetch(url)
-      .then((res) => { if (!res.ok) throw new Error('Erreur serveur'); return res.json(); })
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setProviders(data.map((pro) => ({
           id: pro.id,
@@ -138,29 +137,21 @@ export default function Home() {
           </section>
         )}
 
-        {/* Header liste + toggle vue */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-display text-2xl font-bold text-slate-900">
-                {userPosition ? "À proximité" : "Tous les prestataires"}
-              </h2>
-              <p className="text-sm text-slate-500 mt-0.5">
-                {loading ? "Chargement..." : `${filteredProviders.length} établissement(s) trouvé(s)`}
-                {userPosition && !loading && <span className="ml-2 text-rose-500 font-medium flex items-center gap-1 inline-flex"><MapPin size={11} /> Triés par distance</span>}
-              </p>
-            </div>
-            {/* Toggle liste / carte */}
-            <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
-              <button onClick={() => setViewMode('list')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                <List size={15} /> Liste
-              </button>
-              <button onClick={() => setViewMode('map')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'map' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                <Map size={15} /> Carte
-              </button>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-slate-900">
+              {userPosition ? "À proximité" : "Tous les prestataires"}
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {loading ? "Chargement..." : `${filteredProviders.length} établissement(s) trouvé(s)`}
+              {userPosition && !loading && <span className="ml-2 text-rose-500 font-medium inline-flex items-center gap-1"><MapPin size={11} /> Triés par distance</span>}
+            </p>
           </div>
+        </div>
 
+        {/* Layout split : liste + carte côte à côte */}
+        <section className="mb-16">
           {loading ? (
             <div className="flex flex-col items-center py-20 text-slate-400">
               <Loader2 size={40} className="animate-spin mb-4 text-rose-500" />
@@ -171,27 +162,50 @@ export default function Home() {
               <p className="font-bold text-slate-600">Impossible de charger les prestataires</p>
               <button onClick={fetchProviders} className="mt-4 px-5 py-2.5 bg-rose-500 text-white text-sm font-semibold rounded-xl hover:bg-rose-600 transition">Réessayer</button>
             </div>
-          ) : viewMode === 'map' ? (
-            <div style={{ height: 500 }} className="rounded-2xl overflow-hidden shadow-md border border-slate-200">
-              <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-rose-500" size={32} /></div>}>
-                <ProvidersMap
-                  providers={filteredProviders}
-                  userPosition={userPosition}
-                  onProviderClick={(p) => navigate(`/provider/${p.id}`)}
-                />
-              </Suspense>
-            </div>
-          ) : filteredProviders.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredProviders.map((provider) => (
-                <ProviderCard key={provider.id} provider={provider} onClick={() => navigate(`/provider/${provider.id}`)} />
-              ))}
-            </div>
           ) : (
-            <div className="text-center py-20 text-slate-400 bg-white rounded-[2rem] border border-dashed border-slate-200">
-              <Search size={40} className="mx-auto mb-3 opacity-30" />
-              <p className="font-bold text-slate-600">Aucun prestataire trouvé</p>
-              <button onClick={() => { setActiveCategory(null); }} className="mt-4 px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-rose-300 hover:text-rose-500 transition">Voir tous</button>
+            <div className={`flex gap-6 ${mapExpanded ? 'flex-col' : 'flex-col lg:flex-row'}`}>
+
+              {/* Liste des prestataires */}
+              {!mapExpanded && (
+                <div className="flex-1 min-w-0">
+                  {filteredProviders.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {filteredProviders.map((provider) => (
+                        <ProviderCard key={provider.id} provider={provider} onClick={() => navigate(`/provider/${provider.id}`)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-20 text-slate-400 bg-white rounded-[2rem] border border-dashed border-slate-200">
+                      <Search size={40} className="mx-auto mb-3 opacity-30" />
+                      <p className="font-bold text-slate-600">Aucun prestataire trouvé</p>
+                      <button onClick={() => setActiveCategory(null)} className="mt-4 px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-rose-300 hover:text-rose-500 transition">Voir tous</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Carte */}
+              <div className={`relative ${mapExpanded ? 'w-full' : 'lg:w-2/5 w-full'}`}>
+                <div
+                  style={{ height: mapExpanded ? 600 : 500 }}
+                  className="rounded-2xl overflow-hidden shadow-md border border-slate-200 sticky top-20"
+                >
+                  <Suspense fallback={<div className="flex items-center justify-center h-full bg-slate-100"><Loader2 className="animate-spin text-rose-500" size={32} /></div>}>
+                    <ProvidersMap
+                      providers={filteredProviders}
+                      userPosition={userPosition}
+                      onProviderClick={(p) => navigate(`/provider/${p.id}`)}
+                    />
+                  </Suspense>
+                  {/* Bouton agrandir/réduire */}
+                  <button
+                    onClick={() => setMapExpanded(!mapExpanded)}
+                    className="absolute top-3 right-3 z-[1000] bg-white shadow-md border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-1.5 hover:bg-slate-50 transition"
+                  >
+                    {mapExpanded ? <><Minimize2 size={13} /> Réduire</> : <><Maximize2 size={13} /> Agrandir</>}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>
