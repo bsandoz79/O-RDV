@@ -87,7 +87,7 @@ const SectionCard = ({ icon: Icon, gradient, title, children }) => (
   </div>
 );
 
-const ServiceRow = ({ service, index, onChange, onRemove, token }) => {
+const ServiceRow = ({ service, index, onChange, onRemove }) => {
   const [uploading, setUploading] = React.useState(false);
 
   const handleImageChange = async (e) => {
@@ -99,7 +99,7 @@ const ServiceRow = ({ service, index, onChange, onRemove, token }) => {
       fd.append('image', file);
       const res = await fetch(`${API_BASE_URL}/shop/upload-service-image`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: fd,
       });
       const data = await res.json();
@@ -1267,7 +1267,7 @@ export default function ShopSettings() {
             <div className="flex-1 min-w-0">
               <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue de prestations">
                 {services.map((s, i) => (
-                  <ServiceRow key={i} service={s} index={i} token={token} onChange={(idx, field, val) => {
+                  <ServiceRow key={i} service={s} index={i} onChange={(idx, field, val) => {
                     const updated = [...services]; updated[idx][field] = val; setServices(updated);
                   }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
                 ))}
