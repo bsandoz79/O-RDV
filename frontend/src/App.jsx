@@ -110,7 +110,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <footer className="bg-slate-900 text-slate-400 text-xs py-6 px-4 text-center mt-auto">
+      <footer className="bg-slate-900 text-slate-400 text-xs py-6 px-4 text-center">
         <div className="flex flex-wrap justify-center gap-4 mb-2">
           <a href="/mentions-legales" className="hover:text-white transition">Mentions légales</a>
           <a href="/politique-confidentialite" className="hover:text-white transition">Politique de confidentialité</a>
