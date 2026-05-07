@@ -1,159 +1,167 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Navigation, Clock, Loader2 } from 'lucide-react';
+import { Navigation, Clock, Loader2, Car, PersonStanding, Bike } from 'lucide-react';
 
 const shopIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconSize: [25, 41], iconAnchor: [12, 41],
 });
 
 const userIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  className: 'hue-rotate-[200deg] saturate-200',
+  iconSize: [25, 41], iconAnchor: [12, 41],
+  className: 'hue-rotate-180',
 });
 
 function FitBounds({ positions }) {
   const map = useMap();
   useEffect(() => {
-    if (positions.length >= 2) {
-      map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] });
-    } else if (positions.length === 1) {
-      map.setView(positions[0], 15);
-    }
+    if (positions.length >= 2) map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] });
+    else if (positions.length === 1) map.setView(positions[0], 15);
   }, [positions, map]);
   return null;
 }
 
-function formatDuration(seconds) {
+function fmt(seconds) {
   const min = Math.round(seconds / 60);
   if (min < 60) return `${min} min`;
   const h = Math.floor(min / 60), m = min % 60;
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
-function formatDistance(meters) {
-  if (meters < 1000) return `${Math.round(meters)} m`;
-  return `${(meters / 1000).toFixed(1)} km`;
+function fmtDist(m) {
+  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
+const MODES = [
+  { key: 'driving',  label: 'Voiture',  Icon: Car,             osrm: 'driving',  kmh: 50 },
+  { key: 'walking',  label: 'À pied',   Icon: PersonStanding,  osrm: 'foot',     kmh: 5  },
+  { key: 'cycling',  label: 'Vélo',     Icon: Bike,            osrm: 'bike',     kmh: 15 },
+];
+
 export default function ProviderMap({ provider }) {
-  const [userPos, setUserPos]   = useState(null);
-  const [route, setRoute]       = useState(null);
-  const [routeInfo, setRouteInfo] = useState(null);
-  const [loadingRoute, setLoadingRoute] = useState(false);
-  const [geoError, setGeoError] = useState(false);
+  const [userPos, setUserPos]     = useState(null);
+  const [geoError, setGeoError]  = useState(false);
+  const [mode, setMode]           = useState('driving');
+  const [routes, setRoutes]       = useState({});   // { driving: {route, duration, distance}, ... }
+  const [loading, setLoading]     = useState(false);
 
   const hasCoords = provider.latitude && provider.longitude;
-  const shopPos = hasCoords ? [provider.latitude, provider.longitude] : null;
+  const shopPos   = hasCoords ? [provider.latitude, provider.longitude] : null;
 
-  // Géolocalisation utilisateur
   useEffect(() => {
     if (!hasCoords) return;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-        () => setGeoError(true)
-      );
-    } else {
-      setGeoError(true);
-    }
+    navigator.geolocation?.getCurrentPosition(
+      p => setUserPos([p.coords.latitude, p.coords.longitude]),
+      () => setGeoError(true)
+    );
   }, [hasCoords]);
 
-  // Calcul d'itinéraire via OSRM
+  // Calcule les 3 modes dès qu'on a la position
   useEffect(() => {
     if (!userPos || !shopPos) return;
-    setLoadingRoute(true);
     const [uLat, uLng] = userPos;
     const [sLat, sLng] = shopPos;
-    fetch(
-      `https://router.project-osrm.org/route/v1/driving/${uLng},${uLat};${sLng},${sLat}?overview=full&geometries=geojson`
-    )
+
+    setLoading(true);
+    // On appelle OSRM pour la voiture (trace réelle), et on estime pour pied/vélo
+    fetch(`https://router.project-osrm.org/route/v1/driving/${uLng},${uLat};${sLng},${sLat}?overview=full&geometries=geojson`)
       .then(r => r.json())
       .then(data => {
         const leg = data.routes?.[0];
         if (!leg) return;
-        const coords = leg.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-        setRoute(coords);
-        setRouteInfo({ duration: leg.duration, distance: leg.distance });
+        const coords    = leg.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+        const distance  = leg.distance;
+        setRoutes({
+          driving: { route: coords, duration: leg.duration,                distance },
+          walking: { route: coords, duration: (distance / 1000) / 5 * 3600, distance },
+          cycling: { route: coords, duration: (distance / 1000) / 15 * 3600, distance },
+        });
       })
       .catch(() => {})
-      .finally(() => setLoadingRoute(false));
+      .finally(() => setLoading(false));
   }, [userPos, shopPos]);
 
   if (!hasCoords) return null;
 
-  const positions = [shopPos, ...(userPos ? [userPos] : [])];
+  const current    = routes[mode];
+  const positions  = [shopPos, ...(userPos ? [userPos] : [])];
+
+  // Liens de navigation externes
+  const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${provider.latitude},${provider.longitude}`;
+  const wazeUrl   = `https://waze.com/ul?ll=${provider.latitude},${provider.longitude}&navigate=yes`;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6">
-      <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <Navigation size={18} className="text-rose-400" /> Localisation
+          <Navigation size={18} className="text-rose-400" /> Itinéraire
         </h2>
-        {loadingRoute && <span className="flex items-center gap-1.5 text-xs text-slate-400"><Loader2 size={12} className="animate-spin" /> Calcul de l'itinéraire...</span>}
-        {routeInfo && !loadingRoute && (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-sm font-semibold text-rose-500">
-              <Clock size={14} /> {formatDuration(routeInfo.duration)}
-            </span>
-            <span className="text-xs text-slate-400">{formatDistance(routeInfo.distance)}</span>
-          </div>
-        )}
-        {geoError && !routeInfo && (
-          <span className="text-xs text-slate-400">Activez la géolocalisation pour voir l'itinéraire</span>
-        )}
+        {/* Boutons navigation externe */}
+        <div className="flex gap-2">
+          <a href={googleUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition">
+            <Navigation size={11} /> Google Maps
+          </a>
+          <a href={wazeUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-cyan-500 hover:bg-cyan-600 px-3 py-1.5 rounded-lg transition">
+            <Navigation size={11} /> Waze
+          </a>
+        </div>
       </div>
 
-      <div style={{ height: 300, borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-        <MapContainer
-          center={shopPos}
-          zoom={14}
-          style={{ height: '100%', width: '100%' }}
-          scrollWheelZoom={false}
-        >
+      {/* Onglets de mode */}
+      <div className="flex gap-2 mb-4">
+        {MODES.map(({ key, label, Icon }) => (
+          <button key={key} onClick={() => setMode(key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition border ${
+              mode === key
+                ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-500'
+            }`}>
+            <Icon size={14} /> {label}
+            {routes[key] && (
+              <span className={`ml-1 text-xs font-bold ${mode === key ? 'text-rose-100' : 'text-slate-400'}`}>
+                {fmt(routes[key].duration)}
+              </span>
+            )}
+          </button>
+        ))}
+        {loading && <Loader2 size={16} className="animate-spin text-slate-300 self-center ml-1" />}
+      </div>
+
+      {/* Info distance + durée sélectionnée */}
+      {current && (
+        <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-rose-50 rounded-xl border border-rose-100">
+          <Clock size={14} className="text-rose-400 flex-shrink-0" />
+          <span className="text-sm font-bold text-rose-600">{fmt(current.duration)}</span>
+          <span className="text-xs text-slate-400">·</span>
+          <span className="text-xs text-slate-500">{fmtDist(current.distance)}</span>
+          {geoError && <span className="text-xs text-slate-400 ml-auto">Activez la géolocalisation</span>}
+        </div>
+      )}
+
+      {/* Carte */}
+      <div style={{ height: 280, borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <MapContainer center={shopPos} zoom={14} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBounds positions={positions} />
-
-          {/* Marker boutique */}
           <Marker position={shopPos} icon={shopIcon}>
             <Popup><strong>{provider.name}</strong>{provider.address && <><br />{provider.address}</>}</Popup>
           </Marker>
-
-          {/* Marker utilisateur */}
-          {userPos && (
-            <Marker position={userPos} icon={userIcon}>
-              <Popup>📍 Votre position</Popup>
-            </Marker>
-          )}
-
-          {/* Tracé itinéraire */}
-          {route && (
-            <Polyline
-              positions={route}
-              color="#f43f5e"
-              weight={4}
-              opacity={0.85}
-            />
-          )}
+          {userPos && <Marker position={userPos} icon={userIcon}><Popup>📍 Votre position</Popup></Marker>}
+          {current?.route && <Polyline positions={current.route} color="#f43f5e" weight={4} opacity={0.85} />}
         </MapContainer>
       </div>
-
-      {routeInfo && (
-        <p className="text-xs text-slate-400 text-center mt-2">
-          Itinéraire en voiture · {formatDistance(routeInfo.distance)} · {formatDuration(routeInfo.duration)} estimé
-        </p>
-      )}
     </div>
   );
 }
