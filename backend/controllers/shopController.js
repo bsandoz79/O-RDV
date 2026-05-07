@@ -2,18 +2,40 @@ const prisma = require('../prisma/client');
 
 async function geocodeAddress(address, zipCode, city) {
     if (!address && !city) return { latitude: null, longitude: null };
-    const query = [address, zipCode, city].filter(Boolean).join(', ');
+
+    // Essai 1 : adresse complète structurée (plus précise)
+    if (address && city) {
+        try {
+            const params = new URLSearchParams({
+                street: address,
+                city: city,
+                ...(zipCode ? { postalcode: zipCode } : {}),
+                country: 'France',
+                format: 'json',
+                limit: '1',
+                addressdetails: '1',
+            });
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?${params}`,
+                { headers: { 'User-Agent': 'ORDV-App/1.0' } }
+            );
+            const data = await res.json();
+            if (data.length > 0) return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+        } catch {}
+    }
+
+    // Essai 2 : requête libre avec code pays
     try {
+        const query = [address, zipCode, city, 'France'].filter(Boolean).join(', ');
         const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=fr`,
             { headers: { 'User-Agent': 'ORDV-App/1.0' } }
         );
         const data = await res.json();
-        if (data.length === 0) return { latitude: null, longitude: null };
-        return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
-    } catch {
-        return { latitude: null, longitude: null };
-    }
+        if (data.length > 0) return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    } catch {}
+
+    return { latitude: null, longitude: null };
 }
 
 function fmtTime(t) {
