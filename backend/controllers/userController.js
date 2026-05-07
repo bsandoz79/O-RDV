@@ -242,4 +242,20 @@ const getNewClients = async (req, res) => {
     }
 };
 
-module.exports = { getMe, uploadProfilePicture, updateProfile, changePassword, getAppointments, refuseAppointment, cancelAppointment, getDashboardStats, markAppointmentRead, getNewClients };
+const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.auth.userId;
+        // Annule les RDV futurs avant suppression
+        await prisma.appointment.updateMany({
+            where: { client_id: userId, appointment_date: { gt: new Date() }, status: { in: ['pending', 'confirmed'] } },
+            data: { status: 'cancelled' }
+        });
+        // Supprime l'utilisateur (CASCADE supprime provider, appointments, services, business_hours)
+        await prisma.user.delete({ where: { id: userId } });
+        res.json({ message: 'Compte supprimé définitivement.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getMe, uploadProfilePicture, updateProfile, changePassword, getAppointments, refuseAppointment, cancelAppointment, getDashboardStats, markAppointmentRead, getNewClients, deleteAccount };

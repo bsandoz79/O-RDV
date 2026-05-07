@@ -9,6 +9,9 @@ import UserDashboard from "./pages/user/UserDashboard";
 import BookingPage from "./components/BookingPage";
 import ShopSettings from "./pages/pro/ShopSettings";
 import ProviderProfile from "./pages/ProviderProfile";
+import MentionsLegales from "./pages/legal/MentionsLegales";
+import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
+import CGU from "./pages/legal/CGU";
 
 // Affiche un message quand l'utilisateur est redirigé depuis une route protégée
 function RedirectBanner() {
@@ -101,8 +104,20 @@ function App() {
           }
         />
 
+        <Route path="/mentions-legales" element={<MentionsLegales />} />
+        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+        <Route path="/cgu" element={<CGU />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <footer className="bg-slate-900 text-slate-400 text-xs py-6 px-4 text-center mt-auto">
+        <div className="flex flex-wrap justify-center gap-4 mb-2">
+          <a href="/mentions-legales" className="hover:text-white transition">Mentions légales</a>
+          <a href="/politique-confidentialite" className="hover:text-white transition">Politique de confidentialité</a>
+          <a href="/cgu" className="hover:text-white transition">CGU</a>
+        </div>
+        <p>© {new Date().getFullYear()} O'RDV — Tous droits réservés</p>
+      </footer>
     </Router>
   );
 }

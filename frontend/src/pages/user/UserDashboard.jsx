@@ -559,6 +559,36 @@ export default function UserDashboard() {
           </div>
         </SectionCard>
 
+        {/* Suppression de compte (RGPD) */}
+        <SectionCard icon={X} color="text-red-500" title="Zone de danger">
+          <p className="text-sm text-slate-500 mb-4">
+            La suppression de votre compte est <strong>définitive et irréversible</strong>.
+            Toutes vos données personnelles et votre historique de rendez-vous seront effacés conformément au RGPD.
+          </p>
+          <button
+            onClick={async () => {
+              if (!window.confirm('Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.')) return;
+              try {
+                const res = await fetch(`${API_BASE_URL}/user/account`, {
+                  method: 'DELETE',
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                  localStorage.clear();
+                  window.dispatchEvent(new Event('authChange'));
+                  window.location.href = '/';
+                } else {
+                  const d = await res.json();
+                  alert(d.error || 'Erreur lors de la suppression.');
+                }
+              } catch { alert('Erreur réseau.'); }
+            }}
+            className="flex items-center gap-2 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 border border-red-200 hover:border-red-500 text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+          >
+            <X size={14} /> Supprimer mon compte définitivement
+          </button>
+        </SectionCard>
+
         {/* Horaires (pro uniquement) */}
         {role === 'pro' && (
           <SectionCard icon={Clock} color="text-purple-600" title="Mes horaires d'ouverture">

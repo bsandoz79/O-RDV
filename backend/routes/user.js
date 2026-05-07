@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
 const { uploadAvatar } = require('../middlewares/upload');
-const { getMe, uploadProfilePicture, updateProfile, changePassword, getAppointments, refuseAppointment, cancelAppointment, getDashboardStats, markAppointmentRead, getNewClients } = require('../controllers/userController');
+const { getMe, uploadProfilePicture, updateProfile, changePassword, getAppointments, refuseAppointment, cancelAppointment, getDashboardStats, markAppointmentRead, getNewClients, deleteAccount } = require('../controllers/userController');
 
 router.get('/me', auth, getMe);
 router.post('/profile-picture', auth, (req, res, next) => {
@@ -22,5 +22,6 @@ router.patch('/appointments/:id/cancel', auth, cancelAppointment);
 router.get('/dashboard-stats', auth, getDashboardStats);
 router.patch('/appointments/:id/mark-read', auth, markAppointmentRead);
 router.get('/new-clients', auth, getNewClients);
+router.delete('/account', auth, deleteAccount);
 
 module.exports = router;
