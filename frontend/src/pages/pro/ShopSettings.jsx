@@ -87,23 +87,59 @@ const SectionCard = ({ icon: Icon, gradient, title, children }) => (
   </div>
 );
 
-const ServiceRow = ({ service, index, onChange, onRemove }) => (
-  <div className="service-row">
-    <div style={{ flex: 1, minWidth: '160px' }}>
-      <label className="field-label">Nom du service</label>
-      <input className="custom-input" placeholder="Ex: Coupe de cheveux" type="text" value={service.label} onChange={(e) => onChange(index, 'label', e.target.value)} />
+const ServiceRow = ({ service, index, onChange, onRemove, token }) => {
+  const [uploading, setUploading] = React.useState(false);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch(`${API_BASE_URL}/shop/upload-service-image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.url) onChange(index, 'image_url', data.url);
+    } catch {}
+    setUploading(false);
+  };
+
+  return (
+    <div className="service-row" style={{ flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+      {/* Photo prestation */}
+      <div style={{ width: '72px', flexShrink: 0 }}>
+        <label className="field-label">Photo</label>
+        <label style={{ cursor: 'pointer', display: 'block', width: '72px', height: '72px', borderRadius: '10px', overflow: 'hidden', border: '2px dashed #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {uploading ? (
+            <Loader2 size={20} className="animate-spin text-slate-400" />
+          ) : service.image_url ? (
+            <img src={service.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <Camera size={22} className="text-slate-300" />
+          )}
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+        </label>
+      </div>
+      <div style={{ flex: 1, minWidth: '140px' }}>
+        <label className="field-label">Nom du service</label>
+        <input className="custom-input" placeholder="Ex: Coupe de cheveux" type="text" value={service.label} onChange={(e) => onChange(index, 'label', e.target.value)} />
+      </div>
+      <div style={{ width: '90px' }}>
+        <label className="field-label">Prix (€)</label>
+        <input className="custom-input" placeholder="25" type="number" value={service.price} onChange={(e) => onChange(index, 'price', e.target.value)} />
+      </div>
+      <div style={{ width: '90px' }}>
+        <label className="field-label">Durée (min)</label>
+        <input className="custom-input" placeholder="30" type="number" value={service.duration} onChange={(e) => onChange(index, 'duration', e.target.value)} />
+      </div>
+      <button type="button" className="btn-remove" onClick={() => onRemove(index)}><Trash2 size={17} /></button>
     </div>
-    <div style={{ width: '100px' }}>
-      <label className="field-label">Prix (€)</label>
-      <input className="custom-input" placeholder="25" type="number" value={service.price} onChange={(e) => onChange(index, 'price', e.target.value)} />
-    </div>
-    <div style={{ width: '100px' }}>
-      <label className="field-label">Durée (min)</label>
-      <input className="custom-input" placeholder="30" type="number" value={service.duration} onChange={(e) => onChange(index, 'duration', e.target.value)} />
-    </div>
-    <button type="button" className="btn-remove" onClick={() => onRemove(index)}><Trash2 size={17} /></button>
-  </div>
-);
+  );
+};
 
 const HoursRow = ({ day, config, onChange }) => (
   <div className={`hours-row${config.closed ? ' hours-row--closed' : ''}`}>
@@ -1031,7 +1067,7 @@ export default function ShopSettings() {
   const [profile,       setProfile]       = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '' });
   const [imageFile,     setImageFile]     = useState(null);
   const [imagePreview,  setImagePreview]  = useState(null);
-  const [services,      setServices]      = useState([{ label: '', price: '', duration: '' }]);
+  const [services,      setServices]      = useState([{ label: '', price: '', duration: '', image_url: '' }]);
   const [hours,         setHours]         = useState(INITIAL_HOURS);
   const [loading,       setLoading]       = useState(false);
   const [success,       setSuccess]       = useState(false);
@@ -1088,7 +1124,7 @@ export default function ShopSettings() {
         });
         if (data.image_url) setImagePreview(data.image_url.startsWith('http') ? data.image_url : `${API_BASE_URL.replace('/api', '')}${data.image_url}`);
         if (data.services?.length > 0) {
-          setServices(data.services.map(s => ({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '' })));
+          setServices(data.services.map(s => ({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '', image_url: s.image_url || '' })));
         }
         if (data.hours?.length > 0) {
           const loaded = { ...INITIAL_HOURS };
@@ -1226,22 +1262,29 @@ export default function ShopSettings() {
             </div>
           </SectionCard>
 
-          <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
-            {services.map((s, i) => (
-              <ServiceRow key={i} service={s} index={i} onChange={(idx, field, val) => {
-                const updated = [...services]; updated[idx][field] = val; setServices(updated);
-              }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
-            ))}
-            <button type="button" className="btn-add" onClick={() => setServices([...services, { label: '', price: '', duration: '' }])}>
-              <Plus size={15} /> Ajouter une prestation
-            </button>
-          </SectionCard>
+          {/* Layout split : Catalogue à gauche, Horaires à droite */}
+          <div className="flex gap-6 flex-col lg:flex-row items-start">
+            <div className="flex-1 min-w-0">
+              <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue de prestations">
+                {services.map((s, i) => (
+                  <ServiceRow key={i} service={s} index={i} token={token} onChange={(idx, field, val) => {
+                    const updated = [...services]; updated[idx][field] = val; setServices(updated);
+                  }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
+                ))}
+                <button type="button" className="btn-add" onClick={() => setServices([...services, { label: '', price: '', duration: '', image_url: '' }])}>
+                  <Plus size={15} /> Ajouter une prestation
+                </button>
+              </SectionCard>
+            </div>
 
-          <SectionCard icon={Clock} gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" title="Horaires d'ouverture">
-            {Object.keys(hours).map(day => (
-              <HoursRow key={day} day={day} config={hours[day]} onChange={(d, f, v) => setHours(prev => ({ ...prev, [d]: { ...prev[d], [f]: v } }))} />
-            ))}
-          </SectionCard>
+            <div style={{ width: '100%', maxWidth: '380px' }}>
+              <SectionCard icon={Clock} gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" title="Horaires d'ouverture">
+                {Object.keys(hours).map(day => (
+                  <HoursRow key={day} day={day} config={hours[day]} onChange={(d, f, v) => setHours(prev => ({ ...prev, [d]: { ...prev[d], [f]: v } }))} />
+                ))}
+              </SectionCard>
+            </div>
+          </div>
 
           {error && <div className="form-error">{error}</div>}
 

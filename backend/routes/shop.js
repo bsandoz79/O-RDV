@@ -2,8 +2,19 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
 const checkRole = require('../middlewares/roleGuard');
-const { uploadShopImage } = require('../middlewares/upload');
+const { uploadShopImage, uploadServiceImage } = require('../middlewares/upload');
 const { getCategories, getAllProviders, getProviderProfile, getShopInfo, setupShop } = require('../controllers/shopController');
+
+// POST /api/shop/upload-service-image — upload rapide d'une image de prestation
+router.post('/upload-service-image', auth, checkRole(['pro', 'admin']), (req, res, next) => {
+    uploadServiceImage.single('image')(req, res, (err) => {
+        if (err) return res.status(500).json({ error: 'Erreur upload : ' + err.message });
+        next();
+    });
+}, (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Aucun fichier envoyé.' });
+    res.json({ url: req.file.path });
+});
 
 router.get('/categories', getCategories);
 router.get('/all', getAllProviders);

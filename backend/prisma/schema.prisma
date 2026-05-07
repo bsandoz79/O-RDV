@@ -73,6 +73,7 @@ model Service {
   label       String        @db.VarChar(255)
   price       Decimal       @db.Decimal(10, 2)
   duration    Int           @default(30)
+  image_url   String?       @db.VarChar(255)
   provider    Provider      @relation(fields: [provider_id], references: [id], onDelete: Cascade)
   appointments Appointment[]
 

@@ -24,7 +24,16 @@ const avatarStorage = new CloudinaryStorage({
     },
 });
 
-const uploadShopImage = multer({ storage: shopStorage, limits: { fileSize: 5 * 1024 * 1024 } });
-const uploadAvatar    = multer({ storage: avatarStorage, limits: { fileSize: 2 * 1024 * 1024 } });
+const serviceStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'ordv/services',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    },
+});
 
-module.exports = { uploadShopImage, uploadAvatar };
+const uploadShopImage    = multer({ storage: shopStorage,    limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadAvatar       = multer({ storage: avatarStorage,  limits: { fileSize: 2 * 1024 * 1024 } });
+const uploadServiceImage = multer({ storage: serviceStorage, limits: { fileSize: 3 * 1024 * 1024 } });
+
+module.exports = { uploadShopImage, uploadAvatar, uploadServiceImage };

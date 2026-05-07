@@ -193,11 +193,11 @@ const setupShop = async (req, res) => {
             if (match) {
                 await prisma.service.update({
                     where: { id: match.id },
-                    data: { price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
+                    data: { price: parseFloat(s.price), duration: parseInt(s.duration) || 30, ...(s.image_url !== undefined ? { image_url: s.image_url || null } : {}) },
                 });
             } else {
                 await prisma.service.create({
-                    data: { provider_id: provider.id, label: s.label, price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
+                    data: { provider_id: provider.id, label: s.label, price: parseFloat(s.price), duration: parseInt(s.duration) || 30, image_url: s.image_url || null },
                 });
             }
         }
