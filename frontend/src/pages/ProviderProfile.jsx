@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
-  MapPin,
-  Phone,
-  Clock,
-  Loader2,
-  CalendarPlus,
-  ChevronRight,
-  Scissors,
+  ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
+  ChevronRight, Scissors, Star, CheckCircle2,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
 
-// Clés en anglais (valeurs stockées en DB), labels en français pour l'affichage
 const DAYS = [
   { key: 'monday',    label: 'Lundi' },
   { key: 'tuesday',   label: 'Mardi' },
@@ -24,23 +17,36 @@ const DAYS = [
   { key: 'sunday',    label: 'Dimanche' },
 ];
 
-function formatDuration(minutes) {
-  if (!minutes) return '';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}h${String(m).padStart(2, '0')}`;
+function formatDuration(m) {
+  if (!m) return '';
+  const h = Math.floor(m / 60), min = m % 60;
+  if (h > 0 && min > 0) return `${h}h${String(min).padStart(2,'0')}`;
   if (h > 0) return `${h}h`;
   return `${m} min`;
 }
 
-function formatPrice(price) {
-  return Number(price).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+function formatPrice(p) {
+  return Number(p).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+}
+
+function getOpenStatus(hours) {
+  if (!hours || hours.length === 0) return null;
+  const todayKey = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()).toLowerCase();
+  const h = hours.find(r => r.day_of_week?.toLowerCase() === todayKey);
+  if (!h || h.is_closed) return { open: false, label: 'Fermé aujourd\'hui' };
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const toMin = s => { const parts = String(s||'').substring(0,5).split(':').map(Number); return (parts[0]||0)*60+(parts[1]||0); };
+  const o = toMin(h.open_time), c = toMin(h.close_time);
+  const close = (o===0 && c===0) ? 1440 : c;
+  if (nowMin >= o && nowMin < close) return { open: true, label: `Ouvert · ferme à ${String(h.close_time||'').substring(0,5)}` };
+  if (nowMin < o) return { open: false, label: `Ouvre à ${String(h.open_time||'').substring(0,5)}` };
+  return { open: false, label: 'Fermé' };
 }
 
 export default function ProviderProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,209 +55,181 @@ export default function ProviderProfile() {
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/shop/profile/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Prestataire introuvable');
-        return res.json();
-      })
-      .then((data) => {
-        setProvider(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then(r => { if (!r.ok) throw new Error('Prestataire introuvable'); return r.json(); })
+      .then(d => { setProvider(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="animate-spin text-rose-500" size={40} />
-      </div>
-    );
-  }
-
-  if (error || !provider) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-slate-500 gap-4">
-        <p className="text-lg font-medium">{error || 'Prestataire introuvable'}</p>
-        <Link to="/" className="text-rose-500 hover:underline text-sm flex items-center gap-1">
-          <ArrowLeft size={14} /> Retour à l'accueil
-        </Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-rose-500" size={40} /></div>;
+  if (error || !provider) return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-slate-500">
+      <p>{error || 'Introuvable'}</p>
+      <button onClick={() => navigate(-1)} className="text-rose-500 text-sm flex items-center gap-1 hover:underline"><ArrowLeft size={14} /> Retour</button>
+    </div>
+  );
 
   const imageUrl = provider.image_url
     ? (provider.image_url.startsWith('http') ? provider.image_url : `${API_BASE_URL.replace('/api', '')}${provider.image_url}`)
-    : 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=400&fit=crop';
+    : 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=500&fit=crop';
 
-  const handleReserve = (service) => {
-    setPreselectedService(service);
-    setModalOpen(true);
-  };
-
-  const handleGlobalReserve = () => {
-    setPreselectedService(null);
-    setModalOpen(true);
-  };
+  const status = getOpenStatus(provider.hours);
 
   return (
     <>
-    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      {/* Hero Image */}
-      <div className="relative h-56 sm:h-72 overflow-hidden bg-slate-200">
-        <img
-          src={imageUrl}
-          alt={provider.name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-        {/* Bouton retour */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm text-slate-700 text-sm font-medium px-3 py-2 rounded-xl shadow hover:bg-white transition"
-        >
-          <ArrowLeft size={15} /> Retour
-        </button>
-      </div>
+        {/* ── Hero ─────────────────────────────────────────────────── */}
+        <div className="relative h-72 sm:h-96 overflow-hidden bg-slate-200">
+          <img src={imageUrl} alt={provider.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-      {/* Contenu principal */}
-      <div className="max-w-3xl mx-auto px-4 pb-20">
-        {/* Card en-tête */}
-        <div className="bg-white rounded-2xl shadow-sm -mt-10 relative z-10 p-6 mb-4">
-          <h1 className="text-2xl font-bold text-slate-900">{provider.name}</h1>
-          {provider.description && (
-            <p className="text-slate-500 text-sm mt-1">{provider.description}</p>
-          )}
+          <button onClick={() => navigate(-1)} className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-sm font-medium px-3 py-1.5 rounded-xl border border-white/20 hover:bg-white/30 transition">
+            <ArrowLeft size={14} /> Retour
+          </button>
 
-          <div className="mt-4 space-y-2">
-            {provider.address && (
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <MapPin size={15} className="text-rose-400 mt-0.5 flex-shrink-0" />
-                <span>
-                  {provider.address}
-                  {provider.zip_code && `, ${provider.zip_code}`}
-                  {provider.city && ` ${provider.city}`}
+          {/* Nom + statut dans le hero */}
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="flex items-center gap-2 mb-2">
+              {status && (
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-white'}`}>
+                  {status.open ? '● ' : '○ '}{status.label}
                 </span>
-              </div>
-            )}
-            {provider.phone && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Phone size={15} className="text-rose-400 flex-shrink-0" />
-                <a href={`tel:${provider.phone}`} className="hover:text-rose-500 transition">
-                  {provider.phone}
-                </a>
+              )}
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow">{provider.name}</h1>
+            {provider.city && (
+              <div className="flex items-center gap-1 text-white/80 text-sm mt-1">
+                <MapPin size={13} /> {provider.city}
               </div>
             )}
           </div>
-
-          {/* CTA global */}
-          <button
-            onClick={handleGlobalReserve}
-            className="mt-5 w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-6 py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-rose-100"
-          >
-            <CalendarPlus size={16} />
-            Prendre rendez-vous
-          </button>
         </div>
 
-        {/* Section Services */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <h2 className="text-base font-semibold text-slate-900 mb-4">Prestations</h2>
+        {/* ── Contenu ──────────────────────────────────────────────── */}
+        <div className="max-w-4xl mx-auto px-4 pb-32 -mt-6 relative z-10">
 
-          {provider.services && provider.services.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {provider.services.map((service) => (
-                <div key={service.id} className="flex gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50/30 transition group">
-                  {/* Photo de la prestation */}
-                  {service.image_url ? (
-                    <img
-                      src={service.image_url}
-                      alt={service.label}
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-slate-100"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                      <Scissors size={20} className="text-slate-300" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 truncate">{service.label}</p>
-                      {service.duration && (
-                        <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-400">
-                          <Clock size={10} /> {formatDuration(service.duration)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm font-bold text-slate-900">{formatPrice(service.price)}</span>
-                      <button
-                        onClick={() => handleReserve(service)}
-                        className="flex items-center gap-1 text-xs font-semibold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-500 hover:text-white px-2.5 py-1 rounded-lg transition"
-                      >
-                        Réserver <ChevronRight size={11} />
-                      </button>
-                    </div>
+          {/* Card infos + CTA */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-2 flex-1">
+                {provider.description && (
+                  <p className="text-slate-500 text-sm leading-relaxed">{provider.description}</p>
+                )}
+                {provider.address && (
+                  <div className="flex items-start gap-2 text-sm text-slate-600">
+                    <MapPin size={14} className="text-rose-400 mt-0.5 flex-shrink-0" />
+                    <span>{provider.address}{provider.zip_code && `, ${provider.zip_code}`}{provider.city && ` ${provider.city}`}</span>
                   </div>
-                </div>
-              ))}
+                )}
+                {provider.phone && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Phone size={14} className="text-rose-400 flex-shrink-0" />
+                    <a href={`tel:${provider.phone}`} className="hover:text-rose-500 transition">{provider.phone}</a>
+                  </div>
+                )}
+              </div>
+              <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+                className="flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-rose-100 transition text-sm whitespace-nowrap">
+                <CalendarPlus size={16} /> Prendre rendez-vous
+              </button>
             </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">Aucune prestation renseignée.</p>
-          )}
-        </div>
+          </div>
 
-        {/* Section Horaires */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-base font-semibold text-slate-900 mb-4">Horaires d'ouverture</h2>
+          {/* Layout 2 colonnes : Prestations | Horaires */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-          {provider.hours && provider.hours.length > 0 ? (
-            <ul className="space-y-2">
-              {DAYS.map(({ key, label }) => {
-                const h = provider.hours.find(
-                  (row) => row.day_of_week?.toLowerCase() === key
-                );
-                const isToday =
-                  new Intl.DateTimeFormat('en-US', { weekday: 'long' })
-                    .format(new Date())
-                    .toLowerCase() === key;
+            {/* ── Prestations ────────────────────────────── */}
+            <div className="flex-1 min-w-0">
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Scissors size={18} className="text-rose-400" /> Nos prestations
+                </h2>
+                {provider.services?.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {provider.services.map(s => (
+                      <div key={s.id}
+                        onClick={() => { setPreselectedService(s); setModalOpen(true); }}
+                        className="group flex gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-300 hover:shadow-md hover:shadow-rose-50 transition cursor-pointer bg-white hover:bg-rose-50/20">
+                        {s.image_url ? (
+                          <img src={s.image_url} alt={s.label} className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-slate-100 group-hover:scale-105 transition-transform" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-rose-50 to-slate-100 flex items-center justify-center flex-shrink-0">
+                            <Scissors size={24} className="text-rose-300" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                          <div>
+                            <p className="font-semibold text-slate-800 text-sm leading-tight">{s.label}</p>
+                            {s.duration && (
+                              <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
+                                <Clock size={10} /> {formatDuration(s.duration)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-base font-black text-rose-500">{formatPrice(s.price)}</span>
+                            <span className="text-xs text-rose-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                              Réserver <ChevronRight size={12} />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Aucune prestation renseignée.</p>
+                )}
+              </div>
+            </div>
 
-                return (
-                  <li
-                    key={key}
-                    className={`flex justify-between text-sm px-3 py-2 rounded-lg ${
-                      isToday ? 'bg-rose-50 font-semibold text-rose-600' : 'text-slate-600'
-                    }`}
-                  >
-                    <span>{label}</span>
-                    {!h || h.is_closed ? (
-                      <span className={isToday ? 'text-rose-400' : 'text-slate-400'}>Fermé</span>
-                    ) : (
-                      <span>
-                        {h.open_time?.substring(0, 5)} – {h.close_time?.substring(0, 5)}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="text-sm text-slate-400 italic">Horaires non renseignés.</p>
-          )}
+            {/* ── Horaires ───────────────────────────────── */}
+            <div className="w-full lg:w-72 flex-shrink-0">
+              <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-20">
+                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Clock size={18} className="text-rose-400" /> Horaires
+                </h2>
+                {provider.hours?.length > 0 ? (
+                  <ul className="space-y-1">
+                    {DAYS.map(({ key, label }) => {
+                      const h = provider.hours.find(r => r.day_of_week?.toLowerCase() === key);
+                      const isToday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()).toLowerCase() === key;
+                      const closed = !h || h.is_closed;
+                      return (
+                        <li key={key} className={`flex justify-between items-center text-sm px-3 py-2 rounded-lg ${isToday ? 'bg-rose-50 font-bold' : ''}`}>
+                          <span className={isToday ? 'text-rose-600' : 'text-slate-600'}>
+                            {isToday && <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5 mb-0.5" />}
+                            {label}
+                          </span>
+                          {closed ? (
+                            <span className="text-slate-300 text-xs">Fermé</span>
+                          ) : (
+                            <span className={`text-xs font-medium ${isToday ? 'text-rose-500' : 'text-slate-500'}`}>
+                              {String(h.open_time||'').substring(0,5)} – {String(h.close_time||'').substring(0,5)}
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Non renseignés.</p>
+                )}
+
+                {/* CTA secondaire */}
+                <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+                  className="mt-5 w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md shadow-rose-100">
+                  <CheckCircle2 size={15} /> Réserver maintenant
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
-    </div>
 
-    {modalOpen && (
-      <BookingModal
-        provider={provider}
-        preselectedService={preselectedService}
-        onClose={() => setModalOpen(false)}
-      />
-    )}
-  </>
+      {modalOpen && (
+        <BookingModal provider={provider} preselectedService={preselectedService} onClose={() => setModalOpen(false)} />
+      )}
+    </>
   );
 }
