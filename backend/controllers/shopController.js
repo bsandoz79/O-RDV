@@ -174,12 +174,14 @@ const setupShop = async (req, res) => {
         const validServices = services.filter(s => s.label && s.price);
         const existingServices = await prisma.service.findMany({ where: { provider_id: provider.id } });
 
-        // Supprimer uniquement les services sans RDV associés
+        // Supprimer les services retirés, sauf ceux avec des RDV encore actifs
         const labelsNew = validServices.map(s => s.label);
         for (const existing of existingServices) {
             if (!labelsNew.includes(existing.label)) {
-                const count = await prisma.appointment.count({ where: { service_id: existing.id } });
-                if (count === 0) {
+                const activeCount = await prisma.appointment.count({
+                    where: { service_id: existing.id, status: { in: ['pending', 'confirmed'] } }
+                });
+                if (activeCount === 0) {
                     await prisma.service.delete({ where: { id: existing.id } });
                 }
             }
