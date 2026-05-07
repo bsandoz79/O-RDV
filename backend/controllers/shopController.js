@@ -162,7 +162,14 @@ const setupShop = async (req, res) => {
         const services = req.body.services ? JSON.parse(req.body.services) : [];
         const imageUrl = req.file ? req.file.path : null;
 
-        const { latitude, longitude } = await geocodeAddress(profile.address, profile.zipCode, profile.city);
+        // Coordonnées manuelles (ajustées par le pro sur la carte) prioritaires sur le géocodage auto
+        let latitude, longitude;
+        if (profile.manualLat != null && profile.manualLng != null) {
+            latitude  = parseFloat(profile.manualLat);
+            longitude = parseFloat(profile.manualLng);
+        } else {
+            ({ latitude, longitude } = await geocodeAddress(profile.address, profile.zipCode, profile.city));
+        }
 
         const provider = await prisma.provider.upsert({
             where: { user_id: userId },

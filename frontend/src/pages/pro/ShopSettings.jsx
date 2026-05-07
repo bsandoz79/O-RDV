@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import {
   Store, Plus, Trash2, Clock, Save, MapPin,
   Building2, Loader2, CheckCircle, Phone,
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import API_BASE_URL from "../../api/api";
 import './ShopSettings.css';
+
+const DraggablePinMap = lazy(() => import('../../components/DraggablePinMap'));
 
 const DAY_LABELS = {
   monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi',
@@ -1065,6 +1067,7 @@ function ProDashboard({ shopData, onEditShop }) {
 export default function ShopSettings() {
   const [categories,    setCategories]    = useState([]);
   const [profile,       setProfile]       = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '' });
+  const [manualCoords,  setManualCoords]  = useState(null); // { lat, lng } si le pro a ajusté manuellement
   const [imageFile,     setImageFile]     = useState(null);
   const [imagePreview,  setImagePreview]  = useState(null);
   const [services,      setServices]      = useState([{ label: '', price: '', duration: '', image_url: '' }]);
@@ -1176,7 +1179,7 @@ export default function ShopSettings() {
     try {
       const formData = new FormData();
       if (imageFile) formData.append('image', imageFile);
-      formData.append('profile',   JSON.stringify(profile));
+      formData.append('profile',   JSON.stringify({ ...profile, manualLat: manualCoords?.lat ?? null, manualLng: manualCoords?.lng ?? null }));
       formData.append('services',  JSON.stringify(services));
       formData.append('hours',     JSON.stringify(Object.keys(hours).map(day => ({ day_of_week: day, ...hours[day] }))));
 
@@ -1258,6 +1261,19 @@ export default function ShopSettings() {
               <div className="col-full"><Field label="Adresse" icon={MapPin} placeholder="Ex: 15 rue de la Paix" value={profile.address} onChange={setField('address')} required /></div>
               <Field label="Code Postal" icon={Hash} placeholder="80000" value={profile.zipCode} onChange={setField('zipCode')} />
               <Field label="Ville" placeholder="Amiens" value={profile.city} onChange={setField('city')} required />
+              <div className="col-full">
+                <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MapPin size={13} className="text-rose-400" />
+                  Position sur la carte
+                  {manualCoords && <span style={{ fontSize: 11, color: '#10b981', marginLeft: 6 }}>✓ Position ajustée</span>}
+                </label>
+                <Suspense fallback={<div style={{ height: 260, background: '#f8fafc', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 13 }}>Chargement de la carte...</div>}>
+                  <DraggablePinMap
+                    coords={manualCoords || (shopData?.latitude && shopData?.longitude ? { lat: shopData.latitude, lng: shopData.longitude } : null)}
+                    onChange={setManualCoords}
+                  />
+                </Suspense>
+              </div>
               <Field label="Téléphone" icon={Phone} placeholder="06 00 00 00 00" value={profile.phone} onChange={setField('phone')} />
             </div>
           </SectionCard>
