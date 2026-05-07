@@ -36,18 +36,11 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  const [cityFilter, setCityFilter] = useState('');
-  useEffect(() => {
-    const t = setTimeout(() => setCityFilter(searchQuery), 400);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
   const fetchProviders = () => {
     setLoading(true);
     setFetchError(false);
     const params = new URLSearchParams();
     if (activeCategory) params.set('category_id', activeCategory);
-    if (cityFilter)     params.set('city', cityFilter);
     if (userPosition) {
       params.set('lat', userPosition[0]);
       params.set('lng', userPosition[1]);
@@ -81,13 +74,17 @@ export default function Home() {
       .catch(() => { setFetchError(true); setLoading(false); });
   };
 
-  useEffect(fetchProviders, [activeCategory, cityFilter, userPosition]);
+  useEffect(fetchProviders, [activeCategory, userPosition]);
 
-  const filteredProviders = providers.filter((p) =>
-    !searchQuery ||
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.metier || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProviders = providers.filter((p) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.metier || '').toLowerCase().includes(q) ||
+      (p.distance || '').toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: "#fafafa" }}>
