@@ -29,9 +29,11 @@ jobs:
         with:
           node-version: '18'
       - name: Install dependencies
-        run: cd frontend && npm install
+        run: cd frontend && npm install --legacy-peer-deps
       - name: Run unit tests
         run: cd frontend && npm test
+        env:
+          CI: false
       - name: Build
         run: cd frontend && npm run build
         env:
