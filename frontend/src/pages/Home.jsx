@@ -54,8 +54,8 @@ export default function Home() {
           id: pro.id,
           name: pro.name,
           metier: pro.category_name || pro.description || "Prestataire de services",
-          note: 5.0,
-          avis: 12,
+          avg_rating:   pro.avg_rating ?? null,
+          review_count: pro.review_count ?? 0,
           distance: pro.distance_km !== null ? `${pro.distance_km} km` : (pro.city || ''),
           image: pro.image_url
             ? (pro.image_url.startsWith('http') ? pro.image_url : `${API_BASE_URL.replace('/api', '')}${pro.image_url}`)

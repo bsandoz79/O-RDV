@@ -2,10 +2,11 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
-  ChevronRight, Scissors, Star, CheckCircle2,
+  ChevronRight, Scissors, CheckCircle2, MessageSquare,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
+import { StarDisplay } from '../components/StarRating';
 
 const ProviderMap = lazy(() => import('../components/ProviderMap'));
 
@@ -54,12 +55,17 @@ export default function ProviderProfile() {
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState(null);
+  const [reviewData, setReviewData] = useState({ reviews: [], average: null, count: 0 });
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/shop/profile/${id}`)
       .then(r => { if (!r.ok) throw new Error('Prestataire introuvable'); return r.json(); })
       .then(d => { setProvider(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
+    fetch(`${API_BASE_URL}/reviews/provider/${id}`)
+      .then(r => r.json())
+      .then(d => setReviewData(d))
+      .catch(() => {});
   }, [id]);
 
   if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-rose-500" size={40} /></div>;
@@ -99,11 +105,19 @@ export default function ProviderProfile() {
               )}
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow">{provider.name}</h1>
-            {provider.city && (
-              <div className="flex items-center gap-1 text-white/80 text-sm mt-1">
-                <MapPin size={13} /> {provider.city}
-              </div>
-            )}
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {provider.city && (
+                <div className="flex items-center gap-1 text-white/80 text-sm">
+                  <MapPin size={13} /> {provider.city}
+                </div>
+              )}
+              {reviewData.average !== null && (
+                <div className="flex items-center gap-1.5">
+                  <StarDisplay rating={reviewData.average} size={13} showNumber />
+                  <span className="text-white/70 text-xs">({reviewData.count} avis)</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -237,6 +251,50 @@ export default function ProviderProfile() {
               }>
                 <ProviderMap provider={provider} />
               </Suspense>
+            </div>
+          )}
+
+          {/* ── Avis clients ───────────────────────────── */}
+          {reviewData.count > 0 && (
+            <div className="mt-6 bg-white rounded-2xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <MessageSquare size={18} className="text-rose-400" /> Avis clients
+                </h2>
+                {reviewData.average && (
+                  <div className="flex items-center gap-2">
+                    <StarDisplay rating={reviewData.average} size={16} showNumber />
+                    <span className="text-xs text-slate-400">{reviewData.count} avis</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                {reviewData.reviews.map(r => (
+                  <div key={r.id} className="flex gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                    {r.client.profile_picture ? (
+                      <img src={r.client.profile_picture} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-slate-400">
+                        {(r.client.first_name?.[0] || '?').toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-sm font-semibold text-slate-800">
+                          {[r.client.first_name, r.client.last_name].filter(Boolean).join(' ') || 'Client'}
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <StarDisplay rating={r.rating} size={12} />
+                          <span className="text-xs text-slate-400">
+                            {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                      {r.comment && <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

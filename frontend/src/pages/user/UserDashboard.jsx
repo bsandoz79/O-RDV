@@ -63,10 +63,11 @@ function SectionCard({ icon: Icon, color, title, children }) {
   );
 }
 
-function AppointmentCard({ appt, role, onCancel }) {
+function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
   const past = isPast(appt.appointment_date);
   const isRefused = appt.status === 'cancelled_by_pro';
   const cancellable = !past && appt.status !== 'cancelled' && appt.status !== 'completed' && !isRefused;
+  const showReviewForm = role !== 'pro' && appt.status === 'completed' && !appt.has_review;
   return (
     <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' || isRefused ? 'border-slate-100 opacity-70' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
       <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
@@ -126,6 +127,11 @@ function AppointmentCard({ appt, role, onCancel }) {
           </a>
         )}
       </div>
+      {showReviewForm && (
+        <div className="col-span-full w-full mt-1">
+          <ReviewForm appt={appt} token={token} onSubmitted={onReviewed} />
+        </div>
+      )}
     </div>
   );
 }
@@ -680,7 +686,7 @@ export default function UserDashboard() {
             <>
               <div className="space-y-3">
                 {displayedAppts.map(appt => (
-                  <AppointmentCard key={appt.id} appt={appt} role={role} onCancel={handleCancel} />
+                  <AppointmentCard key={appt.id} appt={appt} role={role} onCancel={handleCancel} token={token} onReviewed={loadAppointments} />
                 ))}
               </div>
               {appointments.length > 3 && (

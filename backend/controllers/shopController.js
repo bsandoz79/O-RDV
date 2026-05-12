@@ -90,9 +90,16 @@ const getAllProviders = async (req, res) => {
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         };
 
+        // Moyenne des avis par prestataire
+        const ratings = await prisma.$queryRaw`
+            SELECT provider_id, ROUND(AVG(rating),1) AS avg_rating, COUNT(*) AS review_count
+            FROM reviews GROUP BY provider_id`;
+        const ratingMap = Object.fromEntries(ratings.map(r => [r.provider_id, r]));
+
         let result = providers.map(p => {
             const bh = p.businessHours[0];
             const distance = calcDistance(p.latitude, p.longitude);
+            const rev = ratingMap[p.id];
             return {
                 ...p,
                 category_name: p.category?.name || null,
@@ -101,6 +108,8 @@ const getAllProviders = async (req, res) => {
                 today_open: fmtTime(bh?.open_time),
                 today_close: fmtTime(bh?.close_time),
                 distance_km: distance !== null ? Math.round(distance * 10) / 10 : null,
+                avg_rating: rev ? Number(rev.avg_rating) : null,
+                review_count: rev ? Number(rev.review_count) : 0,
                 businessHours: undefined,
                 category: undefined,
             };
