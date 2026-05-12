@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const appointmentRoutes = require('./routes/appointments');
 const userRoutes = require('./routes/user');
+const reviewRoutes = require('./routes/reviews');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // --- ROUTES PRINCIPALES ---
 

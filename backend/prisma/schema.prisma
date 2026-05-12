@@ -19,6 +19,7 @@ model User {
   created_at          DateTime @default(now())
   provider            Provider?
   appointments        Appointment[] @relation("ClientAppointments")
+  reviews             Review[]      @relation("ClientReviews")
 
   @@map("users")
 }
@@ -51,6 +52,7 @@ model Provider {
   services     Service[]
   businessHours BusinessHour[]
   appointments Appointment[]
+  reviews      Review[]
 
   @@map("providers")
 }
@@ -96,8 +98,24 @@ model Appointment {
   client           User              @relation("ClientAppointments", fields: [client_id], references: [id], onDelete: Cascade)
   provider         Provider          @relation(fields: [provider_id], references: [id], onDelete: Cascade)
   service          Service           @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  review           Review?
 
   @@map("appointments")
+}
+
+model Review {
+  id          Int       @id @default(autoincrement())
+  client_id   Int
+  provider_id Int
+  appointment_id Int   @unique
+  rating      Int
+  comment     String?  @db.Text
+  created_at  DateTime @default(now())
+  client      User     @relation("ClientReviews", fields: [client_id], references: [id], onDelete: Cascade)
+  provider    Provider @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
 }
 
 enum Role {

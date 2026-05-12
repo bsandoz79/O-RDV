@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 import { buildGoogleCalendarUrl } from '../../utils/googleCalendar';
+import { StarPicker } from '../../components/StarRating';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -125,6 +126,60 @@ function AppointmentCard({ appt, role, onCancel }) {
           </a>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Formulaire d'avis ──────────────────────────────────────────────────────
+
+function ReviewForm({ appt, token, onSubmitted }) {
+  const [rating, setRating]   = useState(0);
+  const [comment, setComment] = useState('');
+  const [status, setStatus]   = useState('idle'); // 'idle' | 'loading' | 'done' | 'error'
+
+  const submit = async () => {
+    if (!rating) return;
+    setStatus('loading');
+    try {
+      const res = await fetch(`${API_BASE_URL}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ appointment_id: appt.id, rating, comment }),
+      });
+      if (res.ok) { setStatus('done'); onSubmitted?.(); }
+      else setStatus('error');
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  if (status === 'done') return (
+    <div className="mt-3 flex items-center gap-2 text-xs text-emerald-600 font-semibold">
+      <CheckCircle2 size={13} /> Avis publié — merci !
+    </div>
+  );
+
+  return (
+    <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+      <p className="text-xs font-semibold text-slate-700 mb-2">Comment s'est passé ce RDV ?</p>
+      <StarPicker value={rating} onChange={setRating} />
+      {status === 'error' && <p className="text-xs text-red-500 mt-1">Une erreur est survenue, réessayez.</p>}
+      {rating > 0 && (
+        <>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="Commentaire optionnel..."
+            rows={2}
+            className="mt-2 w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-amber-400 resize-none"
+          />
+          <button onClick={submit} disabled={status === 'loading'}
+            className="mt-2 flex items-center gap-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg transition">
+            {status === 'loading' ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />}
+            Publier mon avis
+          </button>
+        </>
+      )}
     </div>
   );
 }
