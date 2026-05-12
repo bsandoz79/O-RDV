@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 
 export function StarDisplay({ rating, size = 14, showNumber = false }) {
+  if (rating == null || isNaN(rating)) return null;
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   return (

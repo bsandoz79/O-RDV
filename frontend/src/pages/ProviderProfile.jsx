@@ -63,8 +63,8 @@ export default function ProviderProfile() {
       .then(d => { setProvider(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
     fetch(`${API_BASE_URL}/reviews/provider/${id}`)
-      .then(r => r.json())
-      .then(d => setReviewData(d))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.reviews) setReviewData(d); })
       .catch(() => {});
   }, [id]);
 
