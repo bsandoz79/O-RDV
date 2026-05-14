@@ -90,13 +90,14 @@ export default function ProviderMap({ provider }) {
       .finally(() => setLoading(false));
   }, [userPos, shopPos]);
 
-  if (!hasCoords) return null;
-
-  const current    = routes[mode];
-  const positions  = useMemo(
+  const positions = useMemo(
     () => [shopPos, ...(userPos ? [userPos] : [])].filter(Boolean),
     [shopPos, userPos]
   );
+
+  if (!hasCoords) return null;
+
+  const current = routes[mode];
 
   // Liens de navigation externes
   const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${provider.latitude},${provider.longitude}`;
