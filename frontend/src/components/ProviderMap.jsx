@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, Clock, Loader2, Car, PersonStanding, Bike } from 'lucide-react';
@@ -52,7 +52,10 @@ export default function ProviderMap({ provider }) {
   const [loading, setLoading]     = useState(false);
 
   const hasCoords = provider.latitude && provider.longitude;
-  const shopPos   = hasCoords ? [provider.latitude, provider.longitude] : null;
+  const shopPos   = useMemo(
+    () => hasCoords ? [provider.latitude, provider.longitude] : null,
+    [provider.latitude, provider.longitude]
+  );
 
   useEffect(() => {
     if (!hasCoords) return;
@@ -90,7 +93,10 @@ export default function ProviderMap({ provider }) {
   if (!hasCoords) return null;
 
   const current    = routes[mode];
-  const positions  = [shopPos, ...(userPos ? [userPos] : [])];
+  const positions  = useMemo(
+    () => [shopPos, ...(userPos ? [userPos] : [])].filter(Boolean),
+    [shopPos, userPos]
+  );
 
   // Liens de navigation externes
   const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${provider.latitude},${provider.longitude}`;
