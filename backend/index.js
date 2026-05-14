@@ -5,6 +5,9 @@ require('dotenv').config();
 
 const migrate = require('./migrate');
 
+// Prisma retourne des BigInt pour les colonnes INT/COUNT MySQL — JSON.stringify ne les supporte pas nativement
+BigInt.prototype.toJSON = function() { return Number(this); };
+
 // --- IMPORT DES ROUTES EXTERNES ---
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
