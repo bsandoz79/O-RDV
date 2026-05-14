@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../prisma/client');
 
+const safeJson = (res, data) =>
+    res.send(JSON.stringify(data, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+
 const getMe = async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
@@ -106,7 +109,7 @@ const getAppointments = async (req, res) => {
                     WHERE a.provider_id = ${pid}
                     ORDER BY a.appointment_date ASC`;
             }
-            return res.json(rows);
+            return safeJson(res, rows);
         }
 
         const rows = await prisma.$queryRaw`
@@ -119,7 +122,7 @@ const getAppointments = async (req, res) => {
             JOIN providers p ON a.provider_id = p.id
             WHERE a.client_id = ${req.auth.userId}
             ORDER BY a.appointment_date ASC`;
-        res.json(rows);
+        safeJson(res, rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -237,7 +240,7 @@ const getNewClients = async (req, res) => {
             GROUP BY u.id, u.first_name, u.last_name, u.email, u.phone, u.profile_picture
             HAVING MONTH(MIN(a.created_at)) = MONTH(NOW()) AND YEAR(MIN(a.created_at)) = YEAR(NOW())
             ORDER BY first_booking_date DESC LIMIT 10`;
-        res.json(rows);
+        safeJson(res, rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

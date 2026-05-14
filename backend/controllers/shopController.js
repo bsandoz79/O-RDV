@@ -123,7 +123,8 @@ const getAllProviders = async (req, res) => {
             });
         }
 
-        res.json(result);
+        const safe = JSON.stringify(result, (_, v) => typeof v === 'bigint' ? Number(v) : v);
+        res.send(safe);
     } catch {
         res.status(500).json({ error: "Erreur lors de la récupération des prestataires" });
     }

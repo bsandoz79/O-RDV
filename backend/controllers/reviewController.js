@@ -44,7 +44,7 @@ const getProviderReviews = async (req, res) => {
         ]);
 
         const average = avgResult[0]?.avg ? Number(avgResult[0].avg) : null;
-        res.json({ reviews, average, count: reviews.length });
+        res.send(JSON.stringify({ reviews, average, count: reviews.length }, (_, v) => typeof v === 'bigint' ? Number(v) : v));
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
