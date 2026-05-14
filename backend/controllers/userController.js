@@ -113,7 +113,7 @@ const getAppointments = async (req, res) => {
             SELECT a.id, a.appointment_date, a.status, a.refusal_reason, a.is_read,
                    s.label AS service_label, s.duration, s.price,
                    p.name AS provider_name, p.city AS provider_city, p.image_url AS provider_image,
-                   0 AS has_review
+                   (SELECT COUNT(*) FROM reviews r WHERE r.appointment_id = a.id) AS has_review
             FROM appointments a
             JOIN services s ON a.service_id = s.id
             JOIN providers p ON a.provider_id = p.id
