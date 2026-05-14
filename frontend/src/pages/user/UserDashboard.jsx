@@ -382,8 +382,11 @@ export default function UserDashboard() {
   };
   useEffect(() => {
     loadAppointments();
-    const interval = setInterval(loadAppointments, 5000);
-    return () => clearInterval(interval);
+    // Auto-refresh uniquement pour le pro (nouveaux RDV entrants)
+    if (role === 'pro' || role === 'admin') {
+      const interval = setInterval(loadAppointments, 5000);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const handleProfileSave = async () => {
