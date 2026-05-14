@@ -642,7 +642,12 @@ function ProDashboard({ shopData, onEditShop }) {
   const fetchAppointments = (headers) =>
     fetch(`${API_BASE_URL}/user/appointments`, { headers })
       .then(r => r.json())
-      .then(all => { setAppointments(Array.isArray(all) ? all : []); });
+      .then(all => {
+        if (!Array.isArray(all)) return;
+        setAppointments(prev =>
+          JSON.stringify(prev) === JSON.stringify(all) ? prev : all
+        );
+      });
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };

@@ -374,25 +374,29 @@ export default function UserDashboard() {
       }).catch(() => {});
   }, []);
 
-  const loadAppointments = () => {
-    setLoadingAppts(true);
+  const loadAppointments = (silent = false) => {
+    if (!silent) setLoadingAppts(true);
     fetch(`${API_BASE_URL}/user/appointments`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
         const list = Array.isArray(data) ? data : [];
-        setAppointments(list);
+        // Ne re-rend que si les données ont vraiment changé
+        setAppointments(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(list)) return prev;
+          return list;
+        });
         if (role !== 'pro') {
           setUnreadRefusals(list.filter(a => a.status === 'cancelled_by_pro' && a.is_read === 0));
         }
-        setLoadingAppts(false);
+        if (!silent) setLoadingAppts(false);
       })
-      .catch(() => setLoadingAppts(false));
+      .catch(() => { if (!silent) setLoadingAppts(false); });
   };
   useEffect(() => {
     loadAppointments();
     // Auto-refresh uniquement pour le pro (nouveaux RDV entrants)
     if (role === 'pro' || role === 'admin') {
-      const interval = setInterval(loadAppointments, 5000);
+      const interval = setInterval(() => loadAppointments(true), 5000);
       return () => clearInterval(interval);
     }
   }, []);
