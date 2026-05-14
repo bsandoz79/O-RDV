@@ -80,13 +80,24 @@ INSERT IGNORE INTO categories (name, icon) VALUES
     ('Nail Art',        'Heart'),
     ('Spa & Bien-être', 'Smile');
 
--- colonnes latitude/longitude ajoutées manuellement (ALTER TABLE sans IF NOT EXISTS)
+CREATE TABLE IF NOT EXISTS reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT NOT NULL,
+    provider_id INT NOT NULL,
+    appointment_id INT NOT NULL UNIQUE,
+    rating TINYINT NOT NULL,
+    comment TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
 `;
 
 async function migrate() {
     const stmts = SQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
     for (const stmt of stmts) {
-        await db.execute(stmt);
+        await db.query(stmt);
     }
     console.log('✅ Base de données initialisée automatiquement.');
 }
