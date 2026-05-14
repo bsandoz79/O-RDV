@@ -1,5 +1,8 @@
 const prisma = require('../prisma/client');
 
+const safeJson = (res, data) =>
+    res.send(JSON.stringify(data, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+
 const createReview = async (req, res) => {
     const { appointment_id, rating, comment } = req.body;
     const client_id = req.auth.userId;
@@ -33,21 +36,53 @@ const createReview = async (req, res) => {
 const getProviderReviews = async (req, res) => {
     try {
         const providerId = Number(req.params.providerId);
+        const currentUserId = req.auth?.userId ?? null;
 
-        const [reviews, avgResult] = await Promise.all([
-            prisma.review.findMany({
-                where: { provider_id: providerId },
-                include: { client: { select: { first_name: true, last_name: true, profile_picture: true } } },
-                orderBy: { created_at: 'desc' },
-            }),
-            prisma.$queryRaw`SELECT ROUND(AVG(rating), 1) AS avg FROM reviews WHERE provider_id = ${providerId}`,
-        ]);
+        const reviews = await prisma.review.findMany({
+            where: { provider_id: providerId },
+            include: {
+                client: { select: { first_name: true, last_name: true, profile_picture: true } },
+                likes: { select: { user_id: true } },
+            },
+            orderBy: { created_at: 'desc' },
+        });
 
-        const average = avgResult[0]?.avg ? Number(avgResult[0].avg) : null;
-        res.send(JSON.stringify({ reviews, average, count: reviews.length }, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+        const [avgResult] = await prisma.$queryRaw`
+            SELECT ROUND(AVG(rating), 1) AS avg FROM reviews WHERE provider_id = ${providerId}`;
+
+        const formatted = reviews.map(r => ({
+            id: r.id,
+            rating: r.rating,
+            comment: r.comment,
+            created_at: r.created_at,
+            client: r.client,
+            like_count: r.likes.length,
+            liked_by_me: currentUserId ? r.likes.some(l => l.user_id === currentUserId) : false,
+        }));
+
+        safeJson(res, { reviews: formatted, average: avgResult?.avg ? Number(avgResult.avg) : null, count: reviews.length });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-module.exports = { createReview, getProviderReviews };
+const toggleLike = async (req, res) => {
+    const userId = req.auth.userId;
+    const reviewId = Number(req.params.id);
+    try {
+        const existing = await prisma.reviewLike.findUnique({
+            where: { review_id_user_id: { review_id: reviewId, user_id: userId } },
+        });
+        if (existing) {
+            await prisma.reviewLike.delete({ where: { id: existing.id } });
+            res.json({ liked: false });
+        } else {
+            await prisma.reviewLike.create({ data: { review_id: reviewId, user_id: userId } });
+            res.json({ liked: true });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { createReview, getProviderReviews, toggleLike };

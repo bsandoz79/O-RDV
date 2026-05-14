@@ -20,6 +20,7 @@ model User {
   provider            Provider?
   appointments        Appointment[] @relation("ClientAppointments")
   reviews             Review[]      @relation("ClientReviews")
+  review_likes        ReviewLike[]  @relation("UserLikes")
 
   @@map("users")
 }
@@ -104,18 +105,31 @@ model Appointment {
 }
 
 model Review {
-  id          Int       @id @default(autoincrement())
-  client_id   Int
-  provider_id Int
-  appointment_id Int   @unique
-  rating      Int
-  comment     String?  @db.Text
-  created_at  DateTime @default(now())
-  client      User     @relation("ClientReviews", fields: [client_id], references: [id], onDelete: Cascade)
-  provider    Provider @relation(fields: [provider_id], references: [id], onDelete: Cascade)
-  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  id             Int          @id @default(autoincrement())
+  client_id      Int
+  provider_id    Int
+  appointment_id Int          @unique
+  rating         Int
+  comment        String?      @db.Text
+  created_at     DateTime     @default(now())
+  client         User         @relation("ClientReviews", fields: [client_id], references: [id], onDelete: Cascade)
+  provider       Provider     @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+  appointment    Appointment  @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  likes          ReviewLike[]
 
   @@map("reviews")
+}
+
+model ReviewLike {
+  id         Int      @id @default(autoincrement())
+  review_id  Int
+  user_id    Int
+  created_at DateTime @default(now())
+  review     Review   @relation(fields: [review_id], references: [id], onDelete: Cascade)
+  user       User     @relation("UserLikes", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([review_id, user_id])
+  @@map("review_likes")
 }
 
 enum Role {

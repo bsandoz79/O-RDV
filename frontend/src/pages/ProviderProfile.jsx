@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
-  ChevronRight, Scissors, CheckCircle2, MessageSquare,
+  ChevronRight, Scissors, CheckCircle2, MessageSquare, ThumbsUp,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
@@ -62,7 +62,8 @@ export default function ProviderProfile() {
       .then(r => { if (!r.ok) throw new Error('Prestataire introuvable'); return r.json(); })
       .then(d => { setProvider(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
-    fetch(`${API_BASE_URL}/reviews/provider/${id}`)
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE_URL}/reviews/provider/${id}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.reviews) setReviewData(d); })
       .catch(() => {});
@@ -269,7 +270,26 @@ export default function ProviderProfile() {
                 )}
               </div>
               <div className="space-y-4">
-                {reviewData.reviews.map(r => (
+                {reviewData.reviews.map(r => {
+                  const token = localStorage.getItem('token');
+                  const handleLike = async () => {
+                    if (!token) return;
+                    try {
+                      const res = await fetch(`${API_BASE_URL}/reviews/${r.id}/like`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const data = await res.json();
+                      setReviewData(prev => ({
+                        ...prev,
+                        reviews: prev.reviews.map(rev => rev.id === r.id
+                          ? { ...rev, liked_by_me: data.liked, like_count: data.liked ? rev.like_count + 1 : rev.like_count - 1 }
+                          : rev
+                        ),
+                      }));
+                    } catch {}
+                  };
+                  return (
                   <div key={r.id} className="flex gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
                     {r.client.profile_picture ? (
                       <img src={r.client.profile_picture} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
@@ -290,10 +310,15 @@ export default function ProviderProfile() {
                           </span>
                         </div>
                       </div>
-                      {r.comment && <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>}
+                      {r.comment && <p className="text-sm text-slate-600 leading-relaxed mb-2">{r.comment}</p>}
+                      <button onClick={handleLike}
+                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition ${r.liked_by_me ? 'bg-rose-50 border-rose-200 text-rose-500 font-semibold' : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'}`}>
+                        <ThumbsUp size={11} /> {r.like_count > 0 ? r.like_count : ''} Utile
+                      </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

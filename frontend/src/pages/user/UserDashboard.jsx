@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 import { buildGoogleCalendarUrl } from '../../utils/googleCalendar';
-import { StarPicker } from '../../components/StarRating';
+import { StarPicker, StarDisplay } from '../../components/StarRating';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -67,7 +67,8 @@ function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
   const past = isPast(appt.appointment_date);
   const isRefused = appt.status === 'cancelled_by_pro';
   const cancellable = !past && appt.status !== 'cancelled' && appt.status !== 'completed' && !isRefused;
-  const showReviewForm = role !== 'pro' && appt.status === 'completed' && !appt.has_review;
+  const showReviewForm    = role !== 'pro' && appt.status === 'completed' && !Number(appt.has_review);
+  const showReviewSummary = role !== 'pro' && appt.status === 'completed' && Number(appt.has_review) > 0;
   return (
     <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' || isRefused ? 'border-slate-100 opacity-70' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
       <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
@@ -127,6 +128,13 @@ function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
           </a>
         )}
       </div>
+      {showReviewSummary && (
+        <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-2">
+          <StarDisplay rating={Number(appt.review_rating)} size={13} />
+          {appt.review_comment && <p className="text-xs text-slate-600 leading-relaxed">{appt.review_comment}</p>}
+          {!appt.review_comment && <p className="text-xs text-slate-400 italic">Avis publié</p>}
+        </div>
+      )}
       {showReviewForm && (
         <div className="col-span-full w-full mt-1">
           <ReviewForm appt={appt} token={token} onSubmitted={onReviewed} />
