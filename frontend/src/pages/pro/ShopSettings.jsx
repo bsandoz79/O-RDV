@@ -636,6 +636,8 @@ function ProDashboard({ shopData, onEditShop }) {
   const [loading,          setLoading]          = useState(true);
   const [showAll,          setShowAll]          = useState(false);
   const [refusalTarget,    setRefusalTarget]    = useState(null);
+  const [reviews,          setReviews]          = useState([]);
+  const [showAllReviews,   setShowAllReviews]   = useState(false);
 
   const fetchAppointments = (headers) =>
     fetch(`${API_BASE_URL}/user/appointments`, { headers })
@@ -647,8 +649,10 @@ function ProDashboard({ shopData, onEditShop }) {
     Promise.all([
       fetchAppointments(headers),
       fetch(`${API_BASE_URL}/user/new-clients`, { headers }).then(r => r.json()),
-    ]).then(([, clients]) => {
+      shopData?.id ? fetch(`${API_BASE_URL}/reviews/provider/${shopData.id}`, { headers }).then(r => r.ok ? r.json() : null) : Promise.resolve(null),
+    ]).then(([, clients, reviewData]) => {
       setNewClients(Array.isArray(clients) ? clients : []);
+      if (reviewData?.reviews) setReviews(reviewData.reviews);
     }).catch(() => {}).finally(() => setLoading(false));
 
     const interval = setInterval(() => {
@@ -1049,6 +1053,73 @@ function ProDashboard({ shopData, onEditShop }) {
             )}
           </div>
         )}
+
+        {/* ── Avis clients ─────────────────────────────────────────── */}
+        {reviews.length > 0 && (() => {
+          const today = new Date(); today.setHours(0,0,0,0);
+          const todayReviews = reviews.filter(r => new Date(r.created_at) >= today);
+          const displayed = showAllReviews ? reviews : todayReviews;
+          const avg = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
+
+          return (
+            <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-bold text-slate-900 flex items-center gap-2">
+                    ⭐ Avis clients
+                    {avg && <span className="text-sm font-black text-amber-500">{avg}</span>}
+                    <span className="text-xs text-slate-400 font-normal">({reviews.length} avis)</span>
+                  </h2>
+                  {todayReviews.length > 0 && (
+                    <p className="text-xs text-emerald-600 font-semibold mt-0.5">
+                      🆕 {todayReviews.length} nouvel avis aujourd'hui
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {displayed.length === 0 && !showAllReviews && (
+                <p className="text-xs text-slate-400 italic">Aucun nouvel avis aujourd'hui.</p>
+              )}
+
+              <div className="space-y-3">
+                {displayed.map(r => (
+                  <div key={r.id} className={`flex gap-3 p-3 rounded-xl border ${new Date(r.created_at) >= today ? 'border-amber-100 bg-amber-50/40' : 'border-slate-100'}`}>
+                    {r.client?.profile_picture ? (
+                      <img src={r.client.profile_picture} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-xs font-bold text-slate-400">
+                        {(r.client?.first_name?.[0] || '?').toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-slate-800">
+                          {[r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Client'}
+                        </span>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {'⭐'.repeat(r.rating)}
+                          <span className="text-xs text-slate-400 ml-1">
+                            {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                      </div>
+                      {r.comment && <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{r.comment}</p>}
+                      {r.like_count > 0 && <p className="text-xs text-slate-400 mt-1">👍 {r.like_count} personne{r.like_count > 1 ? 's' : ''} ont trouvé cet avis utile</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowAllReviews(v => !v)}
+                className="mt-4 w-full text-xs font-semibold text-slate-500 hover:text-rose-500 border border-slate-200 hover:border-rose-200 py-2 rounded-xl transition"
+              >
+                {showAllReviews ? '▲ Voir uniquement aujourd\'hui' : `▼ Voir tous les avis (${reviews.length})`}
+              </button>
+            </div>
+          );
+        })()}
 
         {refusalTarget !== null && (
           <RefusalModal
