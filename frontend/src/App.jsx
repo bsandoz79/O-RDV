@@ -1,6 +1,54 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
+
+const INACTIVITY_DELAY = 30 * 60 * 1000; // 30 minutes
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
+function logout() {
+  localStorage.clear();
+  window.dispatchEvent(new Event('authChange'));
+  window.location.href = '/login?session=expired';
+}
+
+function SessionGuard() {
+  const location = useLocation();
+  const timerRef = useRef(null);
+
+  const resetTimer = () => {
+    clearTimeout(timerRef.current);
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    timerRef.current = setTimeout(logout, INACTIVITY_DELAY);
+  };
+
+  // Vérifie le token à chaque changement de route
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && isTokenExpired(token)) logout();
+  }, [location]);
+
+  // Timer d'inactivité
+  useEffect(() => {
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+      clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return null;
+}
 import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -55,6 +103,7 @@ const AdminPanel = () => <div className="p-10"><h1>🛡️ Administration</h1></
 function App() {
   return (
     <Router>
+      <SessionGuard />
       <Navbar />
       <ScrollToTop />
       <RedirectBanner />
