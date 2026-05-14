@@ -1,8 +1,19 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
+import Home from "./pages/Home";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Navbar, { ScrollToTop } from "./components/Navbar";
+import UserDashboard from "./pages/user/UserDashboard";
+import BookingPage from "./components/BookingPage";
+import ShopSettings from "./pages/pro/ShopSettings";
+import ProviderProfile from "./pages/ProviderProfile";
+import MentionsLegales from "./pages/legal/MentionsLegales";
+import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
+import CGU from "./pages/legal/CGU";
 
-const INACTIVITY_DELAY = 30 * 60 * 1000; // 30 minutes
+const INACTIVITY_DELAY = 30 * 60 * 1000;
 
 function isTokenExpired(token) {
   try {
@@ -30,13 +41,11 @@ function SessionGuard() {
     timerRef.current = setTimeout(logout, INACTIVITY_DELAY);
   };
 
-  // Vérifie le token à chaque changement de route
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && isTokenExpired(token)) logout();
   }, [location]);
 
-  // Timer d'inactivité
   useEffect(() => {
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
     events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
@@ -45,23 +54,12 @@ function SessionGuard() {
       events.forEach(e => window.removeEventListener(e, resetTimer));
       clearTimeout(timerRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;
 }
-import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Navbar, { ScrollToTop } from "./components/Navbar";
-import UserDashboard from "./pages/user/UserDashboard";
-import BookingPage from "./components/BookingPage";
-import ShopSettings from "./pages/pro/ShopSettings";
-import ProviderProfile from "./pages/ProviderProfile";
-import MentionsLegales from "./pages/legal/MentionsLegales";
-import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
-import CGU from "./pages/legal/CGU";
 
-// Affiche un message quand l'utilisateur est redirigé depuis une route protégée
 function RedirectBanner() {
   const [msg, setMsg] = useState(() => {
     const m = sessionStorage.getItem('redirectMsg');
@@ -108,50 +106,35 @@ function App() {
       <ScrollToTop />
       <RedirectBanner />
       <Routes>
-        {/* --- ROUTES PUBLIQUES --- */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/provider/:id" element={<ProviderProfile />} />
         <Route path="/booking/:providerId" element={<BookingPage />} />
 
-        {/* --- ROUTES UTILISATEUR (Client) --- */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute allowedRoles={["user", "pro", "admin"]}>
-              <UserDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/account" element={
+          <ProtectedRoute allowedRoles={["user", "pro", "admin"]}>
+            <UserDashboard />
+          </ProtectedRoute>
+        } />
 
-        {/* --- ROUTES PRESTATAIRE (Pro) --- */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["pro", "admin"]}>
-              <DashboardPro />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pro/settings"
-          element={
-            <ProtectedRoute allowedRoles={["pro", "admin"]}>
-              <ShopSettings />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={["pro", "admin"]}>
+            <DashboardPro />
+          </ProtectedRoute>
+        } />
 
-        {/* --- ROUTE ADMIN --- */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminPanel />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/pro/settings" element={
+          <ProtectedRoute allowedRoles={["pro", "admin"]}>
+            <ShopSettings />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminPanel />
+          </ProtectedRoute>
+        } />
 
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
