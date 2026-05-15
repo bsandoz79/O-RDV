@@ -126,9 +126,12 @@ export default function MultiView() {
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/admin/users`, { headers: adminHeaders })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`Erreur ${r.status} — backend non déployé ?`);
+        return r.json();
+      })
       .then(u => { if (Array.isArray(u)) setUsers(u); })
-      .catch(() => {})
+      .catch(e => console.error('[MultiView]', e.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -150,6 +153,12 @@ export default function MultiView() {
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loader2 size={32} className="animate-spin text-slate-400" />
+        </div>
+      ) : users.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <AlertCircle size={32} className="text-red-400" />
+          <p className="text-slate-400 text-sm">Impossible de charger les comptes.</p>
+          <p className="text-slate-500 text-xs">Le backend Railway doit être déployé avec les routes admin.</p>
         </div>
       ) : (
         <div className="flex-1 grid grid-cols-3 overflow-hidden">

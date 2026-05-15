@@ -47,6 +47,12 @@ function logout() {
 
 applyImpersonationHash();
 
+function NavbarConditional() {
+  const location = useLocation();
+  if (location.pathname === '/admin/multiview') return null;
+  return <Navbar />;
+}
+
 function SessionGuard() {
   const location = useLocation();
   const timerRef = useRef(null);
@@ -130,7 +136,7 @@ function App() {
   return (
     <Router>
       <SessionGuard />
-      <Navbar />
+      <NavbarConditional />
       <ScrollToTop />
       <RedirectBanner />
       <Routes>
