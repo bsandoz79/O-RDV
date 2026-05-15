@@ -18,8 +18,7 @@ import MultiView from "./pages/admin/MultiView";
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
 // Détecte le token d'impersonation dans le hash URL (#_t=TOKEN&_u=USER_JSON)
-// Surcharge localStorage pour que TOUS les composants utilisent le compte impersonné
-// sans aucune modification nécessaire de leur côté.
+// window.fetch et window.sessionStorage sont ISOLÉS par iframe (contrairement à localStorage).
 function applyImpersonationHash() {
   const hash = window.location.hash;
   const tMatch = hash.match(/#_t=([^&]+)/);
@@ -29,41 +28,23 @@ function applyImpersonationHash() {
   const impToken = decodeURIComponent(tMatch[1]);
   const impUser  = uMatch ? decodeURIComponent(uMatch[1]) : null;
 
+  // sessionStorage est unique par iframe ✓
   sessionStorage.setItem('_impToken', impToken);
   if (impUser) sessionStorage.setItem('_impUser', impUser);
 
-  // Proxy localStorage : redirige token/user vers sessionStorage
-  const _get = Storage.prototype.getItem;
-  const _set = Storage.prototype.setItem;
-  const _rem = Storage.prototype.removeItem;
-  const _clr = Storage.prototype.clear;
-
-  Object.defineProperty(window.localStorage, 'getItem', {
-    value(key) {
-      if (key === 'token') return sessionStorage.getItem('_impToken');
-      if (key === 'user')  return sessionStorage.getItem('_impUser');
-      return _get.call(this, key);
-    },
-    writable: true,
-  });
-  Object.defineProperty(window.localStorage, 'setItem', {
-    value(key, val) {
-      if (key === 'token' || key === 'user') return; // protège le vrai compte
-      return _set.call(this, key, val);
-    },
-    writable: true,
-  });
-  Object.defineProperty(window.localStorage, 'removeItem', {
-    value(key) {
-      if (key === 'token' || key === 'user') return;
-      return _rem.call(this, key);
-    },
-    writable: true,
-  });
-  Object.defineProperty(window.localStorage, 'clear', {
-    value() { sessionStorage.removeItem('_impToken'); sessionStorage.removeItem('_impUser'); _clr.call(this); },
-    writable: true,
-  });
+  // Intercepte fetch dans CE window uniquement — isolé par iframe ✓
+  const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const origFetch = window.fetch;
+  window.fetch = function(input, init = {}) {
+    const url = typeof input === 'string' ? input : (input?.url || '');
+    if (url.startsWith(apiBase)) {
+      const headers = new Headers(init.headers || (input?.headers));
+      headers.set('Authorization', `Bearer ${impToken}`);
+      init = { ...init, headers };
+      if (typeof input !== 'string') input = new Request(input, { headers });
+    }
+    return origFetch.call(this, input, init);
+  };
 
   window.location.hash = '';
   window.dispatchEvent(new Event('authChange'));
