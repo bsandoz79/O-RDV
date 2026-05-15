@@ -17,6 +17,19 @@ import MultiView from "./pages/admin/MultiView";
 
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
+// Détecte le token d'impersonation dans le hash URL (#_t=TOKEN&_u=USER_JSON)
+function applyImpersonationHash() {
+  const hash = window.location.hash;
+  const tMatch = hash.match(/#_t=([^&]+)/);
+  const uMatch = hash.match(/_u=([^&]+)/);
+  if (tMatch) {
+    sessionStorage.setItem('_impToken', decodeURIComponent(tMatch[1]));
+    if (uMatch) sessionStorage.setItem('_impUser', decodeURIComponent(uMatch[1]));
+    window.location.hash = '';
+    window.dispatchEvent(new Event('authChange'));
+  }
+}
+
 function isTokenExpired(token) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -31,6 +44,8 @@ function logout() {
   window.dispatchEvent(new Event('authChange'));
   window.location.href = '/login?session=expired';
 }
+
+applyImpersonationHash();
 
 function SessionGuard() {
   const location = useLocation();

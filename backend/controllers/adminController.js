@@ -100,6 +100,29 @@ const updateProvider = async (req, res) => {
     }
 };
 
+const jwt = require('jsonwebtoken');
+
+const impersonate = async (req, res) => {
+    const userId = Number(req.params.userId);
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, role: true, is_banned: true },
+        });
+        if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+        if (user.is_banned) return res.status(403).json({ error: 'Impossible d\'impersonner un compte suspendu.' });
+
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET || 'secret',
+            { expiresIn: '30m' }
+        );
+        res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 const getUserAppointments = async (req, res) => {
     const userId = Number(req.params.id);
     try {
@@ -135,4 +158,4 @@ const getProviderAppointments = async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { getUsers, toggleBan, deleteUser, getStats, getProviders, updateProvider, getUserAppointments, getProviderAppointments };
+module.exports = { getUsers, toggleBan, deleteUser, getStats, getProviders, updateProvider, getUserAppointments, getProviderAppointments, impersonate };
