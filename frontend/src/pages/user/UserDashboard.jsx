@@ -198,6 +198,59 @@ function ReviewForm({ appt, token, onSubmitted }) {
   );
 }
 
+// ─── Modal annulation ────────────────────────────────────────────────────────
+
+function CancelModal({ appt, onConfirm, onClose, loading }) {
+  if (!appt) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+            <Ban size={20} className="text-red-500" />
+          </div>
+          <div>
+            <h2 className="font-black text-slate-800 text-lg leading-tight">Annuler ce RDV ?</h2>
+            <p className="text-xs text-slate-400">Cette action est irréversible</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 mb-5 space-y-1.5">
+          <p className="text-sm font-bold text-slate-800">{appt.service_label}</p>
+          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+            <Store size={11} /> {appt.provider_name}
+          </p>
+          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+            <Calendar size={11} />
+            {new Date(appt.appointment_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {' à '}{new Date(appt.appointment_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+            <Clock size={11} /> {appt.duration} min · {appt.price} €
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+          >
+            Garder le RDV
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white text-sm font-bold transition flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <Ban size={14} />}
+            Confirmer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Modal notification refus ───────────────────────────────────────────────
 
 function RefusalNotificationModal({ refusals, onClose }) {
@@ -364,6 +417,8 @@ export default function UserDashboard() {
   const [showAll, setShowAll]           = useState(false);
   const [apptMsg, setApptMsg]           = useState({ type: '', text: '' });
   const [unreadRefusals, setUnreadRefusals] = useState([]);
+  const [cancelTarget, setCancelTarget]     = useState(null); // appointment à annuler
+  const [cancelling, setCancelling]         = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -477,17 +532,28 @@ export default function UserDashboard() {
     ));
   };
 
-  const handleCancel = async (id) => {
-    if (!window.confirm('Confirmer l\'annulation de ce rendez-vous ?')) return;
+  const handleCancel = (id) => {
+    const appt = appointments.find(a => a.id === id);
+    if (appt) setCancelTarget(appt);
+  };
+
+  const doCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/user/appointments/${id}/cancel`, {
+      const res = await fetch(`${API_BASE_URL}/user/appointments/${cancelTarget.id}/cancel`, {
         method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setApptMsg({ type: 'success', text: data.message });
+      setCancelTarget(null);
+      setApptMsg({ type: 'success', text: 'Rendez-vous annulé.' });
       loadAppointments();
-    } catch (err) { setApptMsg({ type: 'error', text: err.message }); }
+    } catch (err) {
+      setApptMsg({ type: 'error', text: err.message });
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const displayedAppts = showAll ? appointments : appointments.slice(0, 3);
@@ -721,6 +787,12 @@ export default function UserDashboard() {
       {role !== 'pro' && unreadRefusals.length > 0 && (
         <RefusalNotificationModal refusals={unreadRefusals} onClose={handleMarkRefusalsRead} />
       )}
+      <CancelModal
+        appt={cancelTarget}
+        onConfirm={doCancel}
+        onClose={() => setCancelTarget(null)}
+        loading={cancelling}
+      />
     </div>
   );
 }

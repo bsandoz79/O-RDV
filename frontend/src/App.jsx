@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+
 import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import Home from "./pages/Home";
@@ -14,6 +15,7 @@ import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
 import CGU from "./pages/legal/CGU";
 import AdminPanel from "./pages/admin/AdminPanel";
 import MultiView from "./pages/admin/MultiView";
+import NotFound from "./pages/NotFound";
 
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
@@ -219,7 +221,7 @@ function App() {
         <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
         <Route path="/cgu" element={<CGU />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <footer className="bg-slate-900 text-slate-400 text-xs py-6 px-4 text-center">
         <div className="flex flex-wrap justify-center gap-4 mb-2">

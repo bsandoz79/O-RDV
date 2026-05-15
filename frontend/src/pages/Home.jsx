@@ -1,6 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, Maximize2, Minimize2 } from "lucide-react";
+import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, Maximize2, Minimize2, SlidersHorizontal, Star, X } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
 import API_BASE_URL from '../api/api';
 
@@ -13,6 +13,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
   const [mapExpanded, setMapExpanded] = useState(false);
+  const [sortBy, setSortBy]       = useState('distance'); // 'distance' | 'rating' | 'name'
+  const [openNow, setOpenNow]     = useState(false);
+  const [minRating, setMinRating] = useState(null); // null | 3 | 4
 
   const [categories, setCategories] = useState([]);
   const [providers, setProviders] = useState([]);
@@ -76,15 +79,38 @@ export default function Home() {
 
   useEffect(fetchProviders, [activeCategory, userPosition]);
 
-  const filteredProviders = providers.filter((p) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      (p.metier || '').toLowerCase().includes(q) ||
-      (p.distance || '').toLowerCase().includes(q)
-    );
-  });
+  const filteredProviders = useMemo(() => {
+    let list = providers.filter(p => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!(p.name.toLowerCase().includes(q) ||
+              (p.metier || '').toLowerCase().includes(q) ||
+              (p.distance || '').toLowerCase().includes(q))) return false;
+      }
+      if (openNow) {
+        if (p.todayIsClosed) return false;
+        if (p.todayOpen && p.todayClose) {
+          const now = new Date();
+          const nowMin = now.getHours() * 60 + now.getMinutes();
+          const [oh, om] = p.todayOpen.split(':').map(Number);
+          const [ch, cm] = p.todayClose.split(':').map(Number);
+          if (nowMin < oh * 60 + om || nowMin >= ch * 60 + cm) return false;
+        }
+      }
+      if (minRating !== null && (p.avg_rating === null || p.avg_rating < minRating)) return false;
+      return true;
+    });
+
+    return [...list].sort((a, b) => {
+      if (sortBy === 'rating') return (b.avg_rating ?? -1) - (a.avg_rating ?? -1);
+      if (sortBy === 'name')   return a.name.localeCompare(b.name, 'fr');
+      // distance (default)
+      if (a.distance_km !== null && b.distance_km !== null) return a.distance_km - b.distance_km;
+      if (a.distance_km === null) return 1;
+      if (b.distance_km === null) return -1;
+      return 0;
+    });
+  }, [providers, searchQuery, openNow, minRating, sortBy]);
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: "#fafafa" }}>
@@ -133,6 +159,51 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        {/* Filtres */}
+        <section className="mb-5 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 mr-1">
+            <SlidersHorizontal size={13} className="text-slate-400" />
+            <span className="text-xs font-semibold text-slate-500">Trier :</span>
+          </div>
+          {[
+            { key: 'distance', label: '📍 Distance' },
+            { key: 'rating',   label: '⭐ Mieux notés' },
+            { key: 'name',     label: 'A–Z' },
+          ].map(({ key, label }) => (
+            <button key={key} onClick={() => setSortBy(key)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all
+                ${sortBy === key
+                  ? 'bg-slate-900 border-slate-900 text-white'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'}`}>
+              {label}
+            </button>
+          ))}
+
+          <div className="w-px h-4 bg-slate-200 mx-1" />
+
+          <button onClick={() => setOpenNow(v => !v)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
+              ${openNow ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${openNow ? 'bg-white' : 'bg-emerald-400'}`} />
+            Ouvert maintenant
+          </button>
+
+          {[3, 4].map(n => (
+            <button key={n} onClick={() => setMinRating(minRating === n ? null : n)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1
+                ${minRating === n ? 'bg-amber-400 border-amber-400 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600'}`}>
+              {n}+ <Star size={10} className={minRating === n ? 'fill-white text-white' : 'fill-amber-400 text-amber-400'} />
+            </button>
+          ))}
+
+          {(sortBy !== 'distance' || openNow || minRating !== null) && (
+            <button onClick={() => { setSortBy('distance'); setOpenNow(false); setMinRating(null); }}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all flex items-center gap-1">
+              <X size={11} /> Réinitialiser
+            </button>
+          )}
+        </section>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
