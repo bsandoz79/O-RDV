@@ -18,16 +18,55 @@ import MultiView from "./pages/admin/MultiView";
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
 // Détecte le token d'impersonation dans le hash URL (#_t=TOKEN&_u=USER_JSON)
+// Surcharge localStorage pour que TOUS les composants utilisent le compte impersonné
+// sans aucune modification nécessaire de leur côté.
 function applyImpersonationHash() {
   const hash = window.location.hash;
   const tMatch = hash.match(/#_t=([^&]+)/);
   const uMatch = hash.match(/_u=([^&]+)/);
-  if (tMatch) {
-    sessionStorage.setItem('_impToken', decodeURIComponent(tMatch[1]));
-    if (uMatch) sessionStorage.setItem('_impUser', decodeURIComponent(uMatch[1]));
-    window.location.hash = '';
-    window.dispatchEvent(new Event('authChange'));
-  }
+  if (!tMatch) return;
+
+  const impToken = decodeURIComponent(tMatch[1]);
+  const impUser  = uMatch ? decodeURIComponent(uMatch[1]) : null;
+
+  sessionStorage.setItem('_impToken', impToken);
+  if (impUser) sessionStorage.setItem('_impUser', impUser);
+
+  // Proxy localStorage : redirige token/user vers sessionStorage
+  const _get = Storage.prototype.getItem;
+  const _set = Storage.prototype.setItem;
+  const _rem = Storage.prototype.removeItem;
+  const _clr = Storage.prototype.clear;
+
+  Object.defineProperty(window.localStorage, 'getItem', {
+    value(key) {
+      if (key === 'token') return sessionStorage.getItem('_impToken');
+      if (key === 'user')  return sessionStorage.getItem('_impUser');
+      return _get.call(this, key);
+    },
+    writable: true,
+  });
+  Object.defineProperty(window.localStorage, 'setItem', {
+    value(key, val) {
+      if (key === 'token' || key === 'user') return; // protège le vrai compte
+      return _set.call(this, key, val);
+    },
+    writable: true,
+  });
+  Object.defineProperty(window.localStorage, 'removeItem', {
+    value(key) {
+      if (key === 'token' || key === 'user') return;
+      return _rem.call(this, key);
+    },
+    writable: true,
+  });
+  Object.defineProperty(window.localStorage, 'clear', {
+    value() { sessionStorage.removeItem('_impToken'); sessionStorage.removeItem('_impUser'); _clr.call(this); },
+    writable: true,
+  });
+
+  window.location.hash = '';
+  window.dispatchEvent(new Event('authChange'));
 }
 
 function isTokenExpired(token) {
