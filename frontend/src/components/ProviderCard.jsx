@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Navigation } from "lucide-react";
+import { ChevronRight, Navigation, Heart } from "lucide-react";
 import { StarDisplay } from './StarRating';
 
 function toMinutes(str) {
@@ -27,7 +27,7 @@ function isNew(createdAt) {
   return Date.now() - new Date(createdAt).getTime() < 30 * 24 * 60 * 60 * 1000;
 }
 
-export default function ProviderCard({ provider, onClick }) {
+export default function ProviderCard({ provider, onClick, isFavorite = false, onFavoriteToggle }) {
   const openBadge = getOpenBadge(provider.todayOpen, provider.todayClose, provider.todayIsClosed);
   const nouveau   = isNew(provider.createdAt);
   const hasRating = provider.avg_rating != null && provider.review_count > 0;
@@ -44,6 +44,15 @@ export default function ProviderCard({ provider, onClick }) {
           <span className="absolute top-3 left-3 text-xs font-semibold bg-blue-500/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full shadow-sm">
             Nouveau
           </span>
+        )}
+        {onFavoriteToggle && (
+          <button
+            onClick={e => { e.stopPropagation(); onFavoriteToggle(provider.id); }}
+            className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center transition hover:scale-110"
+            aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
+            <Heart size={15} className={isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'} />
+          </button>
         )}
         <span className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${openBadge.style}`}>
           <span className={`w-1.5 h-1.5 rounded-full bg-white ${openBadge.label === 'Ouvert' ? 'animate-pulse' : 'opacity-60'}`} />

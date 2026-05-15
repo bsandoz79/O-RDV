@@ -13,8 +13,9 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const appointmentRoutes = require('./routes/appointments');
 const userRoutes = require('./routes/user');
-const reviewRoutes = require('./routes/reviews');
-const adminRoutes  = require('./routes/admin');
+const reviewRoutes    = require('./routes/reviews');
+const adminRoutes     = require('./routes/admin');
+const favoritesRoutes = require('./routes/favorites');
 
 const { apiLimiter } = require('./middlewares/rateLimiter');
 
@@ -37,6 +38,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/favorites', favoritesRoutes);
 
 // --- ROUTES PRINCIPALES ---
 

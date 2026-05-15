@@ -23,6 +23,7 @@ model User {
   appointments        Appointment[] @relation("ClientAppointments")
   reviews             Review[]      @relation("ClientReviews")
   review_likes        ReviewLike[]  @relation("UserLikes")
+  favorites           Favorite[]    @relation("UserFavorites")
 
   @@map("users")
 }
@@ -59,6 +60,7 @@ model Provider {
   businessHours BusinessHour[]
   appointments Appointment[]
   reviews      Review[]
+  favorites    Favorite[]
 
   @@map("providers")
 }
@@ -135,6 +137,18 @@ model ReviewLike {
 
   @@unique([review_id, user_id])
   @@map("review_likes")
+}
+
+model Favorite {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  provider_id Int
+  created_at  DateTime @default(now())
+  user        User     @relation("UserFavorites", fields: [user_id], references: [id], onDelete: Cascade)
+  provider    Provider @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, provider_id])
+  @@map("favorites")
 }
 
 enum Role {

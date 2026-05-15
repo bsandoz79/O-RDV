@@ -22,6 +22,18 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (!token || !storedUser) return;
+    fetch(`${API_BASE_URL}/favorites`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(list => setFavoriteIds(new Set(list.map(f => f.id))))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -239,7 +251,25 @@ export default function Home() {
                   {filteredProviders.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {filteredProviders.map((provider) => (
-                        <ProviderCard key={provider.id} provider={provider} onClick={() => navigate(`/provider/${provider.id}`)} />
+                        <ProviderCard
+                          key={provider.id}
+                          provider={provider}
+                          onClick={() => navigate(`/provider/${provider.id}`)}
+                          isFavorite={favoriteIds.has(provider.id)}
+                          onFavoriteToggle={token ? async (id) => {
+                            const res = await fetch(`${API_BASE_URL}/favorites/${id}`, {
+                              method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (res.ok) {
+                              const { favorited } = await res.json();
+                              setFavoriteIds(prev => {
+                                const next = new Set(prev);
+                                favorited ? next.add(id) : next.delete(id);
+                                return next;
+                              });
+                            }
+                          } : null}
+                        />
                       ))}
                     </div>
                   ) : (

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   User, Mail, Lock, Save, KeyRound, Calendar, Clock,
   MapPin, ChevronDown, ChevronUp, CheckCircle2, AlertCircle,
-  Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search, Camera,
+  Loader2, Pencil, X, Store, Scissors, Ban, Phone, Search, Camera, Heart,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 import { buildGoogleCalendarUrl } from '../../utils/googleCalendar';
@@ -418,8 +418,18 @@ export default function UserDashboard() {
   const [showAll, setShowAll]           = useState(false);
   const [apptMsg, setApptMsg]           = useState({ type: '', text: '' });
   const [unreadRefusals, setUnreadRefusals] = useState([]);
-  const [cancelTarget, setCancelTarget]     = useState(null); // appointment à annuler
+  const [cancelTarget, setCancelTarget]     = useState(null);
+  const [favorites, setFavorites]           = useState([]); // appointment à annuler
   const [cancelling, setCancelling]         = useState(false);
+
+  useEffect(() => {
+    if (role === 'user') {
+      fetch(`${API_BASE_URL}/favorites`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then(setFavorites)
+        .catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -751,6 +761,47 @@ export default function UserDashboard() {
         {role === 'pro' && (
           <SectionCard icon={Clock} color="text-purple-600" title="Mes horaires d'ouverture">
             <HoursEditor token={token} />
+          </SectionCard>
+        )}
+
+        {/* Favoris (client uniquement) */}
+        {role === 'user' && (
+          <SectionCard icon={Heart} color="text-rose-500" title="Mes prestataires favoris">
+            {favorites.length === 0 ? (
+              <div className="text-center py-6">
+                <Heart size={28} className="mx-auto mb-2 text-slate-200" />
+                <p className="text-sm text-slate-400">Aucun favori pour le moment.</p>
+                <p className="text-xs text-slate-400 mt-1">Clique sur le ❤️ d'une fiche prestataire pour l'ajouter.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {favorites.map(p => (
+                  <Link key={p.id} to={`/provider/${p.id}`} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50/30 transition group">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+                      {p.image_url
+                        ? <img src={p.image_url.startsWith('http') ? p.image_url : `${API_BASE_URL.replace('/api','')}${p.image_url}`} alt={p.name} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full bg-rose-100 flex items-center justify-center"><Store size={18} className="text-rose-300" /></div>
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-slate-800 truncate group-hover:text-rose-500 transition">{p.name}</p>
+                      <p className="text-xs text-slate-400 truncate">{p.category_name || ''}{p.city ? ` · ${p.city}` : ''}</p>
+                    </div>
+                    <button
+                      onClick={async e => {
+                        e.preventDefault();
+                        await fetch(`${API_BASE_URL}/favorites/${p.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                        setFavorites(prev => prev.filter(f => f.id !== p.id));
+                      }}
+                      className="flex-shrink-0 text-rose-400 hover:text-slate-300 transition"
+                      title="Retirer des favoris"
+                    >
+                      <Heart size={15} className="fill-rose-400" />
+                    </button>
+                  </Link>
+                ))}
+              </div>
+            )}
           </SectionCard>
         )}
 
