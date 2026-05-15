@@ -119,10 +119,10 @@ export default function Register() {
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Mot de passe (6 caractères minimum)"
+              placeholder="Mot de passe (8 caractères minimum)"
               className="w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm transition-all"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
