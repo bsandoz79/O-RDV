@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const auth = require('../middlewares/auth');
+const checkRole = require('../middlewares/roleGuard');
+const { getUsers, toggleBan, deleteUser, getStats } = require('../controllers/adminController');
+
+const adminOnly = [auth, checkRole(['admin'])];
+
+router.get('/users', ...adminOnly, getUsers);
+router.patch('/users/:id/ban', ...adminOnly, toggleBan);
+router.delete('/users/:id', ...adminOnly, deleteUser);
+router.get('/stats', ...adminOnly, getStats);
+
+module.exports = router;

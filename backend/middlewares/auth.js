@@ -1,25 +1,30 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../prisma/client');
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
     try {
-        // 1. On récupère le token dans le header "Authorization"
         const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
 
-        if (!token) {
-            return res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Vérifie si le compte est banni
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.id },
+            select: { is_banned: true, ban_reason: true },
+        });
+
+        if (user?.is_banned) {
+            return res.status(403).json({
+                error: "Compte suspendu.",
+                banned: true,
+                ban_reason: user.ban_reason || null,
+            });
         }
 
-        // 2. On vérifie le token avec ta clé secrète
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-
-        // 3. On ajoute les infos du user décodées à la requête pour que les routes puissent l'utiliser
-        req.auth = {
-            userId: decodedToken.id,
-            role: decodedToken.role
-        };
-
-        next(); // On passe au middleware suivant ou à la route
-    } catch (error) {
+        req.auth = { userId: decoded.id, role: decoded.role };
+        next();
+    } catch {
         res.status(401).json({ error: "Requête non authentifiée !" });
     }
 };

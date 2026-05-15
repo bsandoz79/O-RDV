@@ -12,6 +12,7 @@ import ProviderProfile from "./pages/ProviderProfile";
 import MentionsLegales from "./pages/legal/MentionsLegales";
 import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
 import CGU from "./pages/legal/CGU";
+import AdminPanel from "./pages/admin/AdminPanel";
 
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
@@ -41,9 +42,16 @@ function SessionGuard() {
     timerRef.current = setTimeout(logout, INACTIVITY_DELAY);
   };
 
+  // Vérifie token expiré + ban à chaque navigation
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token && isTokenExpired(token)) logout();
+    if (!token) return;
+    if (isTokenExpired(token)) { logout(); return; }
+    // Ping le backend pour détecter un ban en temps réel
+    fetch(`${process.env.REACT_APP_API_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.banned) { alert(`Compte suspendu${d.ban_reason ? ' : ' + d.ban_reason : '.'}`); logout(); } })
+      .catch(() => {});
   }, [location]);
 
   useEffect(() => {
@@ -96,7 +104,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const DashboardPro = () => <div className="p-10"><h1>🏢 Interface Prestataire</h1></div>;
-const AdminPanel = () => <div className="p-10"><h1>🛡️ Administration</h1></div>;
 
 function App() {
   return (

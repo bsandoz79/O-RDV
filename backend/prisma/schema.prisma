@@ -16,6 +16,8 @@ model User {
   role                Role     @default(user)
   phone               String?  @db.VarChar(20)
   profile_picture     String?  @db.VarChar(255)
+  is_banned           Boolean  @default(false)
+  ban_reason          String?  @db.VarChar(255)
   created_at          DateTime @default(now())
   provider            Provider?
   appointments        Appointment[] @relation("ClientAppointments")
