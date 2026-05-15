@@ -13,6 +13,7 @@ import MentionsLegales from "./pages/legal/MentionsLegales";
 import PolitiqueConfidentialite from "./pages/legal/PolitiqueConfidentialite";
 import CGU from "./pages/legal/CGU";
 import AdminPanel from "./pages/admin/AdminPanel";
+import MultiView from "./pages/admin/MultiView";
 
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
@@ -145,6 +146,11 @@ function App() {
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminPanel />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/multiview" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <MultiView />
           </ProtectedRoute>
         } />
 

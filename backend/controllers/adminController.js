@@ -100,4 +100,39 @@ const updateProvider = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, toggleBan, deleteUser, getStats, getProviders, updateProvider };
+const getUserAppointments = async (req, res) => {
+    const userId = Number(req.params.id);
+    try {
+        const rows = await prisma.$queryRaw`
+            SELECT a.id, a.appointment_date, a.status, a.refusal_reason,
+                   s.label AS service_label, s.duration, s.price,
+                   p.name AS provider_name, p.city AS provider_city, p.image_url AS provider_image
+            FROM appointments a
+            JOIN services s ON a.service_id = s.id
+            JOIN providers p ON a.provider_id = p.id
+            WHERE a.client_id = ${userId}
+            ORDER BY a.appointment_date DESC
+            LIMIT 20`;
+        safeJson(res, rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const getProviderAppointments = async (req, res) => {
+    const providerId = Number(req.params.id);
+    try {
+        const rows = await prisma.$queryRaw`
+            SELECT a.id, a.appointment_date, a.status,
+                   s.label AS service_label, s.duration, s.price,
+                   u.first_name AS client_first_name, u.last_name AS client_last_name,
+                   u.email AS client_email
+            FROM appointments a
+            JOIN services s ON a.service_id = s.id
+            JOIN users u ON a.client_id = u.id
+            WHERE a.provider_id = ${providerId}
+            ORDER BY a.appointment_date DESC
+            LIMIT 20`;
+        safeJson(res, rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+module.exports = { getUsers, toggleBan, deleteUser, getStats, getProviders, updateProvider, getUserAppointments, getProviderAppointments };

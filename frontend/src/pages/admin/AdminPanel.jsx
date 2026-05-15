@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Store, Calendar, Star, ShieldBan, Trash2,
   Search, RefreshCw, AlertTriangle, CheckCircle2, X, Crown,
-  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ExternalLink,
+  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ExternalLink, LayoutGrid,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 
@@ -140,6 +140,10 @@ export default function AdminPanel() {
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">Supervision et gestion des comptes</p>
           </div>
+          <button onClick={() => navigate('/admin/multiview')}
+            className="flex items-center gap-2 text-sm font-semibold text-purple-600 hover:text-white hover:bg-purple-500 border border-purple-200 hover:border-purple-500 px-3 py-1.5 rounded-xl transition">
+            <LayoutGrid size={14} /> Vue multi-comptes
+          </button>
           <button onClick={() => load()} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 border border-slate-200 px-3 py-1.5 rounded-xl transition">
             <RefreshCw size={14} /> Actualiser
           </button>
