@@ -16,11 +16,14 @@ const userRoutes = require('./routes/user');
 const reviewRoutes = require('./routes/reviews');
 const adminRoutes  = require('./routes/admin');
 
+const { apiLimiter } = require('./middlewares/rateLimiter');
+
 const app = express();
 
 // --- MIDDLEWARES ---
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
+app.use('/api', apiLimiter);
 
 // --- FICHIERS STATIQUES ---
 // Rend le dossier 'uploads' public pour que le frontend puisse afficher les images

@@ -2,8 +2,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const prisma = require('../prisma/client');
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const register = async (req, res) => {
     const { email, password, role } = req.body;
+
+    if (!email || !password)
+        return res.status(400).json({ error: "Email et mot de passe obligatoires." });
+    if (!EMAIL_REGEX.test(email))
+        return res.status(400).json({ error: "Format d'email invalide." });
+    if (password.length < 6)
+        return res.status(400).json({ error: "Le mot de passe doit faire au moins 6 caractères." });
+
     try {
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) return res.status(400).json({ error: "Email déjà utilisé" });
@@ -29,6 +39,12 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password)
+        return res.status(400).json({ error: "Email et mot de passe obligatoires." });
+    if (!EMAIL_REGEX.test(email))
+        return res.status(400).json({ error: "Format d'email invalide." });
+
     try {
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return res.status(401).json({ error: "Identifiants invalides" });
