@@ -50,7 +50,12 @@ function SessionGuard() {
     // Ping le backend pour détecter un ban en temps réel
     fetch(`${process.env.REACT_APP_API_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(d => { if (d.banned) { alert(`Compte suspendu${d.ban_reason ? ' : ' + d.ban_reason : '.'}`); logout(); } })
+      .then(d => {
+        if (d.banned) {
+          sessionStorage.setItem('redirectMsg', `Compte suspendu${d.ban_reason ? ' : ' + d.ban_reason : '.'}`);
+          logout();
+        }
+      })
       .catch(() => {});
   }, [location]);
 

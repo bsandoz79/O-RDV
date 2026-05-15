@@ -1,7 +1,5 @@
 const prisma = require('../prisma/client');
-
-const safeJson = (res, data) =>
-    res.send(JSON.stringify(data, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+const safeJson = require('../utils/safeJson');
 
 const getUsers = async (req, res) => {
     try {
@@ -52,15 +50,15 @@ const deleteUser = async (req, res) => {
 
 const getStats = async (req, res) => {
     try {
-        const [users, providers, appointments, reviews] = await Promise.all([
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const [users, providers, appointments, reviews, banned, newToday] = await Promise.all([
             prisma.user.count(),
             prisma.provider.count(),
             prisma.appointment.count(),
             prisma.review.count(),
+            prisma.user.count({ where: { is_banned: true } }),
+            prisma.user.count({ where: { created_at: { gte: today } } }),
         ]);
-        const banned = await prisma.user.count({ where: { is_banned: true } });
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const newToday = await prisma.user.count({ where: { created_at: { gte: today } } });
         safeJson(res, { users, providers, appointments, reviews, banned, newToday });
     } catch (err) {
         res.status(500).json({ error: err.message });

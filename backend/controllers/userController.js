@@ -1,8 +1,6 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../prisma/client');
-
-const safeJson = (res, data) =>
-    res.send(JSON.stringify(data, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+const safeJson = require('../utils/safeJson');
 
 const getMe = async (req, res) => {
     try {

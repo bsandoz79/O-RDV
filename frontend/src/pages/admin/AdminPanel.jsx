@@ -47,7 +47,7 @@ export default function AdminPanel() {
         fetch(`${API_BASE_URL}/admin/stats`, { headers }),
       ]);
       const [u, s] = await Promise.all([uRes.json(), sRes.json()]);
-      setUsers(prev => JSON.stringify(prev) === JSON.stringify(u) ? prev : (Array.isArray(u) ? u : prev));
+      if (Array.isArray(u)) setUsers(prev => prev.length === u.length && prev.every((p, i) => p.id === u[i].id && p.is_banned === u[i].is_banned) ? prev : u);
       setStats(s);
     } catch {}
     if (!silent) setLoading(false);
