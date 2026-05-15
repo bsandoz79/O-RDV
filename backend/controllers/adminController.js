@@ -65,4 +65,39 @@ const getStats = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, toggleBan, deleteUser, getStats };
+const getProviders = async (req, res) => {
+    try {
+        const providers = await prisma.provider.findMany({
+            include: {
+                user: { select: { id: true, email: true, first_name: true, last_name: true } },
+                category: { select: { name: true } },
+                _count: { select: { services: true, appointments: true, reviews: true } },
+            },
+            orderBy: { created_at: 'desc' },
+        });
+        safeJson(res, providers);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const updateProvider = async (req, res) => {
+    const id = Number(req.params.id);
+    const { is_certified, is_visible, admin_note } = req.body;
+    try {
+        const updated = await prisma.provider.update({
+            where: { id },
+            data: {
+                ...(is_certified !== undefined ? { is_certified } : {}),
+                ...(is_visible   !== undefined ? { is_visible }   : {}),
+                ...(admin_note   !== undefined ? { admin_note: admin_note || null } : {}),
+            },
+            select: { id: true, name: true, is_certified: true, is_visible: true, admin_note: true },
+        });
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getUsers, toggleBan, deleteUser, getStats, getProviders, updateProvider };

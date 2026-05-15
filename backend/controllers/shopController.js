@@ -69,6 +69,7 @@ const getAllProviders = async (req, res) => {
 
         const providers = await prisma.provider.findMany({
             where: {
+                is_visible: true,
                 ...(category_id ? { category_id: Number(category_id) } : {}),
                 ...(city ? { city: { contains: city } } : {}),
             },
@@ -110,6 +111,7 @@ const getAllProviders = async (req, res) => {
                 distance_km: distance !== null ? Math.round(distance * 10) / 10 : null,
                 avg_rating: rev ? Number(rev.avg_rating) : null,
                 review_count: rev ? Number(rev.review_count) : 0,
+                is_certified: p.is_certified,
                 businessHours: undefined,
                 category: undefined,
             };

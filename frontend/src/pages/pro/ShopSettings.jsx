@@ -787,11 +787,23 @@ function ProDashboard({ shopData, onEditShop }) {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base font-bold text-slate-900 truncate">{shopData.name}</h1>
-                <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">En ligne</span>
+                {shopData.is_certified && (
+                  <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">✓ Certifié</span>
+                )}
+                {shopData.is_visible !== false ? (
+                  <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">En ligne</span>
+                ) : (
+                  <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">⚠ Masqué par l'admin</span>
+                )}
               </div>
               <p className="text-xs text-slate-400 truncate">{shopData.city || ''} · Dashboard Pro</p>
+              {shopData.admin_note && (
+                <div className="mt-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-700 font-medium">
+                  ⚠ Avertissement admin : {shopData.admin_note}
+                </div>
+              )}
             </div>
             <button
               onClick={onEditShop}

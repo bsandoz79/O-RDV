@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Users, Store, Calendar, Star, ShieldBan, Trash2,
   Search, RefreshCw, AlertTriangle, CheckCircle2, X, Crown,
+  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ExternalLink,
 } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 
@@ -29,25 +31,31 @@ function StatCard({ icon: Icon, label, value, color }) {
 
 export default function AdminPanel() {
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
+  const [tab, setTab]       = useState('users'); // 'users' | 'shops'
   const [users, setUsers]   = useState([]);
+  const [shops, setShops]   = useState([]);
   const [stats, setStats]   = useState(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [banModal, setBanModal] = useState(null); // { user }
+  const [banModal, setBanModal]   = useState(null);
   const [banReason, setBanReason] = useState('');
-  const [msg, setMsg] = useState(null); // { type, text }
+  const [noteModal, setNoteModal] = useState(null); // { shop, note }
+  const [msg, setMsg] = useState(null);
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const [uRes, sRes] = await Promise.all([
+      const [uRes, sRes, pRes] = await Promise.all([
         fetch(`${API_BASE_URL}/admin/users`, { headers }),
         fetch(`${API_BASE_URL}/admin/stats`, { headers }),
+        fetch(`${API_BASE_URL}/admin/providers`, { headers }),
       ]);
-      const [u, s] = await Promise.all([uRes.json(), sRes.json()]);
-      if (Array.isArray(u)) setUsers(prev => prev.length === u.length && prev.every((p, i) => p.id === u[i].id && p.is_banned === u[i].is_banned) ? prev : u);
+      const [u, s, p] = await Promise.all([uRes.json(), sRes.json(), pRes.json()]);
+      if (Array.isArray(u)) setUsers(prev => prev.length === u.length && prev.every((x, i) => x.id === u[i].id && x.is_banned === u[i].is_banned) ? prev : u);
+      if (Array.isArray(p)) setShops(prev => prev.length === p.length && prev.every((x, i) => x.id === p[i].id && x.is_visible === p[i].is_visible && x.is_certified === p[i].is_certified) ? prev : p);
       setStats(s);
     } catch {}
     if (!silent) setLoading(false);
@@ -90,6 +98,27 @@ export default function AdminPanel() {
     } catch (e) {
       setMsg({ type: 'error', text: e.message });
     }
+    setTimeout(() => setMsg(null), 4000);
+  };
+
+  const handleShop = async (shopId, patch) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/providers/${shopId}`, {
+        method: 'PATCH', headers, body: JSON.stringify(patch),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const label = patch.is_certified !== undefined
+        ? (patch.is_certified ? 'Boutique certifiée ✓' : 'Certification retirée')
+        : patch.is_visible !== undefined
+        ? (patch.is_visible ? 'Boutique visible sur l\'accueil' : 'Boutique masquée de l\'accueil')
+        : 'Avertissement envoyé';
+      setMsg({ type: 'success', text: label });
+      load(true);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+    }
+    setNoteModal(null);
     setTimeout(() => setMsg(null), 4000);
   };
 
@@ -137,17 +166,90 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* Onglets */}
+        <div className="flex gap-2 bg-white border border-slate-200 rounded-xl p-1 w-fit">
+          {[{ key: 'users', icon: Users, label: 'Utilisateurs' }, { key: 'shops', icon: Store, label: 'Boutiques' }].map(({ key, icon: Icon, label }) => (
+            <button key={key} onClick={() => { setTab(key); setSearch(''); }}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition ${tab === key ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              <Icon size={14} /> {label}
+            </button>
+          ))}
+        </div>
+
         {/* Recherche */}
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher par email ou nom..."
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={tab === 'users' ? 'Rechercher par email ou nom...' : 'Rechercher une boutique...'}
             className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-300"
           />
         </div>
 
-        {/* Table */}
+        {/* Table boutiques */}
+        {tab === 'shops' && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Chargement...</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Boutique</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Propriétaire</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Statut</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {shops.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.city?.toLowerCase().includes(search.toLowerCase())).map(s => (
+                    <tr key={s.id} className={`hover:bg-slate-50 transition ${!s.is_visible ? 'opacity-60' : ''}`}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => navigate(`/provider/${s.id}`)} className="font-semibold text-slate-800 hover:text-purple-600 flex items-center gap-1 transition">
+                            {s.name} <ExternalLink size={11} className="opacity-50" />
+                          </button>
+                          {s.is_certified && <BadgeCheck size={14} className="text-blue-500 flex-shrink-0" title="Certifié" />}
+                        </div>
+                        <p className="text-xs text-slate-400">{s.category?.name || '—'} · {s.city || '—'}</p>
+                        {s.admin_note && <p className="text-xs text-orange-500 mt-0.5 italic">⚠ {s.admin_note}</p>}
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell text-xs text-slate-500">
+                        {[s.user?.first_name, s.user?.last_name].filter(Boolean).join(' ') || s.user?.email || '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${s.is_visible ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                            {s.is_visible ? 'Visible' : 'Masquée'}
+                          </span>
+                          {s.is_certified && <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit bg-blue-100 text-blue-600">Certifiée</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          <button onClick={() => handleShop(s.id, { is_certified: !s.is_certified })}
+                            className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg border transition ${s.is_certified ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}`}>
+                            <BadgeCheck size={11} /> {s.is_certified ? 'Décertifier' : 'Certifier'}
+                          </button>
+                          <button onClick={() => setNoteModal({ shop: s, note: s.admin_note || '' })}
+                            className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg border border-orange-200 text-orange-600 hover:bg-orange-50 transition">
+                            <MessageSquareWarning size={11} /> Avertir
+                          </button>
+                          <button onClick={() => handleShop(s.id, { is_visible: !s.is_visible })}
+                            className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg border transition ${s.is_visible ? 'border-red-200 text-red-500 hover:bg-red-50' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'}`}>
+                            {s.is_visible ? <><EyeOff size={11} /> Masquer</> : <><Eye size={11} /> Rendre visible</>}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {/* Table users */}
+        {tab === 'users' && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Chargement...</div>
@@ -215,6 +317,8 @@ export default function AdminPanel() {
             <p className="text-center py-10 text-slate-400 text-sm">Aucun utilisateur trouvé.</p>
           )}
         </div>
+        )}
+
       </div>
 
       {/* Modal ban */}
@@ -239,6 +343,36 @@ export default function AdminPanel() {
                 {banModal.is_banned ? 'Réactiver' : 'Suspendre'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal avertissement boutique */}
+      {noteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+            <h2 className="font-black text-slate-900 text-lg mb-1">Avertissement</h2>
+            <p className="text-sm text-slate-500 mb-4">{noteModal.shop.name}</p>
+            <textarea
+              value={noteModal.note}
+              onChange={e => setNoteModal(n => ({ ...n, note: e.target.value }))}
+              placeholder="Décrivez le problème à corriger (ex: photo non conforme, adresse incorrecte)..."
+              rows={4}
+              className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-4"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setNoteModal(null)} className="flex-1 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">Annuler</button>
+              <button onClick={() => handleShop(noteModal.shop.id, { admin_note: noteModal.note })}
+                className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition">
+                Envoyer l'avertissement
+              </button>
+            </div>
+            {noteModal.note && (
+              <button onClick={() => handleShop(noteModal.shop.id, { admin_note: '' })}
+                className="w-full mt-2 py-1.5 text-xs text-slate-400 hover:text-red-500 transition">
+                Effacer l'avertissement existant
+              </button>
+            )}
           </div>
         </div>
       )}
