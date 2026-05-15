@@ -115,7 +115,21 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-slate-600 text-sm">
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs text-slate-400 font-medium">ou</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <a
+          href={`${API_BASE_URL}/auth/google`}
+          className="w-full flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+          Continuer avec Google
+        </a>
+
+        <p className="text-center mt-6 text-slate-600 text-sm">
           Nouveau sur la plateforme ?{" "}
           <Link to="/register" className="text-rose-500 font-bold hover:underline">S'inscrire</Link>
         </p>

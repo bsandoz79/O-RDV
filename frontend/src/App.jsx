@@ -5,6 +5,7 @@ import { AlertTriangle, X } from "lucide-react";
 import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import AuthCallback from "./pages/auth/AuthCallback";
 import Navbar, { ScrollToTop } from "./components/Navbar";
 import UserDashboard from "./pages/user/UserDashboard";
 import BookingPage from "./components/BookingPage";
@@ -185,6 +186,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/provider/:id" element={<ProviderProfile />} />
         <Route path="/booking/:providerId" element={<BookingPage />} />
 
