@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
   ChevronRight, Scissors, CheckCircle2, MessageSquare, ThumbsUp,
+  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
@@ -56,6 +57,29 @@ export default function ProviderProfile() {
   const [modalOpen, setModalOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState(null);
   const [reviewData, setReviewData] = useState({ reviews: [], average: null, count: 0 });
+  const [adminNote, setAdminNote] = useState('');
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [adminMsg, setAdminMsg] = useState('');
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = storedUser.role === 'admin';
+  const token = localStorage.getItem('token');
+  const adminHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  const adminAction = async (patch, label) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/providers/${id}`, {
+        method: 'PATCH', headers: adminHeaders, body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setProvider(prev => ({ ...prev, ...patch }));
+      setAdminMsg(label);
+      setShowNoteInput(false);
+      setTimeout(() => setAdminMsg(''), 3000);
+    } catch (e) {
+      setAdminMsg('Erreur : ' + e.message);
+    }
+  };
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/shop/profile/${id}`)
@@ -105,7 +129,10 @@ export default function ProviderProfile() {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow">{provider.name}</h1>
+            <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow flex items-center gap-2">
+              {provider.name}
+              {provider.is_certified && <BadgeCheck size={22} className="text-blue-400 flex-shrink-0" title="Boutique certifiée" />}
+            </h1>
             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               {provider.city && (
                 <div className="flex items-center gap-1 text-white/80 text-sm">
@@ -121,6 +148,54 @@ export default function ProviderProfile() {
             </div>
           </div>
         </div>
+
+        {/* ── Barre outils admin ───────────────────────────────────── */}
+        {isAdmin && (
+          <div className="sticky top-16 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-700 px-4 py-2">
+            <div className="max-w-4xl mx-auto flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide mr-1">⚡ Admin</span>
+
+              <button onClick={() => adminAction({ is_certified: !provider.is_certified }, provider.is_certified ? 'Certification retirée' : 'Boutique certifiée ✓')}
+                className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition ${provider.is_certified ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                <BadgeCheck size={12} /> {provider.is_certified ? '✓ Certifié' : 'Certifier'}
+              </button>
+
+              <button onClick={() => adminAction({ is_visible: !provider.is_visible }, provider.is_visible ? 'Boutique masquée de l\'accueil' : 'Boutique visible sur l\'accueil')}
+                className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition ${provider.is_visible !== false ? 'bg-slate-700 text-slate-300 hover:bg-red-900' : 'bg-red-900 text-red-300 hover:bg-red-800'}`}>
+                {provider.is_visible !== false ? <><EyeOff size={12} /> Masquer</> : <><Eye size={12} /> Rendre visible</>}
+              </button>
+
+              <button onClick={() => { setAdminNote(provider.admin_note || ''); setShowNoteInput(v => !v); }}
+                className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition ${provider.admin_note ? 'bg-orange-900 text-orange-300' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                <MessageSquareWarning size={12} /> {provider.admin_note ? 'Modifier l\'avert.' : 'Avertir'}
+              </button>
+
+              <button onClick={() => navigate(`/admin`)}
+                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition ml-auto">
+                <ShieldBan size={12} /> Panel admin
+              </button>
+
+              {adminMsg && <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${adminMsg.startsWith('Erreur') ? 'text-red-400' : 'text-emerald-400'}`}>{adminMsg}</span>}
+            </div>
+
+            {showNoteInput && (
+              <div className="max-w-4xl mx-auto mt-2 flex gap-2">
+                <input value={adminNote} onChange={e => setAdminNote(e.target.value)}
+                  placeholder="Message d'avertissement pour le pro..."
+                  className="flex-1 text-xs bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 outline-none focus:border-orange-400"
+                />
+                <button onClick={() => adminAction({ admin_note: adminNote }, adminNote ? 'Avertissement envoyé' : 'Avertissement effacé')}
+                  className="text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg transition">
+                  Envoyer
+                </button>
+                {provider.admin_note && (
+                  <button onClick={() => adminAction({ admin_note: '' }, 'Avertissement effacé')}
+                    className="text-xs text-slate-400 hover:text-red-400 px-2 transition">Effacer</button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Contenu ──────────────────────────────────────────────── */}
         <div className="max-w-4xl mx-auto px-4 pb-32 -mt-6 relative z-10">
