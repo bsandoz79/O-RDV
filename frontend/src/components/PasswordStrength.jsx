@@ -14,11 +14,11 @@ function getScore(pwd) {
 export function getPasswordScore(pwd) { return getScore(pwd); }
 
 const LEVELS = [
-  null,
-  { label: 'Faible',    bar: 'bg-red-400',     text: 'text-red-500' },
-  { label: 'Moyen',     bar: 'bg-orange-400',  text: 'text-orange-500' },
-  { label: 'Fort',      bar: 'bg-blue-500',    text: 'text-blue-600' },
-  { label: 'Très fort', bar: 'bg-emerald-400', text: 'text-emerald-600' },
+  { label: 'Trop faible', bar: 'bg-red-300',     text: 'text-red-400' },
+  { label: 'Faible',      bar: 'bg-red-400',     text: 'text-red-500' },
+  { label: 'Moyen',       bar: 'bg-orange-400',  text: 'text-orange-500' },
+  { label: 'Fort',        bar: 'bg-blue-500',    text: 'text-blue-600' },
+  { label: 'Très fort',   bar: 'bg-emerald-400', text: 'text-emerald-600' },
 ];
 
 const CRITERIA = [
@@ -37,13 +37,13 @@ export default function PasswordStrength({ password }) {
 
   return (
     <div className="mt-2 space-y-2">
-      {/* Barres de progression */}
+      {/* Barres de progression (score 0 = aucune barre, 1-4 = 1-4 barres) */}
       <div className="flex gap-1">
         {[1, 2, 3, 4].map(i => (
           <div
             key={i}
             className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-              i <= score ? level.bar : 'bg-slate-200'
+              score > 0 && i <= score ? level.bar : 'bg-slate-200'
             }`}
           />
         ))}
