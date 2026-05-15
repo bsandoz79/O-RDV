@@ -28,20 +28,40 @@ function applyImpersonationHash() {
   const impToken = decodeURIComponent(tMatch[1]);
   const impUser  = uMatch ? decodeURIComponent(uMatch[1]) : null;
 
-  // sessionStorage est unique par iframe ✓
-  sessionStorage.setItem('_impToken', impToken);
-  if (impUser) sessionStorage.setItem('_impUser', impUser);
+  // Redéfinit window.localStorage sur CE window uniquement (chaque iframe a son propre window ✓)
+  // La redéfinition n'affecte pas les autres iframes ni la fenêtre parente.
+  const realLS = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'localStorage')?.get?.call(window) || window.localStorage;
+  const virtualLS = {
+    getItem(key) {
+      if (key === 'token') return impToken;
+      if (key === 'user')  return impUser;
+      return realLS.getItem(key);
+    },
+    setItem(key, val) {
+      if (key === 'token' || key === 'user') return; // protège le vrai compte
+      realLS.setItem(key, val);
+    },
+    removeItem(key) {
+      if (key === 'token' || key === 'user') return;
+      realLS.removeItem(key);
+    },
+    clear() { realLS.clear(); },
+    get length() { return realLS.length; },
+    key(n) { return realLS.key(n); },
+  };
+  try {
+    Object.defineProperty(window, 'localStorage', { get: () => virtualLS, configurable: true });
+  } catch {}
 
-  // Intercepte fetch dans CE window uniquement — isolé par iframe ✓
+  // Intercepte fetch dans CE window uniquement ✓
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
   const origFetch = window.fetch;
   window.fetch = function(input, init = {}) {
     const url = typeof input === 'string' ? input : (input?.url || '');
     if (url.startsWith(apiBase)) {
-      const headers = new Headers(init.headers || (input?.headers));
+      const headers = new Headers(init.headers || {});
       headers.set('Authorization', `Bearer ${impToken}`);
       init = { ...init, headers };
-      if (typeof input !== 'string') input = new Request(input, { headers });
     }
     return origFetch.call(this, input, init);
   };
