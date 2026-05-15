@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Store, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
 import API_BASE_URL from "../../api/api";
+import PasswordStrength, { getPasswordScore } from "../../components/PasswordStrength";
 
 export default function Register() {
   const [isPro, setIsPro] = useState(false);
@@ -15,6 +16,10 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    if (getPasswordScore(password) < 2) {
+      setError("Mot de passe trop faible. Utilisez au moins 8 caractères avec une majuscule et un chiffre.");
+      return;
+    }
     setLoading(true);
 
     const role = isPro ? "pro" : "user";
@@ -130,6 +135,7 @@ export default function Register() {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <PasswordStrength password={password} />
 
           <button
             type="submit"

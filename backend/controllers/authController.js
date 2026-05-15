@@ -11,8 +11,12 @@ const register = async (req, res) => {
         return res.status(400).json({ error: "Email et mot de passe obligatoires." });
     if (!EMAIL_REGEX.test(email))
         return res.status(400).json({ error: "Format d'email invalide." });
-    if (password.length < 6)
-        return res.status(400).json({ error: "Le mot de passe doit faire au moins 6 caractères." });
+    if (password.length < 8)
+        return res.status(400).json({ error: "Le mot de passe doit faire au moins 8 caractères." });
+    if (!/[A-Z]/.test(password))
+        return res.status(400).json({ error: "Le mot de passe doit contenir au moins une majuscule." });
+    if (!/[0-9]/.test(password))
+        return res.status(400).json({ error: "Le mot de passe doit contenir au moins un chiffre." });
 
     try {
         const existing = await prisma.user.findUnique({ where: { email } });

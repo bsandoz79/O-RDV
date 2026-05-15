@@ -45,7 +45,9 @@ const updateProfile = async (req, res) => {
 const changePassword = async (req, res) => {
     const { current_password, new_password } = req.body;
     if (!current_password || !new_password) return res.status(400).json({ error: "Tous les champs sont obligatoires." });
-    if (new_password.length < 6) return res.status(400).json({ error: "Le nouveau mot de passe doit faire au moins 6 caractères." });
+    if (new_password.length < 8) return res.status(400).json({ error: "Le mot de passe doit faire au moins 8 caractères." });
+    if (!/[A-Z]/.test(new_password)) return res.status(400).json({ error: "Le mot de passe doit contenir au moins une majuscule." });
+    if (!/[0-9]/.test(new_password)) return res.status(400).json({ error: "Le mot de passe doit contenir au moins un chiffre." });
     try {
         const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
         if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });

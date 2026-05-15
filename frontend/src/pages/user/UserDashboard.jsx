@@ -8,6 +8,7 @@ import {
 import API_BASE_URL from '../../api/api';
 import { buildGoogleCalendarUrl } from '../../utils/googleCalendar';
 import { StarPicker, StarDisplay } from '../../components/StarRating';
+import PasswordStrength, { getPasswordScore } from '../../components/PasswordStrength';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -478,6 +479,8 @@ export default function UserDashboard() {
   const handlePasswordSave = async () => {
     if (pwForm.new_password !== pwForm.confirm)
       return setPwMsg({ type: 'error', text: 'Les mots de passe ne correspondent pas.' });
+    if (getPasswordScore(pwForm.new_password) < 2)
+      return setPwMsg({ type: 'error', text: 'Mot de passe trop faible. Utilisez au moins 8 caractères avec une majuscule et un chiffre.' });
     setSavingPw(true); setPwMsg({ type: '', text: '' });
     try {
       const res = await fetch(`${API_BASE_URL}/user/change-password`, {
@@ -679,21 +682,34 @@ export default function UserDashboard() {
         <SectionCard icon={KeyRound} color="text-amber-600" title="Changer le mot de passe">
           <Alert type={pwMsg.type} message={pwMsg.text} onClose={() => setPwMsg({ type: '', text: '' })} />
           <div className="space-y-4">
-            {[
-              { key: 'current_password', label: 'Mot de passe actuel',   placeholder: '••••••••' },
-              { key: 'new_password',     label: 'Nouveau mot de passe',   placeholder: '6 caractères minimum' },
-              { key: 'confirm',          label: 'Confirmer',              placeholder: 'Répétez le nouveau mot de passe' },
-            ].map(({ key, label, placeholder }) => (
-              <div key={key}>
-                <label className="text-xs font-semibold text-slate-500 mb-1 block">{label}</label>
-                <div className="relative">
-                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="password" placeholder={placeholder} value={pwForm[key]}
-                    onChange={e => setPwForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-rose-400" />
-                </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Mot de passe actuel</label>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="password" placeholder="••••••••" value={pwForm.current_password}
+                  onChange={e => setPwForm(f => ({ ...f, current_password: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-rose-400" />
               </div>
-            ))}
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Nouveau mot de passe</label>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="password" placeholder="8 caractères minimum" value={pwForm.new_password}
+                  onChange={e => setPwForm(f => ({ ...f, new_password: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-rose-400" />
+              </div>
+              <PasswordStrength password={pwForm.new_password} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Confirmer</label>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="password" placeholder="Répétez le nouveau mot de passe" value={pwForm.confirm}
+                  onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-rose-400" />
+              </div>
+            </div>
             <button onClick={handlePasswordSave} disabled={savingPw}
               className="flex items-center gap-2 bg-slate-900 hover:bg-rose-600 disabled:bg-slate-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
               {savingPw ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />} Mettre à jour
