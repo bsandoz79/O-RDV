@@ -55,6 +55,7 @@ export default function Register() {
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
 
         <div className="text-center mb-8">
+          <img src="/logo entier.png" alt="O'RDV" className="mx-auto mb-4" style={{ height: '80px', objectFit: 'contain' }} />
           <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase">Créer un compte</h2>
           <p className="text-slate-500 text-sm font-medium">Rejoignez la communauté O'RDV</p>
         </div>
