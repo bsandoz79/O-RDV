@@ -35,9 +35,9 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
   return (
     <article
       onClick={onClick}
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-100 hover:-translate-y-1 will-change-transform"
+      className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-100 hover:-translate-y-1 will-change-transform"
     >
-      <div className="relative h-44 overflow-hidden bg-slate-100">
+      <div className="relative h-44 overflow-hidden rounded-t-2xl bg-slate-100">
         <img src={provider.image} alt={provider.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         {nouveau && (
