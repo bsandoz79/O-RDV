@@ -16,7 +16,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     process.env.JWT_SECRET = 'test_secret';
 });
 
@@ -28,7 +28,7 @@ describe('POST /api/auth/register', () => {
 
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'test@test.com', password: 'pass123', role: 'user' });
+            .send({ email: 'test@test.com', password: 'Password1', role: 'user' });
 
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/déjà/i);
@@ -40,7 +40,7 @@ describe('POST /api/auth/register', () => {
 
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'nouveau@test.com', password: 'pass123', role: 'user' });
+            .send({ email: 'nouveau@test.com', password: 'Password1', role: 'user' });
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('token');
@@ -53,7 +53,7 @@ describe('POST /api/auth/register', () => {
 
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'hacker@test.com', password: 'pass', role: 'admin' });
+            .send({ email: 'hacker@test.com', password: 'Password1', role: 'admin' });
 
         expect(res.status).toBe(201);
         expect(res.body.user.role).toBe('user');

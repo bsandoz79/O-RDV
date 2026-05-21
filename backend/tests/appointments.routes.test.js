@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 jest.mock('../prisma/client', () => ({
     $queryRaw: jest.fn(),
     $executeRaw: jest.fn(),
+    user: { findUnique: jest.fn() },
     service: { findUnique: jest.fn() },
     appointment: {
         findFirst: jest.fn(),
@@ -28,7 +29,10 @@ function makeUserToken(role = 'user', id = 10) {
     return jwt.sign({ id, role }, SECRET);
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+    jest.clearAllMocks();
+    prisma.user.findUnique.mockResolvedValue({ is_banned: false });
+});
 
 // ── POST /api/appointments ────────────────────────────────────────────────────
 

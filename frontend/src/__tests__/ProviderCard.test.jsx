@@ -6,8 +6,8 @@ import ProviderCard from '../components/ProviderCard';
 const BASE_PROVIDER = {
   name: 'Salon Élégance',
   metier: 'Coiffure',
-  note: 4.5,
-  avis: 32,
+  avg_rating: 4.5,
+  review_count: 32,
   distance: '1,2 km',
   image: '/img/test.jpg',
   todayOpen: null,
