@@ -72,7 +72,7 @@ export default function Navbar() {
       <div className="app-navbar__inner">
         {/* Logo */}
         <Link to="/" className="app-navbar__logo">
-          <img src="/logo.png" alt="O'RDV" className="app-navbar__logo-icon" style={{ width: '1em', height: '1em', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="O'RDV" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
           <span className="app-navbar__logo-text">O'RDV</span>
         </Link>
 
