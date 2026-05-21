@@ -1,18 +1,13 @@
-# Utilise l'image Node.js version 18 
-FROM node:18
+FROM node:18-alpine
 
-# Définit le dossier de travail dans le conteneur
 WORKDIR /app
 
-# Copie le fichier package.json pour installer les dépendances (Express, MySQL, JWT) 
+# Copie schema Prisma avant npm install (postinstall lance prisma generate)
 COPY package*.json ./
-RUN npm install
+COPY prisma/ ./prisma/
+RUN npm install --omit=dev
 
-# Copie le reste du code de l'API 
 COPY . .
 
-# Le backend écoute sur le port 5000 (standard pour Express) 
 EXPOSE 5000
-
-# Lance le serveur Node 
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
