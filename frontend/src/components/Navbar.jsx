@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Briefcase, User, LogOut, ShieldCheck } from "lucide-react"; 
 
@@ -30,8 +30,6 @@ export function ScrollToTop() {
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(true);
-  const lastScrollY = useRef(0);
 
   // ─── ÉTAT D'AUTHENTIFICATION RÉACTIF ──────────────────────────────────────
   // On initialise l'état directement en lisant le localStorage
@@ -69,24 +67,8 @@ export default function Navbar() {
   };
   // ───────────────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const onScroll = () => {
-      const current = window.scrollY;
-      setVisible(current < lastScrollY.current || current < 60);
-      lastScrollY.current = current;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <header
-      className="app-navbar"
-      style={{
-        transform: visible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-110%)",
-        opacity: visible ? 1 : 0,
-      }}
-    >
+    <header className="app-navbar">
       <div className="app-navbar__inner">
         {/* Logo */}
         <Link to="/" className="app-navbar__logo">

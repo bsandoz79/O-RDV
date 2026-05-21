@@ -12,7 +12,7 @@ export default function PolitiqueConfidentialite() {
         <section className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-3">Responsable du traitement</h2>
           <p className="text-slate-600 text-sm leading-relaxed">
-            Baptiste Sandoz — bsandoz79@gmail.com
+            Baptiste Sandoz — contact@o-rdv.fr
           </p>
         </section>
 
@@ -61,7 +61,7 @@ export default function PolitiqueConfidentialite() {
             <li><strong>Droit de rectification</strong> — modifier vos informations depuis votre profil</li>
             <li><strong>Droit à l'effacement</strong> — supprimer votre compte depuis les paramètres</li>
             <li><strong>Droit à la portabilité</strong> — contactez-nous pour obtenir vos données</li>
-            <li><strong>Droit d'opposition</strong> — contactez-nous à bsandoz79@gmail.com</li>
+            <li><strong>Droit d'opposition</strong> — contactez-nous à contact@o-rdv.fr</li>
           </ul>
         </section>
 
@@ -76,7 +76,7 @@ export default function PolitiqueConfidentialite() {
         <section>
           <h2 className="text-lg font-bold text-slate-800 mb-3">Contact & réclamations</h2>
           <p className="text-slate-600 text-sm leading-relaxed">
-            Pour exercer vos droits : bsandoz79@gmail.com<br />
+            Pour exercer vos droits : contact@o-rdv.fr<br />
             Vous pouvez également saisir la CNIL : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:underline">www.cnil.fr</a>
           </p>
         </section>

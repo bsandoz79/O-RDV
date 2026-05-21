@@ -13,7 +13,7 @@ export default function MentionsLegales() {
           <p className="text-slate-600 text-sm leading-relaxed">
             O'RDV est un projet réalisé dans le cadre d'une formation CDA (Concepteur Développeur d'Applications).<br />
             Responsable de publication : Baptiste Sandoz<br />
-            Contact : bsandoz79@gmail.com
+            Contact : contact@o-rdv.fr
           </p>
         </section>
 
