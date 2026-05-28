@@ -57,3 +57,50 @@ test('appelle onClick au clic sur la carte', () => {
   fireEvent.click(screen.getByRole('article'));
   expect(handleClick).toHaveBeenCalledTimes(1);
 });
+
+test("affiche 'Pas encore d'avis' si aucune note", () => {
+  const provider = { ...BASE_PROVIDER, avg_rating: null, review_count: 0 };
+  render(<ProviderCard provider={provider} onClick={() => {}} />);
+  expect(screen.getByText(/pas encore d'avis/i)).toBeInTheDocument();
+});
+
+test("affiche le badge 'Ouvert' si le prestataire est ouvert maintenant", () => {
+  const now = new Date();
+  const openH  = String(now.getHours()).padStart(2, '0');
+  const closeH = String((now.getHours() + 2) % 24).padStart(2, '0');
+  const provider = {
+    ...BASE_PROVIDER,
+    todayIsClosed: false,
+    todayOpen:  `${openH}:00`,
+    todayClose: `${closeH}:00`,
+  };
+  render(<ProviderCard provider={provider} onClick={() => {}} />);
+  expect(screen.getByText('Ouvert')).toBeInTheDocument();
+});
+
+test('affiche le bouton favori et appelle onFavoriteToggle', () => {
+  const toggle = jest.fn();
+  render(
+    <ProviderCard
+      provider={{ ...BASE_PROVIDER, id: 42 }}
+      onClick={() => {}}
+      isFavorite={false}
+      onFavoriteToggle={toggle}
+    />
+  );
+  fireEvent.click(screen.getByLabelText(/ajouter aux favoris/i));
+  expect(toggle).toHaveBeenCalledWith(42);
+});
+
+test("affiche le bouton favori actif si isFavorite=true", () => {
+  const toggle = jest.fn();
+  render(
+    <ProviderCard
+      provider={{ ...BASE_PROVIDER, id: 1 }}
+      onClick={() => {}}
+      isFavorite={true}
+      onFavoriteToggle={toggle}
+    />
+  );
+  expect(screen.getByLabelText(/retirer des favoris/i)).toBeInTheDocument();
+});

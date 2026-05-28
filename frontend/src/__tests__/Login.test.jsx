@@ -54,3 +54,28 @@ test('affiche "Vérification..." pendant le chargement', async () => {
 
   expect(await screen.findByText(/vérification/i)).toBeInTheDocument();
 });
+
+test('affiche le message d\'erreur retourné par le serveur', async () => {
+  global.fetch = jest.fn().mockResolvedValueOnce({
+    ok: false,
+    json: async () => ({ error: 'Identifiants invalides.' }),
+  });
+
+  renderLogin();
+  fireEvent.change(screen.getByPlaceholderText('votre@email.com'), { target: { value: 'x@x.com' } });
+  fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: 'wrong' } });
+  fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
+
+  expect(await screen.findByText('Identifiants invalides.')).toBeInTheDocument();
+});
+
+test('affiche une erreur si le serveur est injoignable', async () => {
+  global.fetch = jest.fn().mockRejectedValueOnce(new Error('Network error'));
+
+  renderLogin();
+  fireEvent.change(screen.getByPlaceholderText('votre@email.com'), { target: { value: 'x@x.com' } });
+  fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: 'pass' } });
+  fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
+
+  expect(await screen.findByText(/impossible de contacter le serveur/i)).toBeInTheDocument();
+});

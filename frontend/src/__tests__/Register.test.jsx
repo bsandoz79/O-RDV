@@ -50,3 +50,28 @@ test('affiche un lien vers la page de connexion', () => {
   renderRegister();
   expect(screen.getByText(/déjà inscrit/i)).toBeInTheDocument();
 });
+
+test('affiche une erreur si le mot de passe est trop faible', async () => {
+  renderRegister();
+  fireEvent.change(screen.getByPlaceholderText('Adresse email'), { target: { value: 'a@a.com' } });
+  fireEvent.change(screen.getByPlaceholderText(/mot de passe/i), { target: { value: 'faible' } });
+  fireEvent.click(screen.getByRole('button', { name: /m'inscrire/i }));
+
+  expect(await screen.findByText(/mot de passe trop faible/i)).toBeInTheDocument();
+});
+
+test('affiche "Création en cours..." pendant le chargement', async () => {
+  global.fetch = jest.fn(() => new Promise(() => {}));
+
+  renderRegister();
+  fireEvent.change(screen.getByPlaceholderText('Adresse email'), { target: { value: 'new@test.com' } });
+  fireEvent.change(screen.getByPlaceholderText(/mot de passe/i), { target: { value: 'Password1' } });
+  fireEvent.click(screen.getByRole('button', { name: /m'inscrire/i }));
+
+  expect(await screen.findByText(/création en cours/i)).toBeInTheDocument();
+});
+
+test('affiche le bouton Google', () => {
+  renderRegister();
+  expect(screen.getByText(/continuer avec google/i)).toBeInTheDocument();
+});

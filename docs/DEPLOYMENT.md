@@ -136,6 +136,24 @@ VALUES ('admin@ordv.fr', '<hash_bcrypt>', 'admin');
 ## 6. CI/CD — GitHub Actions
 
 Pipeline défini dans `.github/workflows/main.yml` :
-- **Backend** : `npm install` + `npm test` (21 tests Jest)
-- **Frontend** : `npm install` + `npm test` (17 tests Jest) + `npm run build`
+- **Backend** : `npm install` + `npm run test:coverage` (45 tests Jest)
+- **Frontend** : `npm install` + `npm run test:coverage` (36 tests Jest) + `npm run build`
+- Les rapports de couverture sont automatiquement uploadés comme **artifacts téléchargeables** (30 jours de rétention)
 - Déclenché sur chaque push sur `develop`, `main`, `master`
+
+### Générer le rapport de couverture en local
+
+```bash
+# Backend
+cd backend && npm run test:coverage
+# → Rapport HTML : backend/coverage/lcov-report/index.html
+
+# Frontend
+cd frontend && npm run test:coverage
+# → Rapport HTML : frontend/coverage/lcov-report/index.html
+```
+
+### Récupérer le rapport depuis GitHub Actions
+1. GitHub → onglet **Actions** → dernier workflow réussi
+2. Section **Artifacts** en bas de page
+3. Télécharger `backend-coverage` ou `frontend-coverage` (archive ZIP contenant le rapport HTML)

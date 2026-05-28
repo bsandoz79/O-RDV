@@ -17,6 +17,11 @@ dist/
 frontend/dist/
 .cache/
 
+# Coverage reports (generated locally — CI uploads as artifacts)
+coverage/
+frontend/coverage/
+backend/coverage/
+
 # Système
 .DS_Store
 Thumbs.db

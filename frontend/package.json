@@ -15,6 +15,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest --config jest.standalone.config.js --forceExit",
+    "test:coverage": "jest --config jest.standalone.config.js --coverage --forceExit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
