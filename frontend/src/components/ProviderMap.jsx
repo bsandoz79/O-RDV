@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Navigation, Clock, Loader2, Car, PersonStanding, Bike } from 'lucide-react';
+import { Navigation, Clock, Loader2, Car, PersonStanding, Bike, MapPin, Search, LocateFixed } from 'lucide-react';
 
 const shopIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -45,11 +45,43 @@ const MODES = [
 ];
 
 export default function ProviderMap({ provider }) {
-  const [userPos, setUserPos]     = useState(null);
-  const [geoError, setGeoError]  = useState(false);
-  const [mode, setMode]           = useState('driving');
-  const [routes, setRoutes]       = useState({});   // { driving: {route, duration, distance}, ... }
-  const [loading, setLoading]     = useState(false);
+  const [userPos, setUserPos]         = useState(null);
+  const [geoError, setGeoError]      = useState(false);
+  const [mode, setMode]               = useState('driving');
+  const [routes, setRoutes]           = useState({});
+  const [loading, setLoading]         = useState(false);
+  const [manualAddress, setManualAddress] = useState('');
+  const [geocoding, setGeocoding]     = useState(false);
+  const [geoNotFound, setGeoNotFound] = useState(false);
+
+  const retryGeo = () => {
+    setGeoError(false);
+    setGeoNotFound(false);
+    navigator.geolocation?.getCurrentPosition(
+      p => setUserPos([p.coords.latitude, p.coords.longitude]),
+      () => setGeoError(true)
+    );
+  };
+
+  const geocodeManual = async () => {
+    if (!manualAddress.trim()) return;
+    setGeocoding(true);
+    setGeoNotFound(false);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualAddress)}&format=json&limit=1&countrycodes=fr`,
+        { headers: { 'User-Agent': 'ORDV-App/1.0' } }
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        setUserPos([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        setGeoError(false);
+      } else {
+        setGeoNotFound(true);
+      }
+    } catch {}
+    finally { setGeocoding(false); }
+  };
 
   const hasCoords = provider.latitude && provider.longitude;
   const shopPos   = useMemo(
@@ -143,6 +175,59 @@ export default function ProviderMap({ provider }) {
         {loading && <Loader2 size={16} className="animate-spin text-slate-300 self-center ml-1" />}
       </div>
 
+      {/* Panneau alternatif si géoloc refusée */}
+      {geoError && !userPos && (
+        <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <p className="text-xs text-slate-500 flex items-center gap-1.5">
+            <MapPin size={12} className="text-slate-400" />
+            Géolocalisation non disponible. Entrez votre ville pour calculer l'itinéraire.
+          </p>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={manualAddress}
+                onChange={e => { setManualAddress(e.target.value); setGeoNotFound(false); }}
+                onKeyDown={e => e.key === 'Enter' && geocodeManual()}
+                placeholder="Ex : Amiens, Paris 75001…"
+                className="w-full pl-7 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+              />
+            </div>
+            <button
+              onClick={geocodeManual}
+              disabled={geocoding || !manualAddress.trim()}
+              className="px-3 py-1.5 bg-rose-500 text-white text-xs font-semibold rounded-lg hover:bg-rose-600 transition disabled:opacity-50 flex items-center gap-1"
+            >
+              {geocoding ? <Loader2 size={12} className="animate-spin" /> : 'OK'}
+            </button>
+            <button
+              onClick={retryGeo}
+              className="px-3 py-1.5 border border-slate-200 text-slate-600 text-xs font-semibold rounded-lg hover:border-rose-300 hover:text-rose-500 transition flex items-center gap-1"
+              title="Réessayer la géolocalisation"
+            >
+              <LocateFixed size={12} />
+            </button>
+          </div>
+          {geoNotFound && <p className="text-xs text-rose-500">Adresse introuvable, essayez avec une ville.</p>}
+        </div>
+      )}
+
+      {/* Bouton désactiver ma position */}
+      {userPos && (
+        <div className="mb-3 flex items-center justify-between px-3 py-2 bg-rose-50 rounded-xl border border-rose-100">
+          <span className="text-xs text-rose-600 font-medium flex items-center gap-1.5">
+            <MapPin size={12} /> Position détectée
+          </span>
+          <button
+            onClick={() => { setUserPos(null); setRoutes({}); setGeoError(true); }}
+            className="text-xs text-slate-400 hover:text-rose-500 transition underline"
+          >
+            Modifier
+          </button>
+        </div>
+      )}
+
       {/* Info distance + durée sélectionnée */}
       {current && (
         <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-rose-50 rounded-xl border border-rose-100">
@@ -150,7 +235,6 @@ export default function ProviderMap({ provider }) {
           <span className="text-sm font-bold text-rose-600">{fmt(current.duration)}</span>
           <span className="text-xs text-slate-400">·</span>
           <span className="text-xs text-slate-500">{fmtDist(current.distance)}</span>
-          {geoError && <span className="text-xs text-slate-400 ml-auto">Activez la géolocalisation</span>}
         </div>
       )}
 

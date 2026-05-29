@@ -22,7 +22,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
+  const [geoStatus, setGeoStatus] = useState('idle'); // 'idle' | 'loading' | 'granted' | 'denied'
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  const requestGeo = () => {
+    if (!navigator.geolocation) { setGeoStatus('denied'); return; }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserPosition([pos.coords.latitude, pos.coords.longitude]); setGeoStatus('granted'); },
+      () => setGeoStatus('denied')
+    );
+  };
+
+  const disableGeo = () => { setUserPosition(null); setGeoStatus('idle'); };
 
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
   const token = localStorage.getItem('token');
@@ -35,14 +47,7 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-        () => {}
-      );
-    }
-  }, []);
+  useEffect(() => { requestGeo(); }, []);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/shop/categories`)
@@ -215,6 +220,25 @@ export default function Home() {
               <X size={11} /> Réinitialiser
             </button>
           )}
+
+          <div className="w-px h-4 bg-slate-200 mx-1" />
+
+          <button
+            onClick={userPosition ? disableGeo : requestGeo}
+            disabled={geoStatus === 'loading'}
+            title={geoStatus === 'denied' ? "Accès refusé — cliquez sur le cadenas dans la barre d'adresse pour autoriser" : ''}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
+              ${userPosition
+                ? 'bg-rose-500 border-rose-500 text-white'
+                : geoStatus === 'denied'
+                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-help'
+                  : geoStatus === 'loading'
+                    ? 'bg-white border-slate-200 text-slate-400'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
+          >
+            <MapPin size={11} className={geoStatus === 'loading' ? 'animate-pulse' : ''} />
+            {userPosition ? 'Ma position' : geoStatus === 'denied' ? 'Localisation refusée' : geoStatus === 'loading' ? 'Localisation...' : 'Ma position'}
+          </button>
         </section>
 
         {/* Header */}
