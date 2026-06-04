@@ -111,6 +111,16 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 
 ![Récapitulatif de la réservation](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Récapitulatifs de la réservation.png>)
 
+**Étape 5 : Réservation confirmée**
+
+![Réservation confirmée](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Réservations confirmée.png>)
+
+**UX Sécurité : Connexion requise (redirection douce)**
+
+L'utilisateur non connecté qui tente de confirmer voit une page intermédiaire de 3 secondes avant d'être redirigé vers la connexion. Son choix (service, date, créneau) est conservé et restauré automatiquement après connexion.
+
+![Connexion requise — redirection vers login](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Connexion requise.png>)
+
 #### Côté Prestataire (Pro)
 
 | Fonctionnalité | Description |
@@ -135,8 +145,7 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 | Impersonation | Connexion en tant qu'un utilisateur pour debug |
 | Multi-vue | 3 iframes simultanées (client / pro / admin) |
 
-> 📸 **CAPTURE D'ÉCRAN 4**
-> *Insérer ici : screenshot de l'interface admin (AdminPanel) avec la liste des utilisateurs et les statistiques*
+![Dashboard admin — gestion utilisateurs et KPIs](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dashboard admin.png>)
 
 ### 1.4 Choix technologiques
 

@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, User, Store, Crown, Loader2, AlertCircle } from 'lucide-react';
 import API_BASE_URL from '../../api/api';
 
-const adminToken = localStorage.getItem('token');
-const adminHeaders = { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
 const appOrigin = window.location.origin;
 
 const PANELS = [
@@ -33,6 +31,7 @@ function IframePanel({ panel, users }) {
   const loadUser = async (userId) => {
     if (!userId) { setIframeSrc(''); return; }
     setLoading(true); setError('');
+    const adminHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
     try {
       const res = await fetch(`${API_BASE_URL}/admin/impersonate/${userId}`, {
         method: 'POST', headers: adminHeaders,
@@ -125,6 +124,7 @@ export default function MultiView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const adminHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
     fetch(`${API_BASE_URL}/admin/users`, { headers: adminHeaders })
       .then(r => {
         if (!r.ok) throw new Error(`Erreur ${r.status} — backend non déployé ?`);
