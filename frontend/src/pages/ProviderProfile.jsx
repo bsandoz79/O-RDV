@@ -94,9 +94,14 @@ export default function ProviderProfile() {
       .catch(() => {});
   }, [id]);
 
-  // Restaurer un booking en cours après redirection depuis login
+  // Restaurer un booking en cours après redirection depuis login (clients uniquement)
   useEffect(() => {
     if (!provider) return;
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (currentUser.role !== 'user') {
+      sessionStorage.removeItem('booking_redirect');
+      return;
+    }
     const raw = sessionStorage.getItem('booking_redirect');
     if (!raw) return;
     try {

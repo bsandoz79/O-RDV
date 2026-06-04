@@ -34,10 +34,11 @@ export default function Login() {
         window.dispatchEvent(new Event("authChange"));
 
         const pendingBooking = sessionStorage.getItem('booking_redirect');
-        if (pendingBooking) {
+        if (pendingBooking && data.user?.role === 'user') {
           const { providerId } = JSON.parse(pendingBooking);
           navigate(`/provider/${providerId}`);
         } else {
+          sessionStorage.removeItem('booking_redirect');
           navigate("/");
         }
       } else {
