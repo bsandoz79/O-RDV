@@ -3,8 +3,9 @@
 
 ---
 
-> 📸 **PAGE DE GARDE**
-> *Insérer ici : logo O'RDV + capture de la page d'accueil de l'application déployée (https://o-rdv.vercel.app)*
+![Logo O'RDV](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/logo entier.png>)
+
+![Page d'accueil O'RDV déployée](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille.png>)
 
 ---
 
@@ -63,8 +64,7 @@ J'ai choisi ce projet parce qu'il couvre l'ensemble du spectre technique attendu
 
 O'RDV se positionne comme une alternative légère, gratuite et open-source : n'importe quel prestataire peut s'inscrire, configurer son établissement et recevoir des réservations en ligne sans frais ni commission.
 
-> 📸 **CAPTURE D'ÉCRAN 1**
-> *Insérer ici : screenshot de la page d'accueil O'RDV montrant la liste des prestataires avec les cartes*
+![Page d'accueil — liste des prestataires](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille.png>)
 
 ### 1.2 Objectifs du projet
 
@@ -95,8 +95,21 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 | Avis et notes | Formulaire d'avis après un RDV terminé, like des avis |
 | Tableau de bord | Historique des RDV, profil, favoris |
 
-> 📸 **CAPTURE D'ÉCRAN 2**
-> *Insérer ici : screenshot de la page de réservation (BookingPage) avec sélecteur de service, calendrier et créneaux*
+**Tunnel de réservation — Étape 1 : Sélection du service**
+
+![Sélection du service et du prestataire](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page de réservations.png>)
+
+**Étape 2 : Choix de la date**
+
+![Calendrier de réservation](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Calendrier réservations.png>)
+
+**Étape 3 : Choix du créneau horaire**
+
+![Créneaux disponibles](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Créneaux Réservations.png>)
+
+**Étape 4 : Récapitulatif et confirmation**
+
+![Récapitulatif de la réservation](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Récapitulatifs de la réservation.png>)
 
 #### Côté Prestataire (Pro)
 

@@ -56,6 +56,7 @@ export default function ProviderProfile() {
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState(null);
+  const [restoredBooking, setRestoredBooking] = useState(null);
   const [reviewData, setReviewData] = useState({ reviews: [], average: null, count: 0 });
   const [adminNote, setAdminNote] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -92,6 +93,25 @@ export default function ProviderProfile() {
       .then(d => { if (d?.reviews) setReviewData(d); })
       .catch(() => {});
   }, [id]);
+
+  // Restaurer un booking en cours après redirection depuis login
+  useEffect(() => {
+    if (!provider) return;
+    const raw = sessionStorage.getItem('booking_redirect');
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw);
+      if (String(saved.providerId) === String(id)) {
+        sessionStorage.removeItem('booking_redirect');
+        const service = provider.services?.find(s => s.id === saved.serviceId);
+        if (service && saved.date && saved.time) {
+          setRestoredBooking({ date: saved.date, time: saved.time });
+          setPreselectedService(service);
+          setModalOpen(true);
+        }
+      }
+    } catch {}
+  }, [provider, id]);
 
   if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-rose-500" size={40} /></div>;
   if (error || !provider) return (
@@ -402,7 +422,13 @@ export default function ProviderProfile() {
       </div>
 
       {modalOpen && (
-        <BookingModal provider={provider} preselectedService={preselectedService} onClose={() => setModalOpen(false)} />
+        <BookingModal
+          provider={provider}
+          preselectedService={preselectedService}
+          onClose={() => { setModalOpen(false); setRestoredBooking(null); }}
+          initialDate={restoredBooking?.date}
+          initialTime={restoredBooking?.time}
+        />
       )}
     </>
   );

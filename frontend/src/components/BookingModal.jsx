@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2, Bell } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2, Bell, Lock } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import { buildGoogleCalendarUrl } from '../utils/googleCalendar';
 
@@ -30,19 +30,27 @@ function toDateString(date) {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingModal({ provider, preselectedService, onClose }) {
+export default function BookingModal({ provider, preselectedService, onClose, initialDate, initialTime }) {
   const navigate = useNavigate();
 
   // ─── États ──────────────────────────────────────────────────────────
-  const [step, setStep] = useState('calendar'); // 'calendar' | 'slots' | 'confirm' | 'done'
+  const isRestored = !!(preselectedService && initialDate && initialTime);
+  const [step, setStep] = useState(isRestored ? 'confirm' : 'calendar'); // 'calendar' | 'slots' | 'confirm' | 'done' | 'auth_required'
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialDate) {
+      const [y, m, d] = initialDate.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return null;
+  });
+  const [selectedTime, setSelectedTime] = useState(initialTime || null);
   const [selectedService, setSelectedService] = useState(preselectedService || null);
+  const [countdown, setCountdown] = useState(3);
 
   const [slots, setSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -69,6 +77,22 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
     );
     setClosedDayNames(closed);
   }, [provider]);
+
+  // ─── Compte à rebours avant redirection vers login ──────────────────
+  useEffect(() => {
+    if (step !== 'auth_required') return;
+    let count = 3;
+    setCountdown(3);
+    const interval = setInterval(() => {
+      count--;
+      setCountdown(count);
+      if (count <= 0) {
+        clearInterval(interval);
+        navigate('/login');
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Charger les créneaux quand une date est sélectionnée ───────────
   const fetchSlots = useCallback(async (date) => {
@@ -112,8 +136,13 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
     const token = localStorage.getItem('token');
 
     if (!user || !token) {
-      onClose();
-      navigate('/login');
+      sessionStorage.setItem('booking_redirect', JSON.stringify({
+        providerId: provider.id,
+        serviceId: selectedService?.id,
+        date: selectedDate ? toDateString(selectedDate) : null,
+        time: selectedTime,
+      }));
+      setStep('auth_required');
       return;
     }
 
@@ -232,6 +261,38 @@ export default function BookingModal({ provider, preselectedService, onClose }) 
         </div>
 
         <div className="px-6 py-5">
+          {/* ÉTAPE — AUTH REQUIRED */}
+          {step === 'auth_required' && (
+            <div className="flex flex-col items-center text-center py-6 gap-4">
+              <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
+                <Lock size={30} className="text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-1">Connexion requise</h3>
+                <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+                  Pour confirmer votre réservation, vous devez être connecté à votre compte O'RDV.
+                </p>
+              </div>
+              <p className="text-xs text-slate-400">
+                Redirection automatique dans{' '}
+                <span className="font-bold text-rose-500">{countdown}</span>{' '}
+                seconde{countdown > 1 ? 's' : ''}…
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition"
+              >
+                Se connecter maintenant
+              </button>
+              <button
+                onClick={onClose}
+                className="text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                Annuler la réservation
+              </button>
+            </div>
+          )}
+
           {/* ÉTAPE — DONE */}
           {step === 'done' && (
             <div className="flex flex-col items-center text-center py-6 gap-3">
