@@ -1,4 +1,5 @@
 const prisma = require('../prisma/client');
+const { cacheGet, cacheSet, cacheDel } = require('../redis');
 
 async function geocodeAddress(address, zipCode, city) {
     if (!address && !city) return { latitude: null, longitude: null };
@@ -64,6 +65,36 @@ const getCategories = async (req, res) => {
 const getAllProviders = async (req, res) => {
     try {
         const { category_id, city, lat, lng } = req.query;
+
+        // Clé de cache sans lat/lng (données stables) — TTL 5 min
+        const cacheKey = `shop:providers:${category_id || ''}:${city || ''}`;
+        const userLat = lat ? parseFloat(lat) : null;
+        const userLng = lng ? parseFloat(lng) : null;
+
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+            let result = JSON.parse(cached);
+            // Recalcule la distance et re-trie si l'utilisateur a une position GPS
+            if (userLat && userLng) {
+                const calcDistance = (pLat, pLng) => {
+                    if (!pLat || !pLng) return null;
+                    const R = 6371;
+                    const dLat = (pLat - userLat) * Math.PI / 180;
+                    const dLng = (pLng - userLng) * Math.PI / 180;
+                    const a = Math.sin(dLat/2)**2 + Math.cos(userLat*Math.PI/180) * Math.cos(pLat*Math.PI/180) * Math.sin(dLng/2)**2;
+                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                };
+                result = result
+                    .map(p => ({ ...p, distance_km: p.latitude && p.longitude ? Math.round(calcDistance(p.latitude, p.longitude) * 10) / 10 : null }))
+                    .sort((a, b) => {
+                        if (a.distance_km === null) return 1;
+                        if (b.distance_km === null) return -1;
+                        return a.distance_km - b.distance_km;
+                    });
+            }
+            return res.type('json').send(JSON.stringify(result, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+        }
+
         const todayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
             .format(new Date()).toLowerCase();
 
@@ -78,9 +109,6 @@ const getAllProviders = async (req, res) => {
                 businessHours: { where: { day_of_week: todayName } },
             },
         });
-
-        const userLat = lat ? parseFloat(lat) : null;
-        const userLng = lng ? parseFloat(lng) : null;
 
         const calcDistance = (pLat, pLng) => {
             if (!userLat || !userLng || !pLat || !pLng) return null;
@@ -124,6 +152,10 @@ const getAllProviders = async (req, res) => {
                 return a.distance_km - b.distance_km;
             });
         }
+
+        // Mise en cache sans la distance (propre à chaque utilisateur)
+        const toCache = result.map(p => ({ ...p, distance_km: null }));
+        await cacheSet(cacheKey, JSON.stringify(toCache, (_, v) => typeof v === 'bigint' ? Number(v) : v), 300);
 
         const safe = JSON.stringify(result, (_, v) => typeof v === 'bigint' ? Number(v) : v);
         res.type('json').send(safe);
@@ -253,6 +285,9 @@ const setupShop = async (req, res) => {
                 is_closed: h.closed ? true : false,
             })),
         });
+
+        // Invalide le cache prestataires (les données ont changé)
+        await cacheDel('shop:providers:*');
 
         res.status(200).json({ message: "Configuration enregistrée avec succès !" });
     } catch (err) {

@@ -18,6 +18,7 @@ const adminRoutes     = require('./routes/admin');
 const favoritesRoutes = require('./routes/favorites');
 
 const { apiLimiter } = require('./middlewares/rateLimiter');
+const { getRedis } = require('./redis');
 
 const app = express();
 
@@ -63,4 +64,5 @@ app.listen(PORT, async () => {
     console.log(`🗄️  Base de données cible : ${process.env.DB_NAME}`);
     console.log(`--------------------------------------------------`);
     await migrate().catch(err => console.error('Migration échouée:', err.message));
+    getRedis(); // Initialise la connexion Redis au démarrage
 });

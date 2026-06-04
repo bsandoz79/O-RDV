@@ -17,6 +17,7 @@
     "express": "^4.22.1",
     "express-rate-limit": "^8.5.2",
     "googleapis": "^171.4.0",
+    "ioredis": "^5.11.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
@@ -32,7 +33,12 @@
   "jest": {
     "testEnvironment": "node",
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "text-summary", "html", "lcov"],
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "html",
+      "lcov"
+    ],
     "collectCoverageFrom": [
       "controllers/**/*.js",
       "middlewares/**/*.js",

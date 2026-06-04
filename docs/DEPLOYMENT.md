@@ -54,6 +54,13 @@ restartPolicyMaxRetries = 5
 | `DB_NAME` | `railway` |
 | `JWT_SECRET` | *(phrase secrète longue)* |
 | `PORT` | `5000` |
+| `REDIS_URL` | `${{Redis.REDIS_URL}}` *(optionnel — service Redis Railway)* |
+
+### Ajout du service Redis (cache NoSQL)
+1. Railway → projet O-RDV → **New Service → Database → Redis**
+2. Railway génère automatiquement `REDIS_URL`
+3. Backend → Variables → `REDIS_URL = ${{Redis.REDIS_URL}}`
+4. Sans `REDIS_URL`, le cache est désactivé et l'API continue normalement
 
 ### Domaine public
 Railway → O-RDV → Settings → Networking → **Generate Domain**
