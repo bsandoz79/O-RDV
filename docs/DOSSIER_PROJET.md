@@ -55,13 +55,13 @@
 
 ### 1.1 Contexte et problématique
 
-> **[À COMPLÉTER — 10 à 15 lignes]**
-> Décris le problème que tu as voulu résoudre. Parle des petits salons de beauté qui n'ont pas d'outil de réservation en ligne, des appels téléphoniques manqués, de la difficulté à gérer un planning manuellement. Explique pourquoi tu as choisi ce projet.
+Les établissements de beauté — coiffeurs, barbiers, instituts de soins, nail art — gèrent encore aujourd'hui la majorité de leurs rendez-vous par téléphone ou par messages. Ce fonctionnement manuel engendre des problèmes récurrents : appels manqués en dehors des heures d'ouverture, doubles réservations, oublis, et perte de temps pour les deux parties.
 
-*Pistes :*
-- *Les établissements de beauté (coiffeurs, barbiers, instituts) gèrent souvent leurs RDV par téléphone ou par messages*
-- *Les grandes plateformes existantes (Planity, Treatwell) sont coûteuses pour les petites structures*
-- *O'RDV propose une alternative gratuite, open-source, auto-hébergeable*
+Les solutions existantes comme Planity ou Treatwell répondent à ce besoin, mais elles s'adressent principalement aux grandes enseignes et appliquent des commissions sur chaque réservation ou des abonnements mensuels élevés, inaccessibles pour les petites structures indépendantes.
+
+J'ai choisi ce projet parce qu'il couvre l'ensemble du spectre technique attendu pour le titre CDA : modélisation de base de données relationnelle, développement d'une API REST sécurisée, développement d'interfaces utilisateur modernes, déploiement en production avec CI/CD. Il représente aussi une problématique métier réelle et concrète, que j'ai pu valider auprès de proches gérant des petits commerces.
+
+O'RDV se positionne comme une alternative légère, gratuite et open-source : n'importe quel prestataire peut s'inscrire, configurer son établissement et recevoir des réservations en ligne sans frais ni commission.
 
 > 📸 **CAPTURE D'ÉCRAN 1**
 > *Insérer ici : screenshot de la page d'accueil O'RDV montrant la liste des prestataires avec les cartes*
@@ -129,29 +129,23 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 
 #### Frontend — React 18 + Tailwind CSS
 
-> **[À COMPLÉTER — 4 à 6 lignes]**
-> Justifie ton choix de React. Exemple : composants réutilisables, Virtual DOM pour les performances, écosystème riche (React Router, hooks), popularité en entreprise...
+J'ai choisi React 18 pour sa popularité dans le monde professionnel et son écosystème riche. Le système de composants réutilisables correspond parfaitement à la structure de l'application : une `ProviderCard` réutilisée sur la page d'accueil, une `StarRating` partagée entre le formulaire d'avis et l'affichage, un `BookingPage` modulaire. Les hooks (`useState`, `useEffect`, `useMemo`) permettent de gérer l'état local sans Redux, ce qui allège considérablement le projet. React Router gère la navigation entre les pages sans rechargement complet.
 
-> **[À COMPLÉTER — 2 à 3 lignes]**
-> Justifie ton choix de Tailwind CSS. Exemple : utilitaires CSS prêts à l'emploi, pas de CSS custom à maintenir, responsive facile, bundle final optimisé...
+Tailwind CSS permet d'écrire le style directement dans le JSX via des classes utilitaires, sans maintenir de fichiers CSS séparés. Le build final est optimisé automatiquement : Tailwind supprime toutes les classes non utilisées, ce qui donne un bundle CSS de quelques kilooctets seulement. Le système responsive (préfixes `sm:`, `md:`, `lg:`) rend l'adaptation mobile très rapide.
 
 #### Backend — Node.js + Express
 
-> **[À COMPLÉTER — 4 à 6 lignes]**
-> Justifie Node.js : non-bloquant (event loop), JavaScript côté serveur = même langage front/back, npm très riche, bien adapté aux APIs REST...
+Node.js repose sur une architecture non-bloquante (event loop) particulièrement adaptée aux APIs REST qui effectuent beaucoup d'opérations I/O : requêtes en base de données, appels à des services externes (Cloudinary, Nominatim, OSRM). Contrairement à un serveur multi-thread, Node.js traite les requêtes de façon asynchrone sans bloquer le thread principal. L'utilisation de JavaScript côté serveur permet de partager la même logique de validation entre le front et le back, et réduit le changement de contexte mental pendant le développement.
 
 #### Base de données — MySQL 8 + Prisma ORM
 
-> **[À COMPLÉTER — 3 à 4 lignes]**
-> Justifie MySQL : base relationnelle mature, forte cohérence des données, contraintes FK et UNIQUE essentielles pour les règles métier (unicité avis, favoris...)
+MySQL est une base de données relationnelle mature, parfaitement adaptée aux données fortement structurées d'O'RDV. Les contraintes `FOREIGN KEY`, `UNIQUE` et les suppressions en cascade garantissent l'intégrité des données sans logique applicative supplémentaire : on ne peut pas créer deux avis pour le même rendez-vous, ni deux favoris identiques. Railway propose MySQL en service natif avec une configuration minimale.
 
-> **[À COMPLÉTER — 3 à 4 lignes]**
-> Justifie Prisma : schéma typé, génération automatique du client, migrations, protection contre les injections SQL, DX supérieure à Sequelize...
+Prisma ORM génère automatiquement un client typé à partir du schéma `schema.prisma`, ce qui élimine les erreurs de frappe sur les noms de colonnes et offre une autocomplétion précise dans VS Code. Les requêtes paramétrées sont automatiques, protégeant contre les injections SQL. `$queryRaw` est disponible pour les agrégations complexes (moyennes de notes, horaires) tout en conservant la liaison de paramètres. La DX est nettement supérieure à Sequelize qui exige plus de configuration manuelle.
 
 #### Déploiement — Railway + Vercel
 
-> **[À COMPLÉTER — 3 à 4 lignes]**
-> Justifie le choix Railway pour le backend (support Node.js, MySQL intégré, déploiement Git automatique) et Vercel pour le frontend (optimisé React/CRA, CDN mondial, HTTPS automatique)...
+Railway intègre nativement Node.js, MySQL et Redis dans le même projet avec des connexions internes sécurisées (réseau privé). Le déploiement est automatique à chaque push sur `develop` via un webhook GitHub. Vercel est optimisé pour les applications React : CDN mondial avec edge caching, HTTPS automatique, et détection automatique de Create React App. La combinaison des deux permet un déploiement complet sans aucune gestion de serveur.
 
 > 📸 **CAPTURE D'ÉCRAN 5**
 > *Insérer ici : screenshot du dashboard Railway montrant le service backend déployé et actif*
@@ -635,8 +629,7 @@ Exemple : *"En tant que client, je veux réserver un créneau chez un prestatair
 > 📸 **CAPTURE D'ÉCRAN 23**
 > *Insérer ici : screenshot du tableau Trello complet avec toutes les colonnes visibles*
 
-> **[À COMPLÉTER — 5 à 8 lignes]**
-> Décris ton organisation au quotidien avec Trello : comment tu planifiais tes sprints, comment tu choisissais les tâches prioritaires, si tu avais des reviews régulières avec ton formateur...
+J'utilisais Trello en mode Kanban hebdomadaire : chaque début de semaine, je déplaçais des cartes du Backlog vers "À faire" en fonction de la complexité estimée et des retours du formateur. Je limitais les cartes "En cours" à deux maximum pour rester concentré sans me disperser. Les cartes suivent le format user story ("En tant que... je veux... afin de..."), ce qui m'aidait à rester orienté sur la valeur utilisateur plutôt que sur la technique pure. Les retours du formateur en fin de semaine guidaient les priorités de la semaine suivante et m'ont notamment conduit à prioriser les tests unitaires et l'utilisation de branches Git.
 
 #### Gestion du versioning Git
 
@@ -880,8 +873,7 @@ BigInt.prototype.toJSON = function() { return Number(this); };
 
 #### Pourquoi Redis ?
 
-> **[À COMPLÉTER — 4 à 6 lignes]**
-> Explique le choix de Redis : base NoSQL clé-valeur en mémoire, ultra-rapide (< 1ms), idéale pour le cache. La requête `/api/shop/all` est la plus appelée de l'application (chaque chargement de la page d'accueil). Sans cache, elle exécute une jointure sur 5 tables pour potentiellement des milliers de prestataires.
+La route `GET /api/shop/all` est la plus sollicitée de l'application : elle est appelée à chaque chargement de la page d'accueil par chaque visiteur. Sans cache, elle exécute une jointure sur 4 tables (providers, categories, business_hours, reviews) pour récupérer les données de tous les prestataires, calculer les moyennes de notes et les horaires du jour. Redis est une base NoSQL clé-valeur qui stocke les données directement en RAM : elle répond en moins d'une milliseconde contre 50 à 200 ms pour MySQL. Le cache est invalidé automatiquement à chaque modification d'un profil prestataire (`POST /api/shop/setup`), garantissant des données toujours cohérentes sans TTL arbitraire en cas de mise à jour.
 
 #### Architecture du cache
 
@@ -906,53 +898,60 @@ Réponse client
 #### Implémentation
 
 ```javascript
-// redis.js — Client singleton
-const { createClient } = require('redis');
+// redis.js — Client ioredis avec fallback silencieux
+const Redis = require('ioredis');
 
-const client = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
+function getRedis() {
+    if (!process.env.REDIS_URL) return null; // Cache désactivé gracieusement
+    return new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });
+}
 
-client.on('error', (err) => console.error('Redis error:', err));
-client.connect();
+async function cacheGet(key) {
+    try { return await getRedis()?.get(key); } catch { return null; }
+}
 
-module.exports = client;
+async function cacheSet(key, value, ttl = 300) {
+    try { await getRedis()?.setex(key, ttl, value); } catch {}
+}
+
+async function cacheDel(pattern) {
+    try {
+        const r = getRedis();
+        const keys = await r?.keys(pattern);
+        if (keys?.length) await r.del(keys);
+    } catch {}
+}
 ```
 
 ```javascript
-// shopController.js — Cache avec TTL 5 minutes
-const redis = require('../redis');
-const CACHE_KEY = 'providers:all';
-const CACHE_TTL = 300; // 5 minutes
-
+// shopController.js — Cache 5 min, clé par category+city
 const getAllProviders = async (req, res) => {
-  try {
-    // Tentative de lecture en cache
-    const cached = await redis.get(CACHE_KEY);
-    if (cached) {
-      return res.json(JSON.parse(cached));
-    }
+  const { category_id, city } = req.query;
+  const cacheKey = `shop:providers:${category_id || ''}:${city || ''}`;
 
-    // Cache miss : requête MySQL
-    const providers = await prisma.$queryRaw`...`;
-    const result = safeJson(providers);
-
-    // Mise en cache pour 5 minutes
-    await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(result));
-
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  // Cache hit → réponse immédiate, recalcul distance si GPS fourni
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    let result = JSON.parse(cached);
+    // ... recalcul distance_km si lat/lng dans la requête ...
+    return res.type('json').send(JSON.stringify(result));
   }
+
+  // Cache miss → requête MySQL, mise en cache sans distance
+  const providers = await prisma.provider.findMany({ ... });
+  const toCache = result.map(p => ({ ...p, distance_km: null }));
+  await cacheSet(cacheKey, JSON.stringify(toCache), 300);
+
+  res.type('json').send(safe);
 };
 ```
 
 ```javascript
-// Invalidation du cache lors d'une mise à jour prestataire
+// setupShop — Invalidation du cache à chaque mise à jour prestataire
 const setupShop = async (req, res) => {
-  // ... logique de mise à jour ...
-  await redis.del('providers:all'); // Invalide le cache
-  res.json({ message: 'Profil mis à jour' });
+  // ... logique de mise à jour MySQL ...
+  await cacheDel('shop:providers:*'); // Invalide toutes les entrées du cache
+  res.status(200).json({ message: 'Configuration enregistrée avec succès !' });
 };
 ```
 
@@ -1032,13 +1031,13 @@ L'application est couverte par deux niveaux de tests :
 
 **Résultats :**
 ```
-Test Suites: 4 passed, 4 total
-Tests:       21 passed, 21 total
-Time:        2.46s
+Test Suites: 7 passed, 7 total
+Tests:       45 passed, 45 total
+Time:        3.49s
 ```
 
 > 📸 **CAPTURE D'ÉCRAN 34**
-> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` avec les 21 tests verts*
+> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` avec les 45 tests verts*
 
 #### Tests unitaires Frontend — Jest + Testing Library
 
@@ -1056,13 +1055,13 @@ Time:        2.46s
 
 **Résultats :**
 ```
-Test Suites: 3 passed, 3 total
-Tests:       17 passed, 17 total
-Time:        2.37s
+Test Suites: 4 passed, 4 total
+Tests:       36 passed, 36 total
+Time:        4.12s
 ```
 
 > 📸 **CAPTURE D'ÉCRAN 35**
-> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` frontend avec les 17 tests verts*
+> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` frontend avec les 36 tests verts*
 
 #### Tests manuels — Scénarios fonctionnels
 
@@ -1445,19 +1444,19 @@ BigInt.prototype.toJSON = function() { return Number(this); };
 
 Cette ligne surcharge la méthode `toJSON` du prototype `BigInt`, permettant à `JSON.stringify` de convertir automatiquement les `BigInt` en `Number`.
 
-**Apprentissage :** > **[À COMPLÉTER — ce que ça t'a appris sur les types JS, les prototypes...]**
+**Apprentissage :** Ce problème m'a appris l'importance de comprendre les types natifs de chaque couche de la stack. JavaScript, MySQL et JSON ont des systèmes de types différents, et les ORM ne font pas toujours les conversions automatiquement. La surcharge du prototype `BigInt.prototype.toJSON` est une solution élégante qui s'applique globalement au démarrage plutôt que de convertir manuellement chaque résultat de requête.
 
 ---
 
 ### Difficulté 2 : Gestion des conflits de créneaux
 
-**Problème :** > **[À COMPLÉTER — décris le problème de détection des overlaps de RDV]**
+**Problème :** Lors de l'implémentation de la réservation, il fallait détecter les chevauchements entre rendez-vous. Un simple contrôle d'égalité de date de début n'était pas suffisant : un RDV de 30 minutes à 14h00 et un autre à 14h20 se chevauchent, même si leurs dates de début sont différentes.
 
-**Cause :** > **[À COMPLÉTER]**
+**Cause :** La logique de détection de conflits temporels (interval overlap) n'est pas triviale. Les approches naïves — vérifier uniquement si la date de début existe déjà — laissent passer des dizaines de cas limites.
 
-**Solution :** > **[À COMPLÉTER — explique la logique de comparaison des intervalles de temps]**
+**Solution :** J'ai implémenté la détection par l'algorithme d'intersection d'intervalles : deux intervalles `[A_start, A_end]` et `[B_start, B_end]` se chevauchent si et seulement si `A_start < B_end ET B_start < A_end`. Traduit en SQL avec `$queryRaw` : `appointment_date < slotEnd AND DATE_ADD(appointment_date, INTERVAL duration MINUTE) > slotStart`.
 
-**Apprentissage :** > **[À COMPLÉTER]**
+**Apprentissage :** La modélisation du temps dans une application de réservation est plus complexe qu'elle n'y paraît. Il faut toujours raisonner en intervalles `[début, fin]` plutôt qu'en instants isolés, et couvrir les cas limites (chevauchement partiel, inclus, adjacent).
 
 ---
 
@@ -1480,31 +1479,39 @@ beforeEach(() => { jest.resetAllMocks(); }); // Vide aussi les queues de mock
 .send({ password: 'Password1' }) // 8 car + majuscule + chiffre
 ```
 
-**Apprentissage :** > **[À COMPLÉTER — ce que tu as appris sur Jest clearAllMocks vs resetAllMocks]**
+**Apprentissage :** `clearAllMocks()` vide les enregistrements d'appels mais conserve les implémentations de mock, notamment les queues `mockResolvedValueOnce`. Si un test ne consomme pas toutes ses valeurs mockées, elles "contaminent" le test suivant. `resetAllMocks()` repart d'un état vraiment vierge. La bonne pratique est d'utiliser `resetAllMocks()` dans `beforeEach` pour garantir l'isolement complet entre les tests.
 
 ---
 
 ### Difficulté 4 : Isolation des sessions dans la vue multi-iframes
 
-**Problème :** > **[À COMPLÉTER — comment les iframes partageaient le même localStorage, causant des conflits de tokens]**
+**Problème :** La vue MultiView affiche 3 sessions simultanées dans des iframes (client / pro / admin). Toutes les iframes d'un même domaine partagent le même `localStorage` du navigateur. Quand une iframe chargeait un token d'impersonation client, il écrasait le token admin de la session principale, causant une déconnexion immédiate.
 
-**Cause :** > **[À COMPLÉTER]**
+**Cause :** Le `localStorage` est partagé par origine (`protocole + domaine + port`). Toutes les iframes du même domaine accèdent exactement au même objet storage, sans isolation possible par les mécanismes standards.
 
-**Solution :** > **[À COMPLÉTER — explique Object.defineProperty pour isoler le localStorage par iframe]**
+**Solution :** Pour chaque iframe, j'ai redéfini `window.localStorage` via `Object.defineProperty` avec un objet storage en mémoire (`Map`) totalement isolé, puis intercepté `window.fetch` pour injecter automatiquement le bon token d'autorisation dans chaque requête sortante de l'iframe.
 
-**Apprentissage :** > **[À COMPLÉTER]**
+```javascript
+Object.defineProperty(iframeWindow, 'localStorage', {
+  value: createIsolatedStorage(token, user),
+  writable: false,
+});
+iframeWindow.fetch = createAuthenticatedFetch(token, iframeWindow.fetch);
+```
+
+**Apprentissage :** `Object.defineProperty` permet de remplacer des propriétés natives du DOM au niveau de chaque `window`, ce qui ouvre des possibilités de monkey-patching très précises. Le partage de `localStorage` entre iframes est un comportement rarement documenté mais fondamental pour comprendre l'isolation des sessions.
 
 ---
 
-### Difficulté 5 : > **[À COMPLÉTER — ta 5ème difficulté]**
+### Difficulté 5 : Géolocalisation refusée — fallback alternatif
 
-**Problème :** > **[À COMPLÉTER]**
+**Problème :** La popup de demande de géolocalisation n'apparaît qu'une seule fois par navigateur. Si l'utilisateur la refuse, `navigator.geolocation.getCurrentPosition()` échoue silencieusement et il n'existe aucun moyen programmatique de re-déclencher la popup. Les utilisateurs ayant refusé se retrouvaient avec une carte sans itinéraire et sans aucun moyen de l'activer par la suite.
 
-**Cause :** > **[À COMPLÉTER]**
+**Cause :** C'est un mécanisme de sécurité imposé par la spec W3C Geolocation API : une permission refusée est mémorisée définitivement par le navigateur jusqu'à ce que l'utilisateur la réinitialise manuellement dans ses paramètres. L'API ne fournit aucun hook pour détecter ce changement.
 
-**Solution :** > **[À COMPLÉTER]**
+**Solution :** Deux mécanismes alternatifs ont été ajoutés : (1) un panneau de saisie manuelle d'adresse sur la carte itinéraire, avec géocodage via l'API Nominatim, permettant de calculer l'itinéraire même sans GPS ; (2) un bouton de réessai qui tente un nouvel appel à `getCurrentPosition` (utile si l'utilisateur a entre-temps modifié ses permissions). Sur la page d'accueil, un bouton toggle "Ma position" permet d'activer et désactiver le tri par distance.
 
-**Apprentissage :** > **[À COMPLÉTER]**
+**Apprentissage :** Les APIs navigateur ont des contraintes de sécurité qu'on ne peut pas contourner programmatiquement. Il faut systématiquement prévoir un fallback utilisateur lorsqu'une permission peut être refusée, plutôt que de bloquer l'expérience entière sur une fonctionnalité optionnelle.
 
 ---
 
@@ -1512,27 +1519,19 @@ beforeEach(() => { jest.resetAllMocks(); }); // Vide aussi les queues de mock
 
 ### 7.1 Compétences acquises
 
-> **[À COMPLÉTER — 10 à 15 lignes personnelles et sincères]**
-> Qu'est-ce que ce projet t'a réellement appris ? Quelles compétences as-tu développées ou renforcées ?
+Ce projet m'a permis de construire pour la première fois une application full-stack complète, depuis la modélisation de la base de données jusqu'au déploiement en production. J'ai appris à concevoir une API REST structurée avec une séparation claire des responsabilités (routes, controllers, middlewares), et à sécuriser chaque couche de l'application : JWT pour l'authentification, RBAC pour le contrôle d'accès, bcrypt pour les mots de passe, rate limiting contre le brute-force.
 
-*Pistes :*
-- *Architecture full-stack (découpage front/back, API REST)*
-- *Gestion de l'authentification (JWT, OAuth)*
-- *Modélisation de base de données relationnelle*
-- *Déploiement en production (Railway, Vercel, CI/CD)*
-- *Tests unitaires et leur importance dans un projet*
-- *Gestion de projet agile avec Trello*
+L'implémentation du système de réservation avec détection de conflits m'a confronté à des problèmes de logique métier concrets qui ne se règlent pas avec un tutoriel. La mise en place du pipeline CI/CD avec GitHub Actions m'a donné une vision DevOps réelle : chaque commit est automatiquement testé avant déploiement, ce qui m'a évité plusieurs régressions.
+
+Les tests unitaires avec Jest m'ont appris à écrire du code testable et à isoler les dépendances via les mocks — une discipline que je n'avais pas avant ce projet. Enfin, l'intégration de Redis comme cache NoSQL m'a donné une première expérience concrète des architectures hybrides SQL/NoSQL, courantes en production.
 
 ### 7.2 Ce que je ferais différemment
 
-> **[À COMPLÉTER — 4 à 5 points concrets]**
-
-*Pistes :*
-- *Commencer les tests dès le début du projet (TDD)*
-- *Utiliser TypeScript pour un meilleur typage*
-- *Modéliser la BDD plus soigneusement avant de commencer le code*
-- *Mettre en place Docker dès le départ*
-- *Documenter l'API avec Swagger dès la création des routes*
+1. **Commencer les tests dès le début (TDD)** : j'ai écrit les tests après le code, ce qui a nécessité plusieurs refactorisations pour rendre le code testable. Partir des tests m'aurait forcé à mieux concevoir les interfaces.
+2. **Utiliser TypeScript dès le départ** : les erreurs de typage (BigInt, undefined, null) auraient été détectées à la compilation plutôt qu'à l'exécution en production.
+3. **Modéliser la BDD plus complètement en amont** : j'ai ajouté des colonnes en cours de projet (`is_certified`, `is_visible`, `admin_note`) qui auraient dû être prévues dès le MCD initial.
+4. **Utiliser des branches Git systématiquement** : j'ai principalement développé sur `develop` directement, ce qui rend l'historique moins lisible. Les branches `feature/` auraient mieux isolé chaque fonctionnalité — j'ai commencé à le faire en fin de projet (branche `feature/redis-cache`).
+5. **Documenter l'API avec Swagger** : créer la documentation des endpoints au fur et à mesure aurait été plus efficace que de la reconstituer en fin de projet.
 
 ### 7.3 Perspectives d'évolution
 
@@ -1576,4 +1575,4 @@ Fonctionnalités envisagées pour une V2 :
 ---
 
 *Document rédigé dans le cadre du Titre Professionnel Concepteur Développeur d'Applications*
-*RNCP37873 — Niveau 6 — Ecole IT — 2025*
+*RNCP37873 — Niveau 6 — Ecole IT — 2026*
