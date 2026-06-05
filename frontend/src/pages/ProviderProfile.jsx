@@ -51,11 +51,20 @@ function getOpenStatus(hours) {
 function ServiceGroupBlock({ group, onSelectService }) {
   const [expanded, setExpanded] = useState(false);
   const SHOW = 5;
+  const total   = group.services.length;
   const visible = expanded ? group.services : group.services.slice(0, SHOW);
-  const hidden  = group.services.length - SHOW;
+  const hidden  = total - SHOW;
+
   return (
     <div className="mb-6">
-      {group.name && <h3 className="font-bold text-slate-800 text-base mb-3">{group.name}</h3>}
+      {group.name && (
+        <h3 className="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
+          {group.name}
+          <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+            {total} prestation{total > 1 ? 's' : ''}
+          </span>
+        </h3>
+      )}
       <div className="rounded-2xl border border-slate-100 overflow-hidden">
         {visible.map(s => (
           <div key={s.id}
@@ -75,13 +84,32 @@ function ServiceGroupBlock({ group, onSelectService }) {
             </button>
           </div>
         ))}
+
+        {/* Rangée +X intégrée dans la carte */}
+        {!expanded && hidden > 0 && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 border-t border-slate-100 hover:bg-rose-50 transition-colors group"
+          >
+            <span className="w-6 h-6 rounded-full bg-slate-900 group-hover:bg-rose-500 text-white text-xs font-black flex items-center justify-center transition-colors">
+              +
+            </span>
+            <span className="text-sm font-semibold text-slate-700 group-hover:text-rose-500 transition-colors">
+              {hidden} prestation{hidden > 1 ? 's' : ''} supplémentaire{hidden > 1 ? 's' : ''}
+            </span>
+          </button>
+        )}
+
+        {/* Bouton Réduire */}
+        {expanded && total > SHOW && (
+          <button
+            onClick={() => setExpanded(false)}
+            className="w-full flex items-center justify-center gap-2 py-3 border-t border-slate-100 hover:bg-slate-50 transition-colors text-xs font-semibold text-slate-400 hover:text-slate-600"
+          >
+            ▲ Réduire
+          </button>
+        )}
       </div>
-      {!expanded && hidden > 0 && (
-        <button onClick={() => setExpanded(true)}
-          className="mt-2 text-sm font-semibold text-blue-600 hover:underline">
-          Voir les {hidden} autre{hidden > 1 ? 's' : ''} prestation{hidden > 1 ? 's' : ''}
-        </button>
-      )}
     </div>
   );
 }
