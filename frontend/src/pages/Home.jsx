@@ -311,7 +311,7 @@ export default function Home() {
         ) : (
 
           /* ── Layout 2 colonnes ── */
-          <div className="flex gap-6 items-start pb-2">
+          <div className="flex gap-6 items-stretch pb-2">
 
             {/* Colonne gauche : liste scrollable */}
             <div className="flex-1 min-w-0 pb-24">
