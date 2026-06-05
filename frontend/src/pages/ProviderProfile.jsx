@@ -185,36 +185,26 @@ export default function ProviderProfile() {
 
         {/* ── Galerie / Hero ───────────────────────────────────────── */}
         {hasGallery ? (
-          <div className="relative bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-            {/* Bouton retour */}
-            <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-slate-700 text-sm font-semibold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm hover:bg-white transition">
-              <ArrowLeft size={14} /> Retour
-            </button>
-
-            {/* Grille photos 1 grande + 2×2 */}
-            <div className="max-w-5xl mx-auto px-4 pt-12 pb-0">
-
-              {/* Infos boutique au-dessus */}
-              <div className="mb-3">
-                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                  {provider.name}
-                  {provider.is_certified && <BadgeCheck size={20} className="text-blue-500" title="Boutique certifiée" />}
-                </h1>
-                {provider.address && (
-                  <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
-                    <MapPin size={12} /> {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
-                  </p>
-                )}
+          <div className="bg-white">
+            {/* Barre retour — sous la navbar fixe (~68px) */}
+            <div style={{ paddingTop: 68 }}>
+              <div className="max-w-5xl mx-auto px-4 py-2">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 text-sm font-semibold transition">
+                  <ArrowLeft size={15} /> Retour
+                </button>
               </div>
+            </div>
 
-              {/* Grille */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, clamp(130px, 18vh, 190px))', gap: 6 }}>
+            {/* Grille photos : 1 grande gauche + 2×2 droite */}
+            <div className="max-w-5xl mx-auto px-4 pb-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, clamp(140px, 19vh, 200px))', gap: 6 }}>
                 {/* Grande photo gauche */}
                 <div
-                  style={{ gridRow: '1 / 3', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                  style={{ gridRow: '1 / 3', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
                   onClick={() => setLightboxIdx(0)}
                 >
-                  <img src={mainUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                  <img src={mainUrl} alt={provider.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
                     onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
                     onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                   />
@@ -227,18 +217,19 @@ export default function ProviderProfile() {
                   const showOverlay = i === 3 && hiddenCount > 0;
                   return (
                     <div key={i}
-                      onClick={() => setLightboxIdx(0)}
-                      style={{ borderRadius: 12, overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default', position: 'relative' }}
+                      onClick={() => p && setLightboxIdx(0)}
+                      style={{ borderRadius: 14, overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default', position: 'relative' }}
                     >
                       {p && (
                         <>
-                          <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block' }}
+                          <img src={p.photo_url} alt=""
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block' }}
                             onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
                             onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                           />
                           {showOverlay && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                              <span style={{ fontSize: 28, fontWeight: 900 }}>+{hiddenCount}</span>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                              <span style={{ fontSize: 30, fontWeight: 900 }}>+{hiddenCount}</span>
                             </div>
                           )}
                         </>
@@ -249,46 +240,27 @@ export default function ProviderProfile() {
               </div>
             </div>
 
-            {/* Lightbox — grille 2 colonnes */}
+            {/* Lightbox — grille 2 colonnes plein écran */}
             {lightboxIdx !== null && (
-              <div
-                style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, overflow: 'auto' }}
-                onClick={() => setLightboxIdx(null)}
-              >
-                {/* Header */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{provider.name} · {photos.length} photos</span>
-                  <button
-                    onClick={e => { e.stopPropagation(); setLightboxIdx(null); }}
-                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 50, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
-                    <X size={18} />
+              <div style={{ position: 'fixed', inset: 0, background: '#111', zIndex: 9999, overflow: 'auto' }}
+                onClick={() => setLightboxIdx(null)}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
+                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{provider.name} · {photos.length} photos</span>
+                  <button onClick={e => { e.stopPropagation(); setLightboxIdx(null); }}
+                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 50, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+                    <X size={17} />
                   </button>
                 </div>
-
-                {/* Grille 2 colonnes */}
-                <div
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '6px 6px 40px' }}
-                  onClick={e => e.stopPropagation()}
-                >
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: '4px 4px 40px' }}
+                  onClick={e => e.stopPropagation()}>
                   {photos.map(p => (
-                    <div key={p.id} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                    <div key={p.id} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '4/3' }}>
                       <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Ligne sous la grille */}
-            <div className="max-w-5xl mx-auto px-4 pt-4 pb-2">
-              {status && (
-                <span className={`inline-flex text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                  {status.open ? '● ' : '○ '}{status.label}
-                </span>
-              )}
-            </div>
-
-            {/* Ancien lightbox carousel — remplacé ci-dessus, bloc fictif pour fermer le ternaire proprement */}
           </div>
         ) : (
           /* Hero classique (pas de galerie) */
