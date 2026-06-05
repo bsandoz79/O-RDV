@@ -155,13 +155,14 @@ const REVIEW_SUB_CATS = [
 ];
 
 function ReviewForm({ appt, token, onSubmitted }) {
-  const [rating, setRating]       = useState(0);
   const [subRatings, setSubRatings] = useState({});
-  const [comment, setComment]     = useState('');
-  const [status, setStatus]       = useState('idle');
+  const [comment, setComment]       = useState('');
+  const [status, setStatus]         = useState('idle');
+
+  const allFilled = REVIEW_SUB_CATS.every(({ key }) => subRatings[key] > 0);
 
   const submit = async () => {
-    if (!rating) return;
+    if (!allFilled) return;
     setStatus('loading');
     try {
       const res = await fetch(`${API_BASE_URL}/reviews`, {
@@ -169,12 +170,11 @@ function ReviewForm({ appt, token, onSubmitted }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           appointment_id:  appt.id,
-          rating,
           comment,
-          rating_accueil:  subRatings.accueil  || null,
-          rating_proprete: subRatings.proprete || null,
-          rating_ambiance: subRatings.ambiance || null,
-          rating_qualite:  subRatings.qualite  || null,
+          rating_accueil:  subRatings.accueil,
+          rating_proprete: subRatings.proprete,
+          rating_ambiance: subRatings.ambiance,
+          rating_qualite:  subRatings.qualite,
         }),
       });
       if (res.ok) { setStatus('done'); onSubmitted?.(); }
@@ -189,33 +189,26 @@ function ReviewForm({ appt, token, onSubmitted }) {
   );
 
   return (
-    <div className="mt-3 p-4 bg-amber-50 border border-amber-100 rounded-xl space-y-3">
-      <p className="text-xs font-semibold text-slate-700">Comment s'est passé ce RDV ?</p>
+    <div className="mt-3 p-4 bg-amber-50 border border-amber-100 rounded-xl space-y-2.5">
+      <p className="text-xs font-semibold text-slate-700 mb-1">Comment s'est passé ce RDV ?</p>
 
-      {/* Note globale */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 w-36 flex-shrink-0">Note globale</span>
-        <StarPicker value={rating} onChange={setRating} />
-      </div>
-
-      {/* Sous-catégories */}
-      {rating > 0 && REVIEW_SUB_CATS.map(({ key, label }) => (
+      {REVIEW_SUB_CATS.map(({ key, label }) => (
         <div key={key} className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 w-36 flex-shrink-0">{label}</span>
+          <span className="text-xs text-slate-500 w-40 flex-shrink-0">{label}</span>
           <StarPicker value={subRatings[key] || 0} onChange={v => setSubRatings(p => ({ ...p, [key]: v }))} />
         </div>
       ))}
 
-      {status === 'error' && <p className="text-xs text-red-500">Une erreur est survenue, réessayez.</p>}
+      {status === 'error' && <p className="text-xs text-red-500 pt-1">Une erreur est survenue, réessayez.</p>}
 
-      {rating > 0 && (
+      {allFilled && (
         <>
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
             placeholder="Commentaire optionnel..."
             rows={2}
-            className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-amber-400 resize-none"
+            className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-amber-400 resize-none mt-1"
           />
           <button onClick={submit} disabled={status === 'loading'}
             className="flex items-center gap-1.5 text-xs font-bold bg-violet-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg transition">

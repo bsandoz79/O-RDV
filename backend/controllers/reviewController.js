@@ -1,12 +1,12 @@
 const prisma = require('../prisma/client');
 const safeJson = require('../utils/safeJson');
+const { cacheDel } = require('../redis');
 
 const createReview = async (req, res) => {
     const { appointment_id, rating, comment, rating_accueil, rating_proprete, rating_ambiance, rating_qualite } = req.body;
     const client_id = req.auth.userId;
 
-    if (!appointment_id || !rating) return res.status(400).json({ error: "appointment_id et rating sont obligatoires." });
-    if (rating < 1 || rating > 5) return res.status(400).json({ error: "La note doit être entre 1 et 5." });
+    if (!appointment_id) return res.status(400).json({ error: "appointment_id est obligatoire." });
 
     try {
         const appt = await prisma.appointment.findUnique({ where: { id: Number(appointment_id) } });
@@ -15,20 +15,35 @@ const createReview = async (req, res) => {
         if (appt.status !== 'completed') return res.status(400).json({ error: "Vous ne pouvez noter qu'un rendez-vous terminé." });
 
         const toInt = v => (v && Number(v) >= 1 && Number(v) <= 5) ? Number(v) : null;
+        const a = toInt(rating_accueil), p = toInt(rating_proprete), b = toInt(rating_ambiance), q = toInt(rating_qualite);
+
+        // Note globale = moyenne des sous-notes si toutes fournies, sinon note explicite, sinon erreur
+        const subVals = [a, p, b, q].filter(v => v !== null);
+        let globalRating;
+        if (subVals.length === 4) {
+            globalRating = Math.round(subVals.reduce((s, v) => s + v, 0) / 4 * 10) / 10;
+        } else if (rating && Number(rating) >= 1 && Number(rating) <= 5) {
+            globalRating = Number(rating);
+        } else {
+            return res.status(400).json({ error: "Notez les 4 catégories ou fournissez une note globale." });
+        }
 
         const review = await prisma.review.create({
             data: {
                 client_id,
                 provider_id: appt.provider_id,
                 appointment_id: Number(appointment_id),
-                rating: Number(rating),
-                rating_accueil:  toInt(rating_accueil),
-                rating_proprete: toInt(rating_proprete),
-                rating_ambiance: toInt(rating_ambiance),
-                rating_qualite:  toInt(rating_qualite),
+                rating: globalRating,
+                rating_accueil:  a,
+                rating_proprete: p,
+                rating_ambiance: b,
+                rating_qualite:  q,
                 comment: comment?.trim() || null,
             },
         });
+
+        // Invalide le cache providers (les notes moyennes ont changé)
+        try { await cacheDel('shop:providers:*'); } catch {}
 
         res.status(201).json(review);
     } catch (err) {
