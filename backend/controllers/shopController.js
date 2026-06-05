@@ -107,6 +107,7 @@ const getAllProviders = async (req, res) => {
             include: {
                 category: true,
                 businessHours: { where: { day_of_week: todayName } },
+                photos: { orderBy: [{ is_main: 'desc' }, { display_order: 'asc' }, { created_at: 'asc' }] },
             },
         });
 
@@ -140,6 +141,7 @@ const getAllProviders = async (req, res) => {
                 avg_rating: rev ? Number(rev.avg_rating) : null,
                 review_count: rev ? Number(rev.review_count) : 0,
                 is_certified: p.is_certified,
+                photos: (p.photos || []).map(ph => ({ id: ph.id, photo_url: ph.photo_url, is_main: ph.is_main })),
                 businessHours: undefined,
                 category: undefined,
             };
@@ -340,14 +342,19 @@ const addProviderPhoto = async (req, res) => {
         const count = await prisma.providerPhoto.count({ where: { provider_id: provider.id } });
         if (count >= 10) return res.status(400).json({ error: 'Maximum 10 photos atteint.' });
 
+        const isFirst = count === 0;
         const photo = await prisma.providerPhoto.create({
             data: {
                 provider_id: provider.id,
                 photo_url: req.file.path,
-                is_main: count === 0,
+                is_main: isFirst,
                 display_order: count,
             },
         });
+        if (isFirst) {
+            await prisma.provider.update({ where: { id: provider.id }, data: { image_url: req.file.path } });
+            await cacheDel('shop:providers:*');
+        }
         res.status(201).json(photo);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -391,6 +398,9 @@ const setMainPhoto = async (req, res) => {
 
         await prisma.providerPhoto.updateMany({ where: { provider_id: provider.id }, data: { is_main: false } });
         await prisma.providerPhoto.update({ where: { id: photo.id }, data: { is_main: true } });
+        // La photo principale devient l'image affichée sur les cartes prestataires
+        await prisma.provider.update({ where: { id: provider.id }, data: { image_url: photo.photo_url } });
+        await cacheDel('shop:providers:*');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

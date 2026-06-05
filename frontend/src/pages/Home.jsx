@@ -103,6 +103,7 @@ export default function Home() {
           address:       pro.address || null,
           zip_code:      pro.zip_code || null,
           city:          pro.city || null,
+          photos:        pro.photos || [],
         })));
         setLoading(false);
       })

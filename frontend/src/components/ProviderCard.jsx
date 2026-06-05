@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapPin, Heart, Star, CalendarDays } from "lucide-react";
+import React, { useState } from 'react';
+import { MapPin, Heart, Star, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { StarDisplay } from './StarRating';
 
 function toMinutes(str) {
@@ -40,21 +40,36 @@ function getNextAvailability(todayOpen, todayClose, todayIsClosed) {
     if (nowMin < openMin) return `Aujourd'hui à ${todayOpen}`;
   }
 
-  // Cherche le prochain jour ouvrable (lun-sam)
   const next = new Date(now);
   next.setDate(next.getDate() + 1);
   while (next.getDay() === 0) next.setDate(next.getDate() + 1);
-
   return `${FR_DAYS[next.getDay()]} ${next.getDate()} ${FR_MONTHS[next.getMonth()]} ${next.getFullYear()}`;
 }
 
 export default function ProviderCard({ provider, onClick, isFavorite = false, onFavoriteToggle }) {
-  const openBadge  = getOpenBadge(provider.todayOpen, provider.todayClose, provider.todayIsClosed);
-  const nouveau    = isNew(provider.createdAt);
-  const hasRating  = provider.avg_rating != null && provider.review_count > 0;
-  const nextAvail  = getNextAvailability(provider.todayOpen, provider.todayClose, provider.todayIsClosed);
+  const openBadge = getOpenBadge(provider.todayOpen, provider.todayClose, provider.todayIsClosed);
+  const nouveau   = isNew(provider.createdAt);
+  const hasRating = provider.avg_rating != null && provider.review_count > 0;
+  const nextAvail = getNextAvailability(provider.todayOpen, provider.todayClose, provider.todayIsClosed);
 
-  // Adresse : address + zip_code + city, sinon distance
+  // Photos pour le carousel : provider_photos si disponibles, sinon image principale
+  const photos = provider.photos?.length > 0
+    ? provider.photos.map(p => p.photo_url)
+    : [provider.image];
+
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const currentPhoto = photos[photoIdx] || provider.image;
+
+  const prev = (e) => {
+    e.stopPropagation();
+    setPhotoIdx(i => (i - 1 + photos.length) % photos.length);
+  };
+  const next = (e) => {
+    e.stopPropagation();
+    setPhotoIdx(i => (i + 1) % photos.length);
+  };
+
+  // Adresse
   const addressParts = [
     provider.address,
     [provider.zip_code, provider.city].filter(Boolean).join(' '),
@@ -66,15 +81,46 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
   return (
     <article className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
 
-      {/* ── Image gauche ─────────────────────────────────────────────── */}
+      {/* ── Image gauche avec carousel ───────────────────────────── */}
       <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden" style={{ width: '230px' }}>
         <img
-          src={provider.image}
+          src={currentPhoto}
           alt={provider.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10 pointer-events-none" />
+
+        {/* Flèches carousel */}
+        {photos.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition opacity-0 group-hover:opacity-100"
+              aria-label="Photo précédente"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition opacity-0 group-hover:opacity-100"
+              aria-label="Photo suivante"
+            >
+              <ChevronRight size={15} />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
+              {photos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={e => { e.stopPropagation(); setPhotoIdx(i); }}
+                  className={`rounded-full transition-all ${i === photoIdx ? 'w-3.5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Badge ouvert/fermé */}
         <span className={`absolute top-3 left-3 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${openBadge.style}`}>
@@ -93,28 +139,17 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           </button>
         )}
 
-        {/* Badge nouveau */}
         {nouveau && (
           <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-blue-500/90 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full">
             Nouveau
           </span>
         )}
-
-        {/* Dots carousel (décoratifs) */}
-        <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
-        </div>
       </div>
 
-      {/* ── Contenu droit ────────────────────────────────────────────── */}
+      {/* ── Contenu droit ────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 min-w-0 justify-between">
 
-        {/* Infos principales */}
         <div className="p-5 pb-4 space-y-2.5">
-
-          {/* Nom */}
           <h3
             onClick={onClick}
             className="text-lg font-bold text-slate-900 group-hover:text-rose-500 transition-colors cursor-pointer leading-tight"
@@ -122,7 +157,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             {provider.name}
           </h3>
 
-          {/* Adresse */}
           {addressStr && (
             <div className="flex items-start gap-1.5">
               <MapPin size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
@@ -130,7 +164,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             </div>
           )}
 
-          {/* Note */}
           {hasRating ? (
             <div className="flex items-center gap-2">
               <StarDisplay rating={provider.avg_rating} size={13} />
@@ -141,7 +174,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             <span className="text-xs text-slate-400 italic">Pas encore d'avis</span>
           )}
 
-          {/* Prochaine disponibilité */}
           <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-slate-100">
             <CalendarDays size={16} className="text-slate-400 flex-shrink-0" />
             <div>
@@ -151,7 +183,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-3.5 flex items-center justify-between border-t border-slate-100">
           <button
             onClick={onClick}
@@ -166,7 +197,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             Prendre RDV
           </button>
         </div>
-
       </div>
     </article>
   );
