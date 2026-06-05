@@ -183,100 +183,118 @@ export default function ProviderProfile() {
 
         {/* ── Galerie / Hero ───────────────────────────────────────── */}
         {hasGallery ? (
-          /* Galerie style Planity */
-          <div className="relative bg-slate-100" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+          <div className="relative bg-white" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
             {/* Bouton retour */}
             <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-slate-700 text-sm font-semibold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm hover:bg-white transition">
               <ArrowLeft size={14} /> Retour
             </button>
 
-            {/* Grille photos */}
-            <div className="max-w-5xl mx-auto px-4 pt-12 pb-0">
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: 'repeat(2, 200px)', gap: 6, borderRadius: 16, overflow: 'hidden' }}>
-                {/* Photo principale */}
+            {/* Grille photos 1 grande + 2×2 */}
+            <div className="max-w-5xl mx-auto px-4 pt-14 pb-0">
+
+              {/* Infos boutique au-dessus */}
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                    {provider.name}
+                    {provider.is_certified && <BadgeCheck size={20} className="text-blue-500" title="Boutique certifiée" />}
+                  </h1>
+                  {provider.address && (
+                    <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5 underline cursor-pointer">
+                      <MapPin size={12} /> {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+                  className="flex-shrink-0 px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
+                >
+                  Prendre RDV
+                </button>
+              </div>
+
+              {/* Grille */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, 220px)', gap: 6 }}>
+                {/* Grande photo gauche */}
                 <div
-                  style={{ gridRow: '1 / 3', cursor: 'pointer', overflow: 'hidden' }}
-                  onClick={() => setLightboxIdx(photos.indexOf(mainPhoto))}
+                  style={{ gridRow: '1 / 3', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                  onClick={() => setLightboxIdx(0)}
                 >
                   <img src={mainUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
                     onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
                     onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                   />
                 </div>
-                {/* Photos secondaires */}
+
+                {/* 4 cases secondaires */}
                 {[0,1,2,3].map(i => {
                   const p = otherPhotos[i];
-                  const isLast = i === 3 && photos.length > 5;
+                  const hiddenCount = photos.length - 5;
+                  const showOverlay = i === 3 && hiddenCount > 0;
                   return (
-                    <div key={i} style={{ position: 'relative', overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default' }}
-                      onClick={() => p && setLightboxIdx(photos.indexOf(p))}>
-                      {p ? (
+                    <div key={i}
+                      onClick={() => setLightboxIdx(0)}
+                      style={{ borderRadius: 12, overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default', position: 'relative' }}
+                    >
+                      {p && (
                         <>
-                          <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                          <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block' }}
                             onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
                             onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                           />
-                          {isLast && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: 6 }}>
-                              <Images size={22} />
-                              <span style={{ fontSize: 13, fontWeight: 700 }}>Voir les {photos.length} photos</span>
+                          {showOverlay && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                              <span style={{ fontSize: 28, fontWeight: 900 }}>+{hiddenCount}</span>
                             </div>
                           )}
                         </>
-                      ) : null}
+                      )}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Nom et infos sous la grille */}
-              <div className="pt-5 pb-4 flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-black text-slate-900 flex items-center gap-2">
-                    {provider.name}
-                    {provider.is_certified && <BadgeCheck size={22} className="text-blue-500" title="Boutique certifiée" />}
-                  </h1>
-                  {status && (
-                    <span className={`mt-1 inline-flex text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {status.open ? '● ' : '○ '}{status.label}
-                    </span>
-                  )}
-                </div>
-              </div>
             </div>
 
-            {/* Lightbox */}
+            {/* Lightbox — grille 2 colonnes */}
             {lightboxIdx !== null && (
               <div
-                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, overflow: 'auto' }}
                 onClick={() => setLightboxIdx(null)}
               >
-                <button style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
-                  <X size={20} />
-                </button>
-                {lightboxIdx > 0 && (
+                {/* Header */}
+                <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{provider.name} · {photos.length} photos</span>
                   <button
-                    style={{ position: 'absolute', left: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', fontSize: 20 }}
-                    onClick={e => { e.stopPropagation(); setLightboxIdx(i => Math.max(0, i - 1)); }}
-                  >‹</button>
-                )}
-                <img
-                  src={photos[lightboxIdx]?.photo_url}
-                  alt=""
-                  style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 8 }}
+                    onClick={e => { e.stopPropagation(); setLightboxIdx(null); }}
+                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 50, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Grille 2 colonnes */}
+                <div
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '6px 6px 40px' }}
                   onClick={e => e.stopPropagation()}
-                />
-                {lightboxIdx < photos.length - 1 && (
-                  <button
-                    style={{ position: 'absolute', right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', fontSize: 20 }}
-                    onClick={e => { e.stopPropagation(); setLightboxIdx(i => Math.min(photos.length - 1, i + 1)); }}
-                  >›</button>
-                )}
-                <div style={{ position: 'absolute', bottom: 16, color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
-                  {lightboxIdx + 1} / {photos.length}
+                >
+                  {photos.map(p => (
+                    <div key={p.id} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '4/3' }}>
+                      <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* Ligne sous la grille */}
+            <div className="max-w-5xl mx-auto px-4 pt-4 pb-2">
+              {status && (
+                <span className={`inline-flex text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                  {status.open ? '● ' : '○ '}{status.label}
+                </span>
+              )}
+            </div>
+
+            {/* Ancien lightbox carousel — remplacé ci-dessus, bloc fictif pour fermer le ternaire proprement */}
           </div>
         ) : (
           /* Hero classique (pas de galerie) */
