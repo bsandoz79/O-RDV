@@ -186,12 +186,38 @@ export default function ProviderProfile() {
         {/* ── Galerie / Hero ───────────────────────────────────────── */}
         {hasGallery ? (
           <div className="bg-white">
-            {/* Barre retour — sous la navbar fixe (~68px) */}
-            <div style={{ paddingTop: 68 }}>
-              <div className="max-w-5xl mx-auto px-4 py-2">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 text-sm font-semibold transition">
-                  <ArrowLeft size={15} /> Retour
+            {/* Retour + nom + adresse + Prendre RDV — sous la navbar fixe */}
+            <div style={{ paddingTop: 70 }}>
+              <div className="max-w-5xl mx-auto px-4 py-3">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-slate-500 hover:text-slate-800 text-xs font-semibold mb-3 transition">
+                  <ArrowLeft size={13} /> Retour
                 </button>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 leading-tight">
+                      {provider.name}
+                      {provider.is_certified && <BadgeCheck size={18} className="text-blue-500 flex-shrink-0" title="Boutique certifiée" />}
+                    </h1>
+                    {(provider.address || provider.city) && (
+                      <p className="text-sm text-slate-500 flex items-center gap-1 mt-1 hover:text-slate-700 cursor-default">
+                        <MapPin size={12} className="flex-shrink-0" />
+                        {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {provider.phone && (
+                      <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+                        <Phone size={12} className="flex-shrink-0" />
+                        <a href={`tel:${provider.phone}`} className="hover:text-rose-500 transition">{provider.phone}</a>
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+                    className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
+                  >
+                    Prendre RDV
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -242,6 +268,16 @@ export default function ProviderProfile() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Titre sous la grille */}
+            <div className="max-w-5xl mx-auto px-4 pt-5 pb-1">
+              <h2 className="text-xl font-black text-slate-900">
+                Réserver en ligne pour un RDV chez {provider.name}
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                24h/24 · Gratuitement · Paiement sur place · Confirmation immédiate
+              </p>
             </div>
 
             {/* Lightbox — grille 2 colonnes plein écran */}
@@ -355,34 +391,41 @@ export default function ProviderProfile() {
         )}
 
         {/* ── Contenu ──────────────────────────────────────────────── */}
-        <div className="max-w-4xl mx-auto px-4 pb-32 -mt-6 relative z-10">
+        <div className={`max-w-4xl mx-auto px-4 pb-32 relative z-10 ${hasGallery ? 'mt-6' : '-mt-6'}`}>
 
-          {/* Card infos + CTA */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="space-y-2 flex-1">
-                {provider.description && (
-                  <p className="text-slate-500 text-sm leading-relaxed">{provider.description}</p>
-                )}
-                {provider.address && (
-                  <div className="flex items-start gap-2 text-sm text-slate-600">
-                    <MapPin size={14} className="text-rose-400 mt-0.5 flex-shrink-0" />
-                    <span>{provider.address}{provider.zip_code && `, ${provider.zip_code}`}{provider.city && ` ${provider.city}`}</span>
-                  </div>
-                )}
-                {provider.phone && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Phone size={14} className="text-rose-400 flex-shrink-0" />
-                    <a href={`tel:${provider.phone}`} className="hover:text-rose-500 transition">{provider.phone}</a>
-                  </div>
-                )}
+          {/* Card infos + CTA — uniquement en mode hero (pas en mode galerie, déjà affiché au-dessus) */}
+          {!hasGallery && (
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  {provider.description && (
+                    <p className="text-slate-500 text-sm leading-relaxed">{provider.description}</p>
+                  )}
+                  {provider.address && (
+                    <div className="flex items-start gap-2 text-sm text-slate-600">
+                      <MapPin size={14} className="text-rose-400 mt-0.5 flex-shrink-0" />
+                      <span>{provider.address}{provider.zip_code && `, ${provider.zip_code}`}{provider.city && ` ${provider.city}`}</span>
+                    </div>
+                  )}
+                  {provider.phone && (
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Phone size={14} className="text-rose-400 flex-shrink-0" />
+                      <a href={`tel:${provider.phone}`} className="hover:text-rose-500 transition">{provider.phone}</a>
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+                  className="flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-rose-100 transition text-sm whitespace-nowrap">
+                  <CalendarPlus size={16} /> Prendre rendez-vous
+                </button>
               </div>
-              <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                className="flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-rose-100 transition text-sm whitespace-nowrap">
-                <CalendarPlus size={16} /> Prendre rendez-vous
-              </button>
             </div>
-          </div>
+          )}
+
+          {/* Description en mode galerie */}
+          {hasGallery && provider.description && (
+            <p className="text-slate-500 text-sm leading-relaxed mb-6 px-1">{provider.description}</p>
+          )}
 
           {/* Layout 2 colonnes : Prestations | Horaires */}
           <div className="flex flex-col lg:flex-row gap-6 items-start">
