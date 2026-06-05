@@ -2,7 +2,7 @@ const prisma = require('../prisma/client');
 const safeJson = require('../utils/safeJson');
 
 const createReview = async (req, res) => {
-    const { appointment_id, rating, comment } = req.body;
+    const { appointment_id, rating, comment, rating_accueil, rating_proprete, rating_ambiance, rating_qualite } = req.body;
     const client_id = req.auth.userId;
 
     if (!appointment_id || !rating) return res.status(400).json({ error: "appointment_id et rating sont obligatoires." });
@@ -14,12 +14,18 @@ const createReview = async (req, res) => {
         if (appt.client_id !== client_id) return res.status(403).json({ error: "Accès refusé." });
         if (appt.status !== 'completed') return res.status(400).json({ error: "Vous ne pouvez noter qu'un rendez-vous terminé." });
 
+        const toInt = v => (v && Number(v) >= 1 && Number(v) <= 5) ? Number(v) : null;
+
         const review = await prisma.review.create({
             data: {
                 client_id,
                 provider_id: appt.provider_id,
                 appointment_id: Number(appointment_id),
                 rating: Number(rating),
+                rating_accueil:  toInt(rating_accueil),
+                rating_proprete: toInt(rating_proprete),
+                rating_ambiance: toInt(rating_ambiance),
+                rating_qualite:  toInt(rating_qualite),
                 comment: comment?.trim() || null,
             },
         });
@@ -46,19 +52,37 @@ const getProviderReviews = async (req, res) => {
         });
 
         const [avgResult] = await prisma.$queryRaw`
-            SELECT ROUND(AVG(rating), 1) AS avg FROM reviews WHERE provider_id = ${providerId}`;
+            SELECT
+                ROUND(AVG(rating), 1)           AS avg,
+                ROUND(AVG(rating_accueil), 1)   AS avg_accueil,
+                ROUND(AVG(rating_proprete), 1)  AS avg_proprete,
+                ROUND(AVG(rating_ambiance), 1)  AS avg_ambiance,
+                ROUND(AVG(rating_qualite), 1)   AS avg_qualite
+            FROM reviews WHERE provider_id = ${providerId}`;
 
         const formatted = reviews.map(r => ({
-            id: r.id,
-            rating: r.rating,
-            comment: r.comment,
-            created_at: r.created_at,
-            client: r.client,
-            like_count: r.likes.length,
-            liked_by_me: currentUserId ? r.likes.some(l => l.user_id === currentUserId) : false,
+            id:              r.id,
+            rating:          r.rating,
+            rating_accueil:  r.rating_accueil,
+            rating_proprete: r.rating_proprete,
+            rating_ambiance: r.rating_ambiance,
+            rating_qualite:  r.rating_qualite,
+            comment:         r.comment,
+            created_at:      r.created_at,
+            client:          r.client,
+            like_count:      r.likes.length,
+            liked_by_me:     currentUserId ? r.likes.some(l => l.user_id === currentUserId) : false,
         }));
 
-        safeJson(res, { reviews: formatted, average: avgResult?.avg ? Number(avgResult.avg) : null, count: reviews.length });
+        safeJson(res, {
+            reviews,
+            average:      avgResult?.avg          ? Number(avgResult.avg)          : null,
+            avg_accueil:  avgResult?.avg_accueil  ? Number(avgResult.avg_accueil)  : null,
+            avg_proprete: avgResult?.avg_proprete ? Number(avgResult.avg_proprete) : null,
+            avg_ambiance: avgResult?.avg_ambiance ? Number(avgResult.avg_ambiance) : null,
+            avg_qualite:  avgResult?.avg_qualite  ? Number(avgResult.avg_qualite)  : null,
+            count:        reviews.length,
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

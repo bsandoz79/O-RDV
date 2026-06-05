@@ -130,9 +130,13 @@ model Review {
   client_id      Int
   provider_id    Int
   appointment_id Int          @unique
-  rating         Int
-  comment        String?      @db.Text
-  created_at     DateTime     @default(now())
+  rating           Int
+  rating_accueil   Int?
+  rating_proprete  Int?
+  rating_ambiance  Int?
+  rating_qualite   Int?
+  comment          String?      @db.Text
+  created_at       DateTime     @default(now())
   client         User         @relation("ClientReviews", fields: [client_id], references: [id], onDelete: Cascade)
   provider       Provider     @relation(fields: [provider_id], references: [id], onDelete: Cascade)
   appointment    Appointment  @relation(fields: [appointment_id], references: [id], onDelete: Cascade)

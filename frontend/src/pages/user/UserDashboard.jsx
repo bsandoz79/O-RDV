@@ -147,10 +147,18 @@ function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
 
 // ─── Formulaire d'avis ──────────────────────────────────────────────────────
 
+const REVIEW_SUB_CATS = [
+  { key: 'accueil',  label: 'Accueil' },
+  { key: 'proprete', label: 'Propreté' },
+  { key: 'ambiance', label: 'Cadre & Ambiance' },
+  { key: 'qualite',  label: 'Qualité de la prestation' },
+];
+
 function ReviewForm({ appt, token, onSubmitted }) {
-  const [rating, setRating]   = useState(0);
-  const [comment, setComment] = useState('');
-  const [status, setStatus]   = useState('idle'); // 'idle' | 'loading' | 'done' | 'error'
+  const [rating, setRating]       = useState(0);
+  const [subRatings, setSubRatings] = useState({});
+  const [comment, setComment]     = useState('');
+  const [status, setStatus]       = useState('idle');
 
   const submit = async () => {
     if (!rating) return;
@@ -159,13 +167,19 @@ function ReviewForm({ appt, token, onSubmitted }) {
       const res = await fetch(`${API_BASE_URL}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ appointment_id: appt.id, rating, comment }),
+        body: JSON.stringify({
+          appointment_id:  appt.id,
+          rating,
+          comment,
+          rating_accueil:  subRatings.accueil  || null,
+          rating_proprete: subRatings.proprete || null,
+          rating_ambiance: subRatings.ambiance || null,
+          rating_qualite:  subRatings.qualite  || null,
+        }),
       });
       if (res.ok) { setStatus('done'); onSubmitted?.(); }
       else setStatus('error');
-    } catch {
-      setStatus('error');
-    }
+    } catch { setStatus('error'); }
   };
 
   if (status === 'done') return (
@@ -175,10 +189,25 @@ function ReviewForm({ appt, token, onSubmitted }) {
   );
 
   return (
-    <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-xl">
-      <p className="text-xs font-semibold text-slate-700 mb-2">Comment s'est passé ce RDV ?</p>
-      <StarPicker value={rating} onChange={setRating} />
-      {status === 'error' && <p className="text-xs text-red-500 mt-1">Une erreur est survenue, réessayez.</p>}
+    <div className="mt-3 p-4 bg-amber-50 border border-amber-100 rounded-xl space-y-3">
+      <p className="text-xs font-semibold text-slate-700">Comment s'est passé ce RDV ?</p>
+
+      {/* Note globale */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-slate-500 w-36 flex-shrink-0">Note globale</span>
+        <StarPicker value={rating} onChange={setRating} />
+      </div>
+
+      {/* Sous-catégories */}
+      {rating > 0 && REVIEW_SUB_CATS.map(({ key, label }) => (
+        <div key={key} className="flex items-center gap-2">
+          <span className="text-xs text-slate-500 w-36 flex-shrink-0">{label}</span>
+          <StarPicker value={subRatings[key] || 0} onChange={v => setSubRatings(p => ({ ...p, [key]: v }))} />
+        </div>
+      ))}
+
+      {status === 'error' && <p className="text-xs text-red-500">Une erreur est survenue, réessayez.</p>}
+
       {rating > 0 && (
         <>
           <textarea
@@ -186,10 +215,10 @@ function ReviewForm({ appt, token, onSubmitted }) {
             onChange={e => setComment(e.target.value)}
             placeholder="Commentaire optionnel..."
             rows={2}
-            className="mt-2 w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-amber-400 resize-none"
+            className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-amber-400 resize-none"
           />
           <button onClick={submit} disabled={status === 'loading'}
-            className="mt-2 flex items-center gap-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg transition">
+            className="flex items-center gap-1.5 text-xs font-bold bg-violet-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg transition">
             {status === 'loading' ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />}
             Publier mon avis
           </button>

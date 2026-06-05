@@ -128,6 +128,10 @@ const ALTER_STMTS = [
     `ALTER TABLE providers ADD COLUMN admin_note TEXT DEFAULT NULL`,
     `ALTER TABLE users ADD COLUMN is_banned TINYINT(1) DEFAULT 0`,
     `ALTER TABLE users ADD COLUMN ban_reason VARCHAR(255) DEFAULT NULL`,
+    `ALTER TABLE reviews ADD COLUMN rating_accueil TINYINT DEFAULT NULL`,
+    `ALTER TABLE reviews ADD COLUMN rating_proprete TINYINT DEFAULT NULL`,
+    `ALTER TABLE reviews ADD COLUMN rating_ambiance TINYINT DEFAULT NULL`,
+    `ALTER TABLE reviews ADD COLUMN rating_qualite TINYINT DEFAULT NULL`,
 ];
 
 async function migrate() {

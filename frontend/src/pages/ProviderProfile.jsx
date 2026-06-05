@@ -48,6 +48,101 @@ function getOpenStatus(hours) {
   return { open: false, label: 'Fermé' };
 }
 
+const SUB_CATS = [
+  { key: 'avg_accueil',  label: 'Accueil' },
+  { key: 'avg_proprete', label: 'Propreté' },
+  { key: 'avg_ambiance', label: 'Cadre & Ambiance' },
+  { key: 'avg_qualite',  label: 'Qualité de la prestation' },
+];
+
+function ReviewSidebar({ reviewData }) {
+  const [tab, setTab] = useState('note');
+  const hasSubRatings = SUB_CATS.some(s => reviewData[s.key] != null);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+      {/* Tabs */}
+      <div className="flex border-b border-slate-100">
+        {['note', 'avis'].map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`flex-1 py-3 text-sm font-semibold border-b-2 transition
+              ${tab === t ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+            {t === 'note' ? 'Note globale' : `Avis${reviewData.count > 0 ? ` (${reviewData.count})` : ''}`}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'note' ? (
+        <div className="p-5">
+          {reviewData.count === 0 ? (
+            <p className="text-sm text-slate-400 italic text-center py-4">Aucun avis pour le moment.</p>
+          ) : (
+            <>
+              <div className="flex items-start gap-4 mb-4">
+                {/* Carré note globale */}
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#0f172a' }}>
+                  <span className="text-white text-2xl font-black leading-none">
+                    {reviewData.average?.toFixed(1)}
+                  </span>
+                </div>
+                {/* Sous-catégories */}
+                <div className="flex-1 space-y-1.5">
+                  {SUB_CATS.map(({ key, label }) => {
+                    const val = reviewData[key] ?? reviewData.average;
+                    return (
+                      <div key={key} className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">{label}</span>
+                        <span className="font-semibold text-slate-800 flex items-center gap-1">
+                          {val != null ? Number(val).toFixed(1) : '—'}
+                          <span className="text-amber-400 text-sm">★</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">
+                {reviewData.count} client{reviewData.count > 1 ? 's' : ''} ont donné leur avis
+              </p>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100" style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {reviewData.reviews.length === 0 ? (
+            <p className="text-sm text-slate-400 italic text-center p-5">Aucun avis publié.</p>
+          ) : reviewData.reviews.map(r => (
+            <div key={r.id} className="p-4">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2">
+                  {r.client?.profile_picture ? (
+                    <img src={r.client.profile_picture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-400 flex-shrink-0">
+                      {(r.client?.first_name?.[0] || '?').toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold text-slate-800">
+                    {[r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Client'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <StarDisplay rating={r.rating} size={11} />
+                  <span className="text-xs text-slate-400">
+                    {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+              {r.comment && <p className="text-sm text-slate-600 leading-relaxed mt-1">{r.comment}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ServiceGroupBlock({ group, onSelectService }) {
   const [expanded, setExpanded] = useState(false);
   const SHOW = 5;
@@ -528,9 +623,14 @@ export default function ProviderProfile() {
               </div>
             </div>
 
-            {/* ── Horaires ───────────────────────────────── */}
+            {/* ── Colonne droite : Notes/Avis + Horaires ── */}
             <div className="w-full lg:w-72 flex-shrink-0">
-              <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-20">
+              {/* Note globale / Avis */}
+              <div className="sticky top-20">
+              <ReviewSidebar reviewData={reviewData} />
+
+              {/* Horaires */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <Clock size={18} className="text-rose-400" /> Horaires
                 </h2>
@@ -563,13 +663,14 @@ export default function ProviderProfile() {
 
                 {/* CTA secondaire */}
                 <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                  className="mt-5 w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md shadow-rose-100">
+                  className="mt-5 w-full bg-violet-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
                   <CheckCircle2 size={15} /> Réserver maintenant
                 </button>
               </div>
-            </div>
+              </div>{/* /sticky */}
+            </div>{/* /col droite */}
 
-          </div>
+          </div>{/* /flex 2col */}
 
           {/* ── Carte + itinéraire (pleine largeur) ─── */}
           {provider.latitude && provider.longitude && (
@@ -584,73 +685,6 @@ export default function ProviderProfile() {
             </div>
           )}
 
-          {/* ── Avis clients ───────────────────────────── */}
-          {reviewData.count > 0 && (
-            <div className="mt-6 bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <MessageSquare size={18} className="text-rose-400" /> Avis clients
-                </h2>
-                {reviewData.average && (
-                  <div className="flex items-center gap-2">
-                    <StarDisplay rating={reviewData.average} size={16} showNumber />
-                    <span className="text-xs text-slate-400">{reviewData.count} avis</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-4">
-                {reviewData.reviews.map(r => {
-                  const token = localStorage.getItem('token');
-                  const handleLike = async () => {
-                    if (!token) return;
-                    try {
-                      const res = await fetch(`${API_BASE_URL}/reviews/${r.id}/like`, {
-                        method: 'POST',
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
-                      const data = await res.json();
-                      setReviewData(prev => ({
-                        ...prev,
-                        reviews: prev.reviews.map(rev => rev.id === r.id
-                          ? { ...rev, liked_by_me: data.liked, like_count: data.liked ? rev.like_count + 1 : rev.like_count - 1 }
-                          : rev
-                        ),
-                      }));
-                    } catch {}
-                  };
-                  return (
-                  <div key={r.id} className="flex gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                    {r.client.profile_picture ? (
-                      <img src={r.client.profile_picture} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-slate-400">
-                        {(r.client.first_name?.[0] || '?').toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-sm font-semibold text-slate-800">
-                          {[r.client.first_name, r.client.last_name].filter(Boolean).join(' ') || 'Client'}
-                        </span>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <StarDisplay rating={r.rating} size={12} />
-                          <span className="text-xs text-slate-400">
-                            {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                        </div>
-                      </div>
-                      {r.comment && <p className="text-sm text-slate-600 leading-relaxed mb-2">{r.comment}</p>}
-                      <button onClick={handleLike}
-                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition ${r.liked_by_me ? 'bg-rose-50 border-rose-200 text-rose-500 font-semibold' : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'}`}>
-                        <ThumbsUp size={11} /> {r.like_count > 0 ? r.like_count : ''} Utile
-                      </button>
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
