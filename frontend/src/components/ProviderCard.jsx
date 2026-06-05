@@ -196,7 +196,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           </button>
           <button
             onClick={e => { e.stopPropagation(); onClick && onClick(); }}
-            className="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-rose-500 transition-colors duration-200"
+            className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-rose-500 transition-colors duration-200"
           >
             Prendre RDV
           </button>

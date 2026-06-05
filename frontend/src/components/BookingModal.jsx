@@ -280,7 +280,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               </p>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition"
+                className="w-full bg-violet-600 hover:bg-rose-500 text-white font-semibold py-3 rounded-xl transition"
               >
                 Se connecter maintenant
               </button>
@@ -545,7 +545,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               <button
                 onClick={handleConfirm}
                 disabled={booking}
-                className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+                className="w-full bg-violet-600 hover:bg-rose-500 disabled:bg-violet-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
               >
                 {booking ? <Loader2 size={16} className="animate-spin" /> : null}
                 {booking ? 'Confirmation...' : 'Confirmer le rendez-vous'}

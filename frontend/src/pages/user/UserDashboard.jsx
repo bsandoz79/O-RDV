@@ -721,7 +721,7 @@ export default function UserDashboard() {
               </div>
             </div>
             <button onClick={handlePasswordSave} disabled={savingPw}
-              className="flex items-center gap-2 bg-slate-900 hover:bg-rose-600 disabled:bg-slate-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
+              className="flex items-center gap-2 bg-violet-600 hover:bg-rose-500 disabled:bg-slate-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
               {savingPw ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />} Mettre à jour
             </button>
           </div>

@@ -230,7 +230,7 @@ export default function Home() {
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setSortBy(key)}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all
-                  ${sortBy === key ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'}`}>
+                  ${sortBy === key ? 'bg-violet-600 border-violet-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-violet-400'}`}>
                 {label}
               </button>
             ))}

@@ -87,7 +87,7 @@ function ServiceGroupBlock({ group, onSelectService }) {
               )}
             </div>
             <span className="text-sm font-bold text-slate-700 flex-shrink-0">{formatPrice(s.price)}</span>
-            <button className="flex-shrink-0 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-rose-500 transition-colors">
+            <button className="flex-shrink-0 px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-rose-500 transition-colors">
               Choisir
             </button>
           </div>
@@ -99,7 +99,7 @@ function ServiceGroupBlock({ group, onSelectService }) {
             onClick={() => setExpanded(true)}
             className="w-full flex items-center justify-center gap-2 py-3.5 border-t border-slate-100 hover:bg-rose-50 transition-colors group"
           >
-            <span className="w-6 h-6 rounded-full bg-slate-900 group-hover:bg-rose-500 text-white text-xs font-black flex items-center justify-center transition-colors">
+            <span className="w-6 h-6 rounded-full bg-violet-600 group-hover:bg-rose-500 text-white text-xs font-black flex items-center justify-center transition-colors">
               +
             </span>
             <span className="text-sm font-semibold text-slate-700 group-hover:text-rose-500 transition-colors">
@@ -249,7 +249,7 @@ export default function ProviderProfile() {
                   </div>
                   <button
                     onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                    className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
                   >
                     Prendre RDV
                   </button>
