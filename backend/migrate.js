@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS services (
     label VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     duration INT NOT NULL DEFAULT 30,
+    image_url VARCHAR(255) DEFAULT NULL,
+    group_name VARCHAR(100) DEFAULT NULL,
     FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE
 );
 
@@ -114,10 +116,28 @@ CREATE TABLE IF NOT EXISTS provider_photos (
 );
 `;
 
+// Colonnes ajoutées après la création initiale (ALTER ignoré si déjà existant)
+const ALTER_STMTS = [
+    `ALTER TABLE services ADD COLUMN image_url VARCHAR(255) DEFAULT NULL`,
+    `ALTER TABLE services ADD COLUMN group_name VARCHAR(100) DEFAULT NULL`,
+    `ALTER TABLE providers ADD COLUMN latitude FLOAT DEFAULT NULL`,
+    `ALTER TABLE providers ADD COLUMN longitude FLOAT DEFAULT NULL`,
+    `ALTER TABLE providers ADD COLUMN is_certified TINYINT(1) DEFAULT 0`,
+    `ALTER TABLE providers ADD COLUMN is_visible TINYINT(1) DEFAULT 1`,
+    `ALTER TABLE providers ADD COLUMN admin_note TEXT DEFAULT NULL`,
+    `ALTER TABLE users ADD COLUMN is_banned TINYINT(1) DEFAULT 0`,
+    `ALTER TABLE users ADD COLUMN ban_reason VARCHAR(255) DEFAULT NULL`,
+];
+
 async function migrate() {
     const stmts = SQL.split(';').map(s => s.trim()).filter(s => s.length > 0);
     for (const stmt of stmts) {
         await db.query(stmt);
+    }
+    for (const stmt of ALTER_STMTS) {
+        try { await db.query(stmt); } catch (e) {
+            if (!e.message?.includes('Duplicate column name')) throw e;
+        }
     }
     console.log('✅ Base de données initialisée automatiquement.');
 }

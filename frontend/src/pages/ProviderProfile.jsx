@@ -48,6 +48,44 @@ function getOpenStatus(hours) {
   return { open: false, label: 'Fermé' };
 }
 
+function ServiceGroupBlock({ group, onSelectService }) {
+  const [expanded, setExpanded] = useState(false);
+  const SHOW = 5;
+  const visible = expanded ? group.services : group.services.slice(0, SHOW);
+  const hidden  = group.services.length - SHOW;
+  return (
+    <div className="mb-6">
+      {group.name && <h3 className="font-bold text-slate-800 text-base mb-3">{group.name}</h3>}
+      <div className="rounded-2xl border border-slate-100 overflow-hidden">
+        {visible.map(s => (
+          <div key={s.id}
+            onClick={() => onSelectService(s)}
+            className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 cursor-pointer transition border-b border-slate-100 last:border-b-0">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-slate-800 text-sm">{s.label}</p>
+              {s.duration && (
+                <span className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                  <Clock size={10} /> {formatDuration(s.duration)}
+                </span>
+              )}
+            </div>
+            <span className="text-sm font-bold text-slate-700 flex-shrink-0">{formatPrice(s.price)}</span>
+            <button className="flex-shrink-0 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-rose-500 transition-colors">
+              Choisir
+            </button>
+          </div>
+        ))}
+      </div>
+      {!expanded && hidden > 0 && (
+        <button onClick={() => setExpanded(true)}
+          className="mt-2 text-sm font-semibold text-blue-600 hover:underline">
+          Voir les {hidden} autre{hidden > 1 ? 's' : ''} prestation{hidden > 1 ? 's' : ''}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ProviderProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -361,45 +399,32 @@ export default function ProviderProfile() {
           {/* Layout 2 colonnes : Prestations | Horaires */}
           <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-            {/* ── Prestations ────────────────────────────── */}
+            {/* ── Prestations style Planity ───────────────── */}
             <div className="flex-1 min-w-0">
               <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <Scissors size={18} className="text-rose-400" /> Nos prestations
+                <h2 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <Scissors size={18} className="text-rose-400" /> Choix de la prestation
                 </h2>
-                {provider.services?.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {provider.services.map(s => (
-                      <div key={s.id}
-                        onClick={() => { setPreselectedService(s); setModalOpen(true); }}
-                        className="group flex gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-300 hover:shadow-md hover:shadow-rose-50 transition cursor-pointer bg-white hover:bg-rose-50/20">
-                        {s.image_url ? (
-                          <img src={s.image_url} alt={s.label} className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-slate-100 group-hover:scale-105 transition-transform" />
-                        ) : (
-                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-rose-50 to-slate-100 flex items-center justify-center flex-shrink-0">
-                            <Scissors size={24} className="text-rose-300" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                          <div>
-                            <p className="font-semibold text-slate-800 text-sm leading-tight">{s.label}</p>
-                            {s.duration && (
-                              <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
-                                <Clock size={10} /> {formatDuration(s.duration)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-base font-black text-rose-500">{formatPrice(s.price)}</span>
-                            <span className="text-xs text-rose-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                              Réserver <ChevronRight size={12} />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                <p className="text-sm text-slate-400 mb-5">24h/24 · Gratuitement · Confirmation immédiate</p>
+
+                {provider.services?.length > 0 ? (() => {
+                  // Grouper les services par group_name
+                  const groups = {};
+                  for (const s of provider.services) {
+                    const key = s.group_name || '__none__';
+                    if (!groups[key]) groups[key] = { name: s.group_name || null, services: [] };
+                    groups[key].services.push(s);
+                  }
+                  const groupList = Object.values(groups);
+
+                  return groupList.map((group, gi) => (
+                    <ServiceGroupBlock
+                      key={gi}
+                      group={group}
+                      onSelectService={s => { setPreselectedService(s); setModalOpen(true); }}
+                    />
+                  ));
+                })() : (
                   <p className="text-sm text-slate-400 italic">Aucune prestation renseignée.</p>
                 )}
               </div>

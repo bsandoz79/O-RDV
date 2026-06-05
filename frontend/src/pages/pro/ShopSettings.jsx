@@ -90,59 +90,38 @@ const SectionCard = ({ icon: Icon, gradient, title, children }) => (
   </div>
 );
 
-const ServiceRow = ({ service, index, onChange, onRemove }) => {
-  const [uploading, setUploading] = React.useState(false);
-
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('image', file);
-      const res = await fetch(`${API_BASE_URL}/shop/upload-service-image`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: fd,
-      });
-      const data = await res.json();
-      if (data.url) onChange(index, 'image_url', data.url);
-    } catch {}
-    setUploading(false);
-  };
-
-  return (
-    <div className="service-row" style={{ flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-      {/* Photo prestation */}
-      <div style={{ width: '72px', flexShrink: 0 }}>
-        <label className="field-label">Photo</label>
-        <label style={{ cursor: 'pointer', display: 'block', width: '72px', height: '72px', borderRadius: '10px', overflow: 'hidden', border: '2px dashed #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {uploading ? (
-            <Loader2 size={20} className="animate-spin text-slate-400" />
-          ) : service.image_url ? (
-            <img src={service.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <Camera size={22} className="text-slate-300" />
-          )}
-          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
-        </label>
-      </div>
-      <div style={{ flex: 1, minWidth: '140px' }}>
-        <label className="field-label">Nom du service</label>
-        <input className="custom-input" placeholder="Ex: Coupe de cheveux" type="text" value={service.label} onChange={(e) => onChange(index, 'label', e.target.value)} />
-      </div>
-      <div style={{ width: '90px' }}>
-        <label className="field-label">Prix (€)</label>
-        <input className="custom-input" placeholder="25" type="number" value={service.price} onChange={(e) => onChange(index, 'price', e.target.value)} />
-      </div>
-      <div style={{ width: '90px' }}>
-        <label className="field-label">Durée (min)</label>
-        <input className="custom-input" placeholder="30" type="number" value={service.duration} onChange={(e) => onChange(index, 'duration', e.target.value)} />
-      </div>
-      <button type="button" className="btn-remove" onClick={() => onRemove(index)}><Trash2 size={17} /></button>
-    </div>
-  );
-};
+// Ligne de service simplifiée (sans image)
+const ServiceLine = ({ service, onUpdate, onRemove }) => (
+  <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+    <input
+      className="custom-input"
+      placeholder="Nom de la prestation (ex: Coupe courte)"
+      style={{ flex: 3 }}
+      type="text"
+      value={service.label}
+      onChange={e => onUpdate('label', e.target.value)}
+    />
+    <input
+      className="custom-input"
+      placeholder="Prix €"
+      style={{ width: 80 }}
+      type="number"
+      value={service.price}
+      onChange={e => onUpdate('price', e.target.value)}
+    />
+    <input
+      className="custom-input"
+      placeholder="min"
+      style={{ width: 72 }}
+      type="number"
+      value={service.duration}
+      onChange={e => onUpdate('duration', e.target.value)}
+    />
+    <button type="button" className="btn-remove" onClick={onRemove} style={{ flexShrink: 0 }}>
+      <Trash2 size={15} />
+    </button>
+  </div>
+);
 
 const HoursRow = ({ day, config, onChange }) => (
   <div className={`hours-row${config.closed ? ' hours-row--closed' : ''}`}>
@@ -1159,7 +1138,7 @@ export default function ShopSettings() {
   const [manualCoords,  setManualCoords]  = useState(null); // { lat, lng } si le pro a ajusté manuellement
   const [imageFile,     setImageFile]     = useState(null);
   const [imagePreview,  setImagePreview]  = useState(null);
-  const [services,      setServices]      = useState([{ label: '', price: '', duration: '', image_url: '' }]);
+  const [serviceGroups, setServiceGroups] = useState([{ name: '', services: [{ label: '', price: '', duration: '' }] }]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [galleryUploading, setGalleryUploading] = useState(false);
   const galleryInputRef = useRef(null);
@@ -1222,7 +1201,13 @@ export default function ShopSettings() {
         fetch(`${API_BASE_URL}/shop/photos/${data.id}`)
           .then(r => r.json()).then(setGalleryPhotos).catch(() => {});
         if (data.services?.length > 0) {
-          setServices(data.services.map(s => ({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '', image_url: s.image_url || '' })));
+          const grouped = {};
+          for (const s of data.services) {
+            const key = s.group_name || '';
+            if (!grouped[key]) grouped[key] = { name: key, services: [] };
+            grouped[key].services.push({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '' });
+          }
+          setServiceGroups(Object.values(grouped));
         }
         if (data.hours?.length > 0) {
           const loaded = { ...INITIAL_HOURS };
@@ -1316,7 +1301,10 @@ export default function ShopSettings() {
       const formData = new FormData();
       if (imageFile) formData.append('image', imageFile);
       formData.append('profile',   JSON.stringify({ ...profile, manualLat: manualCoords?.lat ?? null, manualLng: manualCoords?.lng ?? null }));
-      formData.append('services',  JSON.stringify(services));
+      const flatServices = serviceGroups.flatMap(g =>
+        g.services.map(s => ({ label: s.label, price: s.price, duration: s.duration, group_name: g.name || null }))
+      );
+      formData.append('services', JSON.stringify(flatServices));
       formData.append('hours',     JSON.stringify(Object.keys(hours).map(day => ({ day_of_week: day, ...hours[day] }))));
 
       const token = localStorage.getItem('token');
@@ -1479,13 +1467,68 @@ export default function ShopSettings() {
           </SectionCard>
 
           <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
-            {services.map((s, i) => (
-              <ServiceRow key={i} service={s} index={i} onChange={(idx, field, val) => {
-                const updated = [...services]; updated[idx][field] = val; setServices(updated);
-              }} onRemove={idx => setServices(services.filter((_, k) => k !== idx))} />
+            {/* Légende colonnes */}
+            <div style={{ display: 'flex', gap: 8, padding: '0 0 6px 0', borderBottom: '2px solid #f1f5f9', marginBottom: 4 }}>
+              <span style={{ flex: 3, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Prestation</span>
+              <span style={{ width: 80, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Prix €</span>
+              <span style={{ width: 72, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Durée</span>
+              <span style={{ width: 32 }} />
+            </div>
+
+            {serviceGroups.map((group, gi) => (
+              <div key={gi} style={{ marginBottom: 20, background: '#f8fafc', borderRadius: 14, padding: '12px 14px', border: '1px solid #e2e8f0' }}>
+                {/* Nom de la catégorie */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <input
+                    className="custom-input"
+                    placeholder="Nom de la catégorie (ex: Coupe femme, Soins…)"
+                    style={{ flex: 1, fontWeight: 700, fontSize: 13 }}
+                    value={group.name}
+                    onChange={e => {
+                      const updated = [...serviceGroups];
+                      updated[gi] = { ...updated[gi], name: e.target.value };
+                      setServiceGroups(updated);
+                    }}
+                  />
+                  <button type="button" title="Supprimer la catégorie" onClick={() => setServiceGroups(serviceGroups.filter((_, k) => k !== gi))}
+                    style={{ background: '#fee2e2', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: '#ef4444' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                {/* Services de cette catégorie */}
+                {group.services.map((svc, si) => (
+                  <ServiceLine
+                    key={si}
+                    service={svc}
+                    onUpdate={(field, val) => {
+                      const updated = serviceGroups.map((g, gIdx) =>
+                        gIdx !== gi ? g : { ...g, services: g.services.map((s, sIdx) => sIdx !== si ? s : { ...s, [field]: val }) }
+                      );
+                      setServiceGroups(updated);
+                    }}
+                    onRemove={() => {
+                      const updated = serviceGroups.map((g, gIdx) =>
+                        gIdx !== gi ? g : { ...g, services: g.services.filter((_, sIdx) => sIdx !== si) }
+                      );
+                      setServiceGroups(updated.filter(g => g.services.length > 0 || g === serviceGroups[gi]));
+                    }}
+                  />
+                ))}
+
+                <button type="button" style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#64748b', background: 'transparent', border: '1px dashed #cbd5e1', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}
+                  onClick={() => {
+                    const updated = [...serviceGroups];
+                    updated[gi] = { ...updated[gi], services: [...updated[gi].services, { label: '', price: '', duration: '' }] };
+                    setServiceGroups(updated);
+                  }}>
+                  <Plus size={13} /> Ajouter une prestation
+                </button>
+              </div>
             ))}
-            <button type="button" className="btn-add" onClick={() => setServices([...services, { label: '', price: '', duration: '', image_url: '' }])}>
-              <Plus size={15} /> Ajouter une prestation
+
+            <button type="button" className="btn-add" onClick={() => setServiceGroups([...serviceGroups, { name: '', services: [{ label: '', price: '', duration: '' }] }])}>
+              <Plus size={15} /> Ajouter une catégorie
             </button>
           </SectionCard>
 
