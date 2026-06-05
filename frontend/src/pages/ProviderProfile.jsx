@@ -195,12 +195,13 @@ export default function ProviderProfile() {
               </div>
             </div>
 
-            {/* Grille photos : 1 grande gauche + 2×2 droite */}
+            {/* Grille photos : grande gauche + 2×2 droite (3 colonnes) */}
             <div className="max-w-5xl mx-auto px-4 pb-4">
-              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, clamp(140px, 19vh, 200px))', gap: 6 }}>
-                {/* Grande photo gauche */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: 'repeat(2, 210px)', gap: 6 }}>
+
+                {/* Grande photo gauche — couvre les 2 lignes */}
                 <div
-                  style={{ gridRow: '1 / 3', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
+                  style={{ gridColumn: 1, gridRow: '1 / 3', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
                   onClick={() => setLightboxIdx(0)}
                 >
                   <img src={mainUrl} alt={provider.name}
@@ -210,15 +211,18 @@ export default function ProviderProfile() {
                   />
                 </div>
 
-                {/* 4 cases secondaires */}
+                {/* 4 cases droite : col 2+3, row 1+2 */}
                 {[0,1,2,3].map(i => {
                   const p = otherPhotos[i];
                   const hiddenCount = photos.length - 5;
                   const showOverlay = i === 3 && hiddenCount > 0;
+                  // col: 0,1 → col 2,3 ; row: 0,1 → row 1,2
+                  const col = (i % 2) + 2;
+                  const row = Math.floor(i / 2) + 1;
                   return (
                     <div key={i}
                       onClick={() => p && setLightboxIdx(0)}
-                      style={{ borderRadius: 14, overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default', position: 'relative' }}
+                      style={{ gridColumn: col, gridRow: row, borderRadius: 14, overflow: 'hidden', background: '#dde1e7', cursor: p ? 'pointer' : 'default', position: 'relative' }}
                     >
                       {p && (
                         <>
@@ -228,8 +232,8 @@ export default function ProviderProfile() {
                             onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                           />
                           {showOverlay && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                              <span style={{ fontSize: 30, fontWeight: 900 }}>+{hiddenCount}</span>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                              <span style={{ fontSize: 32, fontWeight: 900, letterSpacing: -1 }}>+{hiddenCount}</span>
                             </div>
                           )}
                         </>
