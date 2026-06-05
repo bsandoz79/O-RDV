@@ -85,7 +85,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
     <article className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
 
       {/* ── Image gauche avec carousel ───────────────────────────── */}
-      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden" style={{ width: '230px' }}>
+      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer" style={{ width: '230px' }} onClick={onClick}>
         <img
           key={photoIdx}
           src={currentPhoto}
