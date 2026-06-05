@@ -47,6 +47,65 @@
 - Déconnecter l'utilisateur après 30 min d'inactivité
 - Déconnecter l'utilisateur si son token expire ou s'il est banni
 
+### Diagramme de cas d'utilisation
+
+```mermaid
+graph LR
+    C["👤 Client"]
+    P["💼 Prestataire"]
+    A["🛡️ Admin"]
+    S["⚙️ Système"]
+
+    subgraph ORDV["Système O'RDV"]
+        direction TB
+        uc1(["S'inscrire / Se connecter"])
+        uc2(["Rechercher des prestataires"])
+        uc3(["Filtrer et trier les résultats"])
+        uc4(["Consulter un profil prestataire"])
+        uc5(["Réserver un rendez-vous"])
+        uc6(["Annuler un rendez-vous"])
+        uc7(["Laisser un avis / liker"])
+        uc8(["Gérer ses favoris"])
+        uc9(["Modifier profil / supprimer compte"])
+        uc10(["Voir itinéraire — carte + navigation"])
+        uc11(["Configurer sa boutique"])
+        uc12(["Gérer les rendez-vous entrants"])
+        uc13(["Consulter ses statistiques"])
+        uc14(["Gérer les utilisateurs — ban/unban/suppr."])
+        uc15(["Gérer les prestataires — certif./visibilité"])
+        uc16(["Consulter les KPIs globaux"])
+        uc17(["Impersonnifier un utilisateur"])
+        uc18(["Vue multi-rôles — 3 iframes"])
+        uc19(["Compléter les RDV automatiquement"])
+        uc20(["Gérer les sessions — inactivité / ban"])
+    end
+
+    C --> uc1
+    C --> uc2
+    C --> uc3
+    C --> uc4
+    C --> uc5
+    C --> uc6
+    C --> uc7
+    C --> uc8
+    C --> uc9
+    C --> uc10
+
+    P --> uc1
+    P --> uc11
+    P --> uc12
+    P --> uc13
+
+    A --> uc14
+    A --> uc15
+    A --> uc16
+    A --> uc17
+    A --> uc18
+
+    S --> uc19
+    S --> uc20
+```
+
 ---
 
 ## 2. Diagramme de classes

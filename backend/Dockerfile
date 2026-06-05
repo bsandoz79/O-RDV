@@ -1,8 +1,9 @@
-FROM node:18-alpine
+FROM node:18-slim
+
+RUN apt-get update -y && apt-get install -y openssl --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copie schema Prisma avant npm install (postinstall lance prisma generate)
 COPY package*.json ./
 COPY prisma/ ./prisma/
 RUN npm install --omit=dev

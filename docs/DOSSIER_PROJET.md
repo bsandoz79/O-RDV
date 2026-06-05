@@ -95,31 +95,7 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 | Avis et notes | Formulaire d'avis après un RDV terminé, like des avis |
 | Tableau de bord | Historique des RDV, profil, favoris |
 
-**Tunnel de réservation — Étape 1 : Sélection du service**
-
-![Sélection du service et du prestataire](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page de réservations.png>)
-
-**Étape 2 : Choix de la date**
-
-![Calendrier de réservation](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Calendrier réservations.png>)
-
-**Étape 3 : Choix du créneau horaire**
-
-![Créneaux disponibles](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Créneaux Réservations.png>)
-
-**Étape 4 : Récapitulatif et confirmation**
-
-![Récapitulatif de la réservation](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Récapitulatifs de la réservation.png>)
-
-**Étape 5 : Réservation confirmée**
-
-![Réservation confirmée](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Réservations confirmée.png>)
-
-**UX Sécurité : Connexion requise (redirection douce)**
-
-L'utilisateur non connecté qui tente de confirmer voit une page intermédiaire de 3 secondes avant d'être redirigé vers la connexion. Son choix (service, date, créneau) est conservé et restauré automatiquement après connexion.
-
-![Connexion requise — redirection vers login](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Connexion requise.png>)
+*(Voir captures 14 et 15 — tunnel de réservation détaillé)*
 
 #### Côté Prestataire (Pro)
 
@@ -132,8 +108,29 @@ L'utilisateur non connecté qui tente de confirmer voit une page intermédiaire 
 | Dashboard statistiques | Nouveaux clients, RDV à venir, chiffre d'affaires, taux d'occupation |
 | Avis reçus | Consultation des avis clients |
 
-> 📸 **CAPTURE D'ÉCRAN 3**
-> *Insérer ici : screenshot du dashboard pro (ShopSettings) montrant les statistiques et la liste des RDV*
+**Dashboard Pro — KPIs et planning de la semaine**
+
+![Dashboard pro — statistiques et planning](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dashboard pro stats et planning.png>)
+
+**Dashboard Pro — Prochains rendez-vous et historique**
+
+![Dashboard pro — prochains RDV et historique](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dashboard pro prochain rdv, historique.png>)
+
+**Configuration de la boutique — Profil établissement**
+
+![Création et modification boutique — profil](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Creations et modification boutique pro.png>)
+
+**Configuration de la boutique — Adresse, carte et téléphone**
+
+![Création et modification boutique — adresse et carte](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Creations et modification boutique pro adresse map tel.png>)
+
+**Configuration de la boutique — Catalogue de services**
+
+![Création et modification boutique — catalogue](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Creations et modification boutique pro catalogue.png>)
+
+**Configuration de la boutique — Horaires d'ouverture**
+
+![Création et modification boutique — horaires](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Creations et modification boutique pro horraires.png>)
 
 #### Côté Administrateur
 
@@ -146,6 +143,34 @@ L'utilisateur non connecté qui tente de confirmer voit une page intermédiaire 
 | Multi-vue | 3 iframes simultanées (client / pro / admin) |
 
 ![Dashboard admin — gestion utilisateurs et KPIs](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dashboard admin.png>)
+
+**Dashboard admin — Derniers clients et avis**
+
+![Dashboard admin — derniers clients et avis](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dashboard admin Dernier clients et Avis.png>)
+
+**Dashboard admin — Vue des boutiques**
+
+![Dashboard admin — gestion des boutiques](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Dasboard admin vu des boutiques.png>)
+
+**Barre d'outils admin sur la fiche prestataire (certifier / masquer / avertir)**
+
+![Outils admin sur fiche prestataire](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Outil admin .png>)
+
+**Suspension d'un compte avec motif**
+
+![Modal de suspension de compte](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Fonctionnalité admin suspendre.png>)
+
+**Certification d'une boutique**
+
+![Outil admin — certification boutique](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Outils admin certifié.png>)
+
+**Visibilité d'une boutique (masquer / rendre visible)**
+
+![Outil admin — visibilité boutique](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Outils admin rendre visible - masqué.png>)
+
+**Note d'avertissement administrateur**
+
+![Outil admin — avertissement](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Outils admin avertisssement.png>)
 
 ### 1.4 Choix technologiques
 
@@ -169,11 +194,9 @@ Prisma ORM génère automatiquement un client typé à partir du schéma `schema
 
 Railway intègre nativement Node.js, MySQL et Redis dans le même projet avec des connexions internes sécurisées (réseau privé). Le déploiement est automatique à chaque push sur `develop` via un webhook GitHub. Vercel est optimisé pour les applications React : CDN mondial avec edge caching, HTTPS automatique, et détection automatique de Create React App. La combinaison des deux permet un déploiement complet sans aucune gestion de serveur.
 
-> 📸 **CAPTURE D'ÉCRAN 5**
-> *Insérer ici : screenshot du dashboard Railway montrant le service backend déployé et actif*
+![Dashboard Railway — Redis, MySQL et backend O-RDV actifs](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Railway projet actif.png>)
 
-> 📸 **CAPTURE D'ÉCRAN 6**
-> *Insérer ici : screenshot du dashboard Vercel montrant le déploiement frontend*
+![Dashboard Vercel — déploiement frontend O'RDV](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Vercel.png>)
 
 ---
 
@@ -195,8 +218,17 @@ Railway intègre nativement Node.js, MySQL et Redis dans le même projet avec de
 | MySQL Workbench | — | Gestion de la base de données locale |
 | Docker Desktop | — | Conteneurisation locale |
 
-> 📸 **CAPTURE D'ÉCRAN 7**
-> *Insérer ici : screenshot de VS Code ouvert sur le projet avec l'arborescence des fichiers visible*
+**Arborescence racine du projet**
+
+![VS Code — arborescence du monorepo O'RDV](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Arborescence VS Code.png>)
+
+**Arborescence Backend**
+
+![VS Code — arborescence backend](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Arborescence Backend.png>)
+
+**Arborescence Frontend**
+
+![VS Code — arborescence frontend](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Arborescence Frontend.png>)
 
 #### Structure du monorepo
 
@@ -229,8 +261,7 @@ Le projet suit une stratégie de branches simple :
 - `develop` : branche principale de développement, déploiement automatique en staging
 - `main` : branche de production (releases stables)
 
-> 📸 **CAPTURE D'ÉCRAN 8**
-> *Insérer ici : screenshot de GitHub montrant l'historique des commits sur la branche develop*
+![GitHub Actions — historique des workflows et commits](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/GitHub action historique des commits.png>)
 
 #### Démarrage du projet en local
 
@@ -320,11 +351,9 @@ const filtered = providers
   });
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 9**
-> *Insérer ici : screenshot de la page d'accueil avec la barre de recherche, les filtres de catégories et les cartes prestataires*
+![Page d'accueil — barre de recherche et filtres catégories](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille Barre de recherche filtre catégorie.png>)
 
-> 📸 **CAPTURE D'ÉCRAN 10**
-> *Insérer ici : screenshot de la carte Leaflet (ProvidersMap) sur la page d'accueil avec les marqueurs des prestataires*
+![Page d'accueil — carte Leaflet avec marqueurs prestataires](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille Map.png>)
 
 #### Composant ProviderCard — Badge horaire dynamique
 
@@ -349,8 +378,7 @@ function getOpenBadge(todayOpen, todayClose, todayIsClosed) {
 }
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 11**
-> *Insérer ici : screenshot de cartes prestataires avec les badges "Ouvert" (vert) et "Fermé" (rouge) visibles*
+![Cartes prestataires — badges Ouvert/Nouveau et distance](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille Provider card ouvert etc.png>)
 
 #### Page de profil prestataire — Carte et routing
 
@@ -369,21 +397,39 @@ const fetchRoute = async (mode) => {
 };
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 12**
-> *Insérer ici : screenshot de la fiche prestataire avec la carte Leaflet et l'itinéraire tracé*
+![Fiche prestataire — carte Leaflet avec itinéraire tracé](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Map itinéraire.png>)
 
-> 📸 **CAPTURE D'ÉCRAN 13**
-> *Insérer ici : screenshot des boutons de navigation (voiture/piéton/vélo) et les liens Waze/Google Maps*
+![Itinéraire — boutons voiture/pied/vélo et liens Waze/Google Maps](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Itineraire bouton map, waze.png>)
 
 #### Formulaire de réservation — BookingPage
 
 Le tunnel de réservation guide l'utilisateur en 3 étapes : sélection du service → choix de la date → choix du créneau.
 
-> 📸 **CAPTURE D'ÉCRAN 14**
-> *Insérer ici : screenshot de BookingPage — étape 1 : liste des services avec prix et durée*
+**Étape 1 : Fiche prestataire avec sélection du service**
 
-> 📸 **CAPTURE D'ÉCRAN 15**
-> *Insérer ici : screenshot de BookingPage — étape 2/3 : calendrier + créneaux disponibles*
+![BookingPage — sélection du service](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page de réservations.png>)
+
+**Étape 2 : Choix de la date**
+
+![BookingPage — calendrier](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Calendrier réservations.png>)
+
+**Étape 3 : Choix du créneau horaire**
+
+![BookingPage — créneaux disponibles](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Créneaux Réservations.png>)
+
+**Étape 4 : Récapitulatif avant confirmation**
+
+![BookingPage — récapitulatif](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Récapitulatifs de la réservation.png>)
+
+**Étape 5 : Réservation confirmée**
+
+![BookingPage — réservation confirmée](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Réservations confirmée.png>)
+
+**UX Sécurité : Connexion requise (redirection douce 3s)**
+
+L'utilisateur non connecté qui tente de confirmer voit une page intermédiaire avant d'être redirigé vers la connexion. Son choix est conservé et restauré après connexion.
+
+![BookingPage — connexion requise](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Connexion requise.png>)
 
 #### Indicateur de force du mot de passe
 
@@ -406,8 +452,17 @@ export function getPasswordScore(password) {
 }
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 16**
-> *Insérer ici : screenshot de la page d'inscription avec l'indicateur de force du mot de passe (barre colorée + critères)*
+![Page d'inscription](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page inscription.png>)
+
+**Indicateur de force — 4 niveaux**
+
+![Mot de passe faible](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Inscription mdp faible.png>)
+
+![Mot de passe moyen](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Inscription mdp moyen.png>)
+
+![Mot de passe fort](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Inscription mdp fort.png>)
+
+![Mot de passe très fort](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Inscription mdp tres fort.png>)
 
 #### Gestion de session et protection des routes
 
@@ -435,11 +490,9 @@ function SessionGuard({ children }) {
 
 #### Authentification Google OAuth — Flux complet
 
-> 📸 **CAPTURE D'ÉCRAN 17**
-> *Insérer ici : screenshot de la page de login avec le bouton "Continuer avec Google"*
+![Page de connexion avec bouton "Continuer avec Google"](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Connexion inscrire avec google.png>)
 
-> 📸 **CAPTURE D'ÉCRAN 18**
-> *Insérer ici : screenshot de la popup Google d'autorisation OAuth*
+![Popup Google OAuth — sélection du compte](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Connexion Pop Up avec google.png>)
 
 ### 2.3 Développement des composants métier
 
@@ -567,8 +620,7 @@ const createAppointment = async (req, res) => {
 };
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 19**
-> *Insérer ici : screenshot du message d'erreur "Ce créneau chevauche un RDV existant" lors d'une tentative de double réservation*
+> **Note** : L'erreur HTTP 409 `"Ce créneau chevauche un RDV existant"` (ligne 605 ci-dessus) ne peut pas être déclenchée depuis l'interface — l'endpoint `GET /availability` retourne en temps réel les créneaux disponibles, et les créneaux déjà pris sont grisés et non cliquables côté frontend. La protection anti-conflit agit comme filet de sécurité contre les requêtes directes à l'API (ex : via curl ou deux bookings simultanés à la milliseconde près).
 
 #### Système de favoris
 
@@ -626,8 +678,7 @@ Object.defineProperty(iframeWindow, 'localStorage', {
 iframeWindow.fetch = createAuthenticatedFetch(token, iframeWindow.fetch);
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 22**
-> *Insérer ici : screenshot de la vue MultiView avec les 3 iframes côte à côte (client / pro / admin)*
+![Vue multi-comptes — 3 sessions isolées côte à côte](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Vue MultiCompte.png>)
 
 ### 2.4 Gestion de projet — Méthode Agile (Kanban)
 
@@ -834,8 +885,9 @@ enum AppointmentStatus {
 }
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 32**
-> *Insérer ici : screenshot de MySQL Workbench ou de Prisma Studio montrant la structure des tables*
+![Vue d'ensemble des tables MySQL — Railway Dashboard](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Mysql tables.png>)
+
+![Table `appointments` — colonnes client_id, provider_id, service_id, appointment_date, status](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Table appointments.png>)
 
 ### 3.4 Composants d'accès aux données SQL
 
@@ -995,8 +1047,7 @@ services:
       - db
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 33**
-> *Insérer ici : screenshot de Redis Insight ou redis-cli montrant la clé "providers:all" en cache*
+![Cache Redis — clé `shop:providers::` avec TTL 300s — Railway Dashboard](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Redis cache.png>)
 
 ---
 
@@ -1058,8 +1109,7 @@ Tests:       45 passed, 45 total
 Time:        3.49s
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 34**
-> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` avec les 45 tests verts*
+![Tests backend — 7 suites, 45 tests passés](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/npm test backend.png>)
 
 #### Tests unitaires Frontend — Jest + Testing Library
 
@@ -1082,8 +1132,7 @@ Tests:       36 passed, 36 total
 Time:        4.12s
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 35**
-> *Insérer ici : screenshot du terminal montrant le résultat de `npm test` frontend avec les 36 tests verts*
+![Tests frontend — 4 suites, 36 tests passés](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/npm test frontend.png>)
 
 #### Tests manuels — Scénarios fonctionnels
 
@@ -1146,8 +1195,9 @@ healthcheckPath = "/api/health"
 cmds = ["npm install", "npx prisma generate"]
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 36**
-> *Insérer ici : screenshot de Railway montrant les variables d'environnement configurées (sans les valeurs)*
+![Variables d'environnement Railway — backend O'RDV](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Railway variable O'rdv.png>)
+
+![Variables d'environnement Railway — suite](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Railway variable O'rdv 2.png>)
 
 #### Configuration Vercel (frontend)
 
@@ -1158,8 +1208,7 @@ cmds = ["npm install", "npx prisma generate"]
 }
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 37**
-> *Insérer ici : screenshot de Vercel montrant les déploiements avec statut "Ready" et les URLs de production*
+![Dashboard Vercel — déploiement frontend O'RDV](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Vercel.png>)
 
 #### Variables d'environnement
 
@@ -1214,11 +1263,11 @@ jobs:
         env: { CI: false }
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 38**
-> *Insérer ici : screenshot de GitHub Actions montrant les pipelines verts (tous les jobs passés)*
+![GitHub Actions — historique des workflows et commits](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Github Action commit et date .png>)
 
-> 📸 **CAPTURE D'ÉCRAN 39**
-> *Insérer ici : screenshot d'un run GitHub Actions en détail avec les étapes déroulées*
+![GitHub Actions — run détaillé tests frontend](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Github Action test frontend.png>)
+
+![GitHub Actions — run détaillé tests backend](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Github action test backend.png>)
 
 #### Bénéfices du CI/CD
 
@@ -1321,8 +1370,9 @@ services:
     depends_on: [backend]
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 40**
-> *Insérer ici : screenshot du terminal montrant `docker-compose up --build` avec les 3 services démarrés*
+![docker-compose up — 3 services démarrés (db, backend, frontend)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Docker .png>)
+
+![docker-compose up — logs détaillés des 3 containers actifs](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Docker 2 .png>)
 
 ---
 
