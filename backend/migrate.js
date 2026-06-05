@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS provider_photos (
 const ALTER_STMTS = [
     `ALTER TABLE services ADD COLUMN image_url VARCHAR(255) DEFAULT NULL`,
     `ALTER TABLE services ADD COLUMN group_name VARCHAR(100) DEFAULT NULL`,
+    `ALTER TABLE services ADD COLUMN group_description TEXT DEFAULT NULL`,
     `ALTER TABLE providers ADD COLUMN latitude FLOAT DEFAULT NULL`,
     `ALTER TABLE providers ADD COLUMN longitude FLOAT DEFAULT NULL`,
     `ALTER TABLE providers ADD COLUMN is_certified TINYINT(1) DEFAULT 0`,

@@ -180,12 +180,12 @@ const getProviderProfile = async (req, res) => {
         const { businessHours, ...rest } = provider;
         const hours = businessHours.map(h => ({ ...h, open_time: fmtTime(h.open_time), close_time: fmtTime(h.close_time) }));
 
-        // group_name hors schema Prisma → raw query
+        // group_name / group_description hors schema Prisma → raw query
         let services = rest.services;
         try {
-            const groups = await prisma.$queryRaw`SELECT id, group_name FROM services WHERE provider_id = ${provider.id}`;
-            const gMap = new Map(groups.map(g => [Number(g.id), g.group_name]));
-            services = services.map(s => ({ ...s, group_name: gMap.get(s.id) || null }));
+            const groups = await prisma.$queryRaw`SELECT id, group_name, group_description FROM services WHERE provider_id = ${provider.id}`;
+            const gMap = new Map(groups.map(g => [Number(g.id), { group_name: g.group_name, group_description: g.group_description }]));
+            services = services.map(s => ({ ...s, ...( gMap.get(s.id) || {}) }));
         } catch { /* colonne pas encore créée, on ignore */ }
 
         res.json({ ...rest, services, hours });
@@ -208,12 +208,12 @@ const getShopInfo = async (req, res) => {
         const { businessHours, ...rest } = provider;
         const hours = businessHours.map(h => ({ ...h, open_time: fmtTime(h.open_time), close_time: fmtTime(h.close_time) }));
 
-        // group_name hors schema Prisma → raw query
+        // group_name / group_description hors schema Prisma → raw query
         let services = rest.services;
         try {
-            const groups = await prisma.$queryRaw`SELECT id, group_name FROM services WHERE provider_id = ${provider.id}`;
-            const gMap = new Map(groups.map(g => [Number(g.id), g.group_name]));
-            services = services.map(s => ({ ...s, group_name: gMap.get(s.id) || null }));
+            const groups = await prisma.$queryRaw`SELECT id, group_name, group_description FROM services WHERE provider_id = ${provider.id}`;
+            const gMap = new Map(groups.map(g => [Number(g.id), { group_name: g.group_name, group_description: g.group_description }]));
+            services = services.map(s => ({ ...s, ...(gMap.get(s.id) || {}) }));
         } catch { /* colonne pas encore créée, on ignore */ }
 
         res.json({ ...rest, services, hours });
@@ -292,12 +292,12 @@ const setupShop = async (req, res) => {
                     where: { id: match.id },
                     data: { price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
                 });
-                try { await prisma.$executeRaw`UPDATE services SET group_name = ${s.group_name || null} WHERE id = ${match.id}`; } catch {}
+                try { await prisma.$executeRaw`UPDATE services SET group_name = ${s.group_name || null}, group_description = ${s.group_description || null} WHERE id = ${match.id}`; } catch {}
             } else {
                 const created = await prisma.service.create({
                     data: { provider_id: provider.id, label: s.label, price: parseFloat(s.price), duration: parseInt(s.duration) || 30 },
                 });
-                try { await prisma.$executeRaw`UPDATE services SET group_name = ${s.group_name || null} WHERE id = ${created.id}`; } catch {}
+                try { await prisma.$executeRaw`UPDATE services SET group_name = ${s.group_name || null}, group_description = ${s.group_description || null} WHERE id = ${created.id}`; } catch {}
             }
         }
 

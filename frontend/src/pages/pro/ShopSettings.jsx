@@ -1137,7 +1137,7 @@ export default function ShopSettings() {
   const [profile,       setProfile]       = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '' });
   const [manualCoords,  setManualCoords]  = useState(null); // { lat, lng } si le pro a ajusté manuellement
   const [pendingPhotoFiles, setPendingPhotoFiles] = useState([]); // fichiers en attente (création)
-  const [serviceGroups, setServiceGroups] = useState([{ name: '', services: [{ label: '', price: '', duration: '' }] }]);
+  const [serviceGroups, setServiceGroups] = useState([{ name: '', description: '', services: [{ label: '', price: '', duration: '' }] }]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [galleryUploading, setGalleryUploading] = useState(false);
   const [galleryError, setGalleryError] = useState('');
@@ -1204,7 +1204,7 @@ export default function ShopSettings() {
           const grouped = {};
           for (const s of data.services) {
             const key = s.group_name || '';
-            if (!grouped[key]) grouped[key] = { name: key, services: [] };
+            if (!grouped[key]) grouped[key] = { name: key, description: s.group_description || '', services: [] };
             grouped[key].services.push({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '' });
           }
           setServiceGroups(Object.values(grouped));
@@ -1313,7 +1313,7 @@ export default function ShopSettings() {
       // plus d'image unique — gérée par la galerie
       formData.append('profile',   JSON.stringify({ ...profile, manualLat: manualCoords?.lat ?? null, manualLng: manualCoords?.lng ?? null }));
       const flatServices = serviceGroups.flatMap(g =>
-        g.services.map(s => ({ label: s.label, price: s.price, duration: s.duration, group_name: g.name || null }))
+        g.services.map(s => ({ label: s.label, price: s.price, duration: s.duration, group_name: g.name || null, group_description: g.description || null }))
       );
       formData.append('services', JSON.stringify(flatServices));
       formData.append('hours',     JSON.stringify(Object.keys(hours).map(day => ({ day_of_week: day, ...hours[day] }))));
@@ -1525,6 +1525,20 @@ export default function ShopSettings() {
                   </button>
                 </div>
 
+                {/* Description / conditions de la catégorie */}
+                <textarea
+                  className="custom-input"
+                  placeholder="Conditions à respecter (ex: Cheveux lavés et secs, pas de soins en cours…)"
+                  rows={2}
+                  style={{ fontSize: 12, color: '#64748b', marginBottom: 10, resize: 'none', width: '100%' }}
+                  value={group.description}
+                  onChange={e => {
+                    const updated = [...serviceGroups];
+                    updated[gi] = { ...updated[gi], description: e.target.value };
+                    setServiceGroups(updated);
+                  }}
+                />
+
                 {/* Services de cette catégorie */}
                 {group.services.map((svc, si) => (
                   <ServiceLine
@@ -1556,7 +1570,7 @@ export default function ShopSettings() {
               </div>
             ))}
 
-            <button type="button" className="btn-add" onClick={() => setServiceGroups([...serviceGroups, { name: '', services: [{ label: '', price: '', duration: '' }] }])}>
+            <button type="button" className="btn-add" onClick={() => setServiceGroups([...serviceGroups, { name: '', description: '', services: [{ label: '', price: '', duration: '' }] }])}>
               <Plus size={15} /> Ajouter une catégorie
             </button>
           </SectionCard>

@@ -58,12 +58,20 @@ function ServiceGroupBlock({ group, onSelectService }) {
   return (
     <div className="mb-6">
       {group.name && (
-        <h3 className="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
           {group.name}
           <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
             {total} prestation{total > 1 ? 's' : ''}
           </span>
         </h3>
+      )}
+
+      {/* Conditions / description de la catégorie */}
+      {group.description && (
+        <div className="flex items-start gap-2 mb-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+          <span className="text-amber-500 flex-shrink-0 mt-0.5 text-base">ℹ️</span>
+          <p className="text-sm text-amber-800 leading-snug">{group.description}</p>
+        </div>
       )}
       <div className="rounded-2xl border border-slate-100 overflow-hidden">
         {visible.map(s => (
@@ -502,7 +510,7 @@ export default function ProviderProfile() {
                   const groups = {};
                   for (const s of provider.services) {
                     const key = s.group_name || '__none__';
-                    if (!groups[key]) groups[key] = { name: s.group_name || null, services: [] };
+                    if (!groups[key]) groups[key] = { name: s.group_name || null, description: s.group_description || null, services: [] };
                     groups[key].services.push(s);
                   }
                   const groupList = Object.values(groups);
