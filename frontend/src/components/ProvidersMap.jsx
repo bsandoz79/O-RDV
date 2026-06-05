@@ -36,7 +36,7 @@ export default function ProvidersMap({ providers, userPosition, onProviderClick 
       center={defaultCenter}
       zoom={zoom}
       style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
-      scrollWheelZoom={false}
+      scrollWheelZoom={true}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'

@@ -353,6 +353,8 @@ export default function Home() {
               <div
                 className="sticky rounded-2xl overflow-hidden shadow-md border border-slate-200"
                 style={{ top: mapTop, height: `calc(100vh - ${mapTop + 8}px)` }}
+                onMouseEnter={() => { document.body.style.overflow = 'hidden'; }}
+                onMouseLeave={() => { document.body.style.overflow = ''; }}
               >
                 <Suspense fallback={<div className="flex items-center justify-center h-full bg-slate-100"><Loader2 className="animate-spin text-rose-500" size={32} /></div>}>
                   <ProvidersMap
