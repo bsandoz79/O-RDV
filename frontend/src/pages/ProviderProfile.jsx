@@ -121,6 +121,8 @@ export default function ProviderProfile() {
     }
   };
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [id]);
+
   useEffect(() => {
     fetch(`${API_BASE_URL}/shop/profile/${id}`)
       .then(r => { if (!r.ok) throw new Error('Prestataire introuvable'); return r.json(); })
@@ -190,31 +192,23 @@ export default function ProviderProfile() {
             </button>
 
             {/* Grille photos 1 grande + 2×2 */}
-            <div className="max-w-5xl mx-auto px-4 pt-14 pb-0">
+            <div className="max-w-5xl mx-auto px-4 pt-12 pb-0">
 
               {/* Infos boutique au-dessus */}
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                    {provider.name}
-                    {provider.is_certified && <BadgeCheck size={20} className="text-blue-500" title="Boutique certifiée" />}
-                  </h1>
-                  {provider.address && (
-                    <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5 underline cursor-pointer">
-                      <MapPin size={12} /> {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                  className="flex-shrink-0 px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
-                >
-                  Prendre RDV
-                </button>
+              <div className="mb-3">
+                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                  {provider.name}
+                  {provider.is_certified && <BadgeCheck size={20} className="text-blue-500" title="Boutique certifiée" />}
+                </h1>
+                {provider.address && (
+                  <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+                    <MapPin size={12} /> {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
+                  </p>
+                )}
               </div>
 
               {/* Grille */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, 220px)', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gridTemplateRows: 'repeat(2, clamp(130px, 18vh, 190px))', gap: 6 }}>
                 {/* Grande photo gauche */}
                 <div
                   style={{ gridRow: '1 / 3', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
