@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
   ChevronRight, Scissors, CheckCircle2, MessageSquare, ThumbsUp,
-  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan, X, Images,
+  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan, X, Images, AlignLeft,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
@@ -671,6 +671,31 @@ export default function ProviderProfile() {
             </div>{/* /col droite */}
 
           </div>{/* /flex 2col */}
+
+          {/* ── Section À-propos ───────────────────────── */}
+          {provider.description && (
+            <div className="mt-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Informations</h2>
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                {/* Tab */}
+                <div className="border-b border-slate-100 px-6 pt-4 pb-0">
+                  <span className="inline-block text-sm font-semibold text-slate-900 pb-3 border-b-2 border-slate-900">
+                    À-propos
+                  </span>
+                </div>
+                {/* Contenu */}
+                <div className="p-6">
+                  <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
+                    <AlignLeft size={16} className="text-violet-500" />
+                    Présentation
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                    {provider.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── Carte + itinéraire (pleine largeur) ─── */}
           {provider.latitude && provider.longitude && (
