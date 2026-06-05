@@ -221,53 +221,84 @@ export default function ProviderProfile() {
               </div>
             </div>
 
-            {/* Grille photos : grande gauche + 2×2 droite (3 colonnes) */}
+            {/* Grille photos adaptative selon le nombre de photos */}
             <div className="max-w-5xl mx-auto px-4 pb-4">
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: 'repeat(2, 210px)', gap: 6 }}>
+              {(() => {
+                const n = photos.length;
+                const imgStyle = { width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.4s' };
+                const cell = (src, key, style = {}) => (
+                  <div key={key} onClick={() => setLightboxIdx(0)} style={{ borderRadius: 14, overflow: 'hidden', cursor: 'pointer', ...style }}>
+                    <img src={src} alt="" style={imgStyle}
+                      onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
+                      onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                    />
+                  </div>
+                );
 
-                {/* Grande photo gauche — couvre les 2 lignes */}
-                <div
-                  style={{ gridColumn: 1, gridRow: '1 / 3', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
-                  onClick={() => setLightboxIdx(0)}
-                >
-                  <img src={mainUrl} alt={provider.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-                    onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
-                    onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                  />
-                </div>
+                /* 1 photo — pleine largeur */
+                if (n === 1) return (
+                  <div style={{ height: 420, borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
+                    onClick={() => setLightboxIdx(0)}>
+                    <img src={mainUrl} alt={provider.name} style={imgStyle} />
+                  </div>
+                );
 
-                {/* 4 cases droite : col 2+3, row 1+2 */}
-                {[0,1,2,3].map(i => {
-                  const p = otherPhotos[i];
-                  const hiddenCount = photos.length - 5;
-                  const showOverlay = i === 3 && hiddenCount > 0;
-                  // col: 0,1 → col 2,3 ; row: 0,1 → row 1,2
-                  const col = (i % 2) + 2;
-                  const row = Math.floor(i / 2) + 1;
-                  return (
-                    <div key={i}
-                      onClick={() => p && setLightboxIdx(0)}
-                      style={{ gridColumn: col, gridRow: row, borderRadius: 14, overflow: 'hidden', background: '#dde1e7', cursor: p ? 'pointer' : 'default', position: 'relative' }}
-                    >
-                      {p && (
-                        <>
-                          <img src={p.photo_url} alt=""
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block' }}
-                            onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
-                            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                          />
-                          {showOverlay && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                              <span style={{ fontSize: 32, fontWeight: 900, letterSpacing: -1 }}>+{hiddenCount}</span>
-                            </div>
+                /* 2 photos — deux grandes côte à côte */
+                if (n === 2) return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 420, gap: 6 }}>
+                    {photos.map((p, i) => cell(p.photo_url, p.id))}
+                  </div>
+                );
+
+                /* 3 photos — grande gauche + 2 empilées droite */
+                if (n === 3) return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: 'repeat(2, 210px)', gap: 6 }}>
+                    {cell(mainUrl, 'main', { gridRow: '1/3' })}
+                    {otherPhotos.slice(0, 2).map((p) => cell(p.photo_url, p.id))}
+                  </div>
+                );
+
+                /* 4 photos — grande gauche + 1 pleine hauteur + 2 empilées droite (Jean Louis David) */
+                if (n === 4) return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: 'repeat(2, 210px)', gap: 6 }}>
+                    {cell(mainUrl, 'main', { gridRow: '1/3' })}
+                    {cell(otherPhotos[0]?.photo_url, otherPhotos[0]?.id, { gridRow: '1/3' })}
+                    {otherPhotos.slice(1, 3).map((p) => cell(p.photo_url, p.id))}
+                  </div>
+                );
+
+                /* 5+ photos — grande gauche + 2×2 droite avec +X */
+                const hiddenCount = n - 5;
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: 'repeat(2, 210px)', gap: 6 }}>
+                    {cell(mainUrl, 'main', { gridColumn: 1, gridRow: '1/3' })}
+                    {[0,1,2,3].map(i => {
+                      const p = otherPhotos[i];
+                      const showOverlay = i === 3 && hiddenCount > 0;
+                      return (
+                        <div key={i}
+                          onClick={() => p && setLightboxIdx(0)}
+                          style={{ gridColumn: (i % 2) + 2, gridRow: Math.floor(i / 2) + 1, borderRadius: 14, overflow: 'hidden', background: '#dde1e7', cursor: p ? 'pointer' : 'default', position: 'relative' }}
+                        >
+                          {p && (
+                            <>
+                              <img src={p.photo_url} alt="" style={imgStyle}
+                                onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
+                                onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                              />
+                              {showOverlay && (
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                  <span style={{ fontSize: 32, fontWeight: 900 }}>+{hiddenCount}</span>
+                                </div>
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Titre sous la grille */}
