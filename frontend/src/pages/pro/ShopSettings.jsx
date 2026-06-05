@@ -1141,6 +1141,7 @@ export default function ShopSettings() {
   const [serviceGroups, setServiceGroups] = useState([{ name: '', services: [{ label: '', price: '', duration: '' }] }]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [galleryUploading, setGalleryUploading] = useState(false);
+  const [galleryError, setGalleryError] = useState('');
   const galleryInputRef = useRef(null);
   const [hours,         setHours]         = useState(INITIAL_HOURS);
   const [loading,       setLoading]       = useState(false);
@@ -1239,19 +1240,28 @@ export default function ShopSettings() {
     if (!files.length) return;
     const token = localStorage.getItem('token');
     setGalleryUploading(true);
-    for (const file of files) {
-      if (galleryPhotos.length >= 10) break;
-      const fd = new FormData();
-      fd.append('photo', file);
-      const res = await fetch(`${API_BASE_URL}/shop/photos`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      if (res.ok) {
-        const photo = await res.json();
-        setGalleryPhotos(prev => [...prev, photo]);
+    setGalleryError('');
+    try {
+      for (const file of files) {
+        if (galleryPhotos.length >= 10) break;
+        const fd = new FormData();
+        fd.append('photo', file);
+        const res = await fetch(`${API_BASE_URL}/shop/photos`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        if (res.ok) {
+          const photo = await res.json();
+          setGalleryPhotos(prev => [...prev, photo]);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          setGalleryError(err.error || `Erreur ${res.status} lors de l'upload`);
+          break;
+        }
       }
+    } catch (err) {
+      setGalleryError('Impossible de joindre le serveur. Vérifiez que le backend est démarré.');
     }
     setGalleryUploading(false);
     e.target.value = '';
@@ -1402,8 +1412,8 @@ export default function ShopSettings() {
             </div>
           </SectionCard>
 
-          {/* ── Galerie photos ── */}
-          <SectionCard icon={Images} gradient="linear-gradient(135deg,#0ea5e9,#0284c7)" title="Photos de la boutique">
+          {/* ── Galerie photos (seulement si la boutique existe) ── */}
+          {shopData && <SectionCard icon={Images} gradient="linear-gradient(135deg,#0ea5e9,#0284c7)" title="Photos de la boutique">
             <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
               Ajoutez jusqu'à 10 photos. Cliquez sur l'étoile pour choisir la photo principale (affichée en grand sur votre profil).
             </p>
@@ -1464,7 +1474,10 @@ export default function ShopSettings() {
               {galleryUploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
               {galleryUploading ? 'Upload en cours...' : galleryPhotos.length >= 10 ? 'Maximum atteint (10/10)' : `Ajouter des photos (${galleryPhotos.length}/10)`}
             </button>
-          </SectionCard>
+            {galleryError && (
+              <p style={{ marginTop: 8, color: '#ef4444', fontSize: 12, fontWeight: 600 }}>⚠ {galleryError}</p>
+            )}
+          </SectionCard>}
 
           <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
             {/* Légende colonnes */}
