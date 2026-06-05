@@ -644,11 +644,9 @@ const toggleFavorite = async (req, res) => {
 };
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 20**
-> *Insérer ici : screenshot d'une carte prestataire avec le coeur rouge (favori activé)*
+![Carte prestataire — cœur favori activé (rouge)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Carte prestataire avec favorie activé.png>)
 
-> 📸 **CAPTURE D'ÉCRAN 21**
-> *Insérer ici : screenshot de la section "Mes prestataires favoris" dans le dashboard client*
+![Dashboard client — section "Mes prestataires favoris"](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Mes prestataire favoris.png>)
 
 #### Dashboard administrateur — Impersonation
 
@@ -699,8 +697,7 @@ Chaque carte suit le format user story :
 
 Exemple : *"En tant que client, je veux réserver un créneau chez un prestataire, afin d'obtenir un rendez-vous sans téléphoner."*
 
-> 📸 **CAPTURE D'ÉCRAN 23**
-> *Insérer ici : screenshot du tableau Trello complet avec toutes les colonnes visibles*
+![Tableau Trello — colonnes Kanban et user stories](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Trello colonne et userstorie.png>)
 
 J'utilisais Trello en mode Kanban hebdomadaire : chaque début de semaine, je déplaçais des cartes du Backlog vers "À faire" en fonction de la complexité estimée et des retours du formateur. Je limitais les cartes "En cours" à deux maximum pour rester concentré sans me disperser. Les cartes suivent le format user story ("En tant que... je veux... afin de..."), ce qui m'aidait à rester orienté sur la valeur utilisateur plutôt que sur la technique pure. Les retours du formateur en fin de semaine guidaient les priorités de la semaine suivante et m'ont notamment conduit à prioriser les tests unitaires et l'utilisation de branches Git.
 
@@ -717,8 +714,7 @@ fix: correction des tests cassés suite aux évolutions du code
 docs: ajout MCD/MLD en Mermaid
 ```
 
-> 📸 **CAPTURE D'ÉCRAN 24**
-> *Insérer ici : screenshot de GitHub montrant la liste des commits avec les messages et les dates*
+![GitHub — historique des commits avec messages conventionnels et dates](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Github Action commit et date .png>)
 
 ---
 
@@ -728,8 +724,9 @@ docs: ajout MCD/MLD en Mermaid
 
 #### Diagramme de cas d'utilisation (UML)
 
-> 📸 **CAPTURE D'ÉCRAN 25**
-> *Insérer ici : le diagramme de cas d'utilisation (Use Case UML) que tu as réalisé*
+![Diagramme UML — cas d'utilisation Client](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/UML client.png>)
+
+![Diagramme UML — cas d'utilisation Prestataire, Admin et Système](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/UML prestataire admin système.png>)
 
 Les cas d'utilisation couvrent les 3 acteurs principaux :
 
@@ -741,20 +738,7 @@ Les cas d'utilisation couvrent les 3 acteurs principaux :
 
 #### Maquettes (Figma)
 
-> 📸 **CAPTURE D'ÉCRAN 26**
-> *Insérer ici : capture de la maquette Figma de la page d'accueil*
-
-> 📸 **CAPTURE D'ÉCRAN 27**
-> *Insérer ici : capture de la maquette Figma de la fiche prestataire*
-
-> 📸 **CAPTURE D'ÉCRAN 28**
-> *Insérer ici : capture de la maquette Figma du dashboard client*
-
-> 📸 **CAPTURE D'ÉCRAN 29**
-> *Insérer ici : capture de la maquette Figma du formulaire de réservation*
-
-> **[À COMPLÉTER — 3 à 5 lignes]**
-> Décris ta démarche de conception : comment tu as prototypé les interfaces, les itérations que tu as faites, les retours que tu as intégrés...
+Les maquettes Figma ont été réalisées en amont du développement pour valider la structure des pages et la charte graphique avant d'écrire le moindre composant React. La palette de couleurs (rose `#F43F5E`, blanc, ardoise `#1E293B`) et la typographie (DM Sans) ont été définies à cette étape. L'approche a été itérative : une première version des maquettes a été soumise au formateur, dont les retours ont conduit à simplifier le tunnel de réservation (passage de 5 à 3 étapes visibles) et à renforcer l'accessibilité des badges horaires (Ouvert / Fermé). Les maquettes couvrent les 4 vues principales : page d'accueil avec carte, fiche prestataire, tunnel de réservation, et tableau de bord client/pro.
 
 ### 3.2 Architecture logicielle en couches
 
@@ -786,9 +770,6 @@ L'application suit une architecture **3 couches** clairement séparées :
 │    9 tables         │   │    TTL 5 minutes             │
 └─────────────────────┘   └──────────────────────────────┘
 ```
-
-> 📸 **CAPTURE D'ÉCRAN 30**
-> *Insérer ici : un schéma d'architecture que tu auras dessiné (draw.io ou équivalent) reprenant ce diagramme en version visuelle*
 
 #### Organisation du backend
 
@@ -823,8 +804,11 @@ app.use('/api/favorites', favRoutes);      // Favoris
 
 Le schéma complet est disponible dans `docs/MCD-MLD.md` et rendu visuellement sur GitHub.
 
-> 📸 **CAPTURE D'ÉCRAN 31**
-> *Insérer ici : l'export PNG du diagramme MCD/MLD depuis mermaid.live ou dbdiagram.io*
+![MCD — partie haute (users, providers, categories)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/MCD partie haute.png>)
+
+![MCD — partie centrale (services, appointments, business_hours)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/MCD milieu.png>)
+
+![MCD — partie basse (reviews, review_likes, favorites)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/MCD bas.png>)
 
 #### Tables et relations
 
@@ -1136,8 +1120,6 @@ Time:        4.12s
 
 #### Tests manuels — Scénarios fonctionnels
 
-> **[À COMPLÉTER — ajouter tes propres tests manuels effectués]**
-
 | # | Fonctionnalité | Scénario testé | Résultat obtenu | Statut |
 |---|---|---|---|---|
 | 1 | Inscription | Email déjà existant | Message "Email déjà utilisé" | ✅ |
@@ -1149,7 +1131,8 @@ Time:        4.12s
 | 7 | Avis | Après RDV terminé | Formulaire disponible 1 seule fois | ✅ |
 | 8 | Admin — Ban | Ban d'un utilisateur | Token invalide à la prochaine requête | ✅ |
 | 9 | Admin — Impersonation | Connexion en tant que client | Token 30 min valide | ✅ |
-| 10 | > **[À COMPLÉTER]** | | | |
+| 10 | Session | Inactivité > 30 min | Déconnexion automatique | ✅ |
+| 11 | Compte banni | Requête avec token valide d'un banni | 403 "Compte suspendu" | ✅ |
 
 ### 4.2 Documentation de déploiement
 
@@ -1497,9 +1480,6 @@ const deleteAccount = async (req, res) => {
 ---
 
 ## 6. Difficultés rencontrées et solutions apportées
-
-> **[SECTION TRÈS IMPORTANTE — Le jury creuse sur les difficultés. Montre que tu sais résoudre des problèmes.]**
-> Développe 5 à 6 difficultés concrètes que tu as réellement rencontrées.
 
 ### Difficulté 1 : Sérialisation des BigInt MySQL avec Prisma
 
