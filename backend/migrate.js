@@ -132,6 +132,8 @@ const ALTER_STMTS = [
     `ALTER TABLE reviews ADD COLUMN rating_proprete TINYINT DEFAULT NULL`,
     `ALTER TABLE reviews ADD COLUMN rating_ambiance TINYINT DEFAULT NULL`,
     `ALTER TABLE reviews ADD COLUMN rating_qualite TINYINT DEFAULT NULL`,
+    `ALTER TABLE providers ADD COLUMN access_info TEXT DEFAULT NULL`,
+    `ALTER TABLE providers ADD COLUMN payment_info VARCHAR(255) DEFAULT NULL`,
 ];
 
 async function migrate() {

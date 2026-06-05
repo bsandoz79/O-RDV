@@ -251,6 +251,8 @@ const setupShop = async (req, res) => {
                 phone: profile.phone,
                 latitude,
                 longitude,
+                access_info:  profile.accessInfo  || null,
+                payment_info: profile.paymentInfo || null,
                 ...(imageUrl ? { image_url: imageUrl } : {}),
             },
             create: {
@@ -265,6 +267,8 @@ const setupShop = async (req, res) => {
                 image_url: imageUrl,
                 latitude,
                 longitude,
+                access_info:  profile.accessInfo  || null,
+                payment_info: profile.paymentInfo || null,
             },
         });
 

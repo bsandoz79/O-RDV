@@ -1134,7 +1134,7 @@ function ProDashboard({ shopData, onEditShop }) {
 
 export default function ShopSettings() {
   const [categories,    setCategories]    = useState([]);
-  const [profile,       setProfile]       = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '' });
+  const [profile,       setProfile]       = useState({ name: '', description: '', address: '', zipCode: '', city: '', phone: '', categoryId: '', accessInfo: '', paymentInfo: '' });
   const [manualCoords,  setManualCoords]  = useState(null); // { lat, lng } si le pro a ajusté manuellement
   const [pendingPhotoFiles, setPendingPhotoFiles] = useState([]); // fichiers en attente (création)
   const [serviceGroups, setServiceGroups] = useState([{ name: '', description: '', services: [{ label: '', price: '', duration: '' }] }]);
@@ -1195,6 +1195,8 @@ export default function ShopSettings() {
           city:        data.city        || '',
           phone:       data.phone       || '',
           categoryId:  data.category_id ? String(data.category_id) : '',
+          accessInfo:  data.access_info  || '',
+          paymentInfo: data.payment_info || '',
         });
         // les photos sont gérées dans la section galerie du formulaire
         // Charger les photos galerie
@@ -1492,6 +1494,24 @@ export default function ShopSettings() {
                 </Suspense>
               </div>
               <Field label="Téléphone" icon={Phone} placeholder="06 00 00 00 00" value={profile.phone} onChange={setField('phone')} />
+              <div className="col-full">
+                <TextareaField
+                  label="Infos d'accès (optionnel)"
+                  icon={MapPin}
+                  placeholder="Ex : Parking gratuit au 5 rue de la Paix · Interphone : B12 · Entrée fond de cour…"
+                  value={profile.accessInfo}
+                  onChange={setField('accessInfo')}
+                />
+              </div>
+              <div className="col-full">
+                <Field
+                  label="Moyens de paiement (optionnel)"
+                  icon={null}
+                  placeholder="Ex : Paiement sur place · CB, espèces…"
+                  value={profile.paymentInfo}
+                  onChange={setField('paymentInfo')}
+                />
+              </div>
             </div>
           </SectionCard>
 

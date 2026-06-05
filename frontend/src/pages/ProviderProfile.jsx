@@ -143,6 +143,88 @@ function ReviewSidebar({ reviewData }) {
   );
 }
 
+function InfoTabs({ provider, hasAcces, hasApropos }) {
+  const defaultTab = hasAcces ? 'acces' : 'apropos';
+  const [tab, setTab] = useState(defaultTab);
+
+  return (
+    <div className="mt-6">
+      <h2 className="text-xl font-bold text-slate-900 mb-4">Informations</h2>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+        {/* Onglets */}
+        <div className="flex border-b border-slate-100 px-6 pt-4">
+          {hasAcces && (
+            <button onClick={() => setTab('acces')}
+              className={`mr-8 pb-3 text-sm font-semibold border-b-2 transition
+                ${tab === 'acces' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+              Accès
+            </button>
+          )}
+          {hasApropos && (
+            <button onClick={() => setTab('apropos')}
+              className={`pb-3 text-sm font-semibold border-b-2 transition
+                ${tab === 'apropos' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+              À-propos
+            </button>
+          )}
+        </div>
+
+        {/* Contenu Accès */}
+        {tab === 'acces' && (
+          <div className="p-6 space-y-5">
+            {/* Adresse */}
+            {provider.address && (
+              <div>
+                <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2">
+                  <MapPin size={15} className="text-violet-500" />
+                  Infos pratiques d'accès
+                </h3>
+                <a
+                  href={`https://www.google.com/maps/search/${encodeURIComponent([provider.address, provider.zip_code, provider.city].filter(Boolean).join(', '))}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-slate-700 underline hover:text-violet-600 transition"
+                >
+                  {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
+                </a>
+                {provider.access_info && (
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed whitespace-pre-line">
+                    {provider.access_info}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Paiement */}
+            {provider.payment_info && (
+              <div>
+                <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-2">
+                  <span className="text-violet-500 text-base">💳</span>
+                  Paiement
+                </h3>
+                <p className="text-sm text-slate-600">{provider.payment_info}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Contenu À-propos */}
+        {tab === 'apropos' && (
+          <div className="p-6">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <AlignLeft size={15} className="text-violet-500" />
+              Présentation
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              {provider.description}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ServiceGroupBlock({ group, onSelectService }) {
   const [expanded, setExpanded] = useState(false);
   const SHOW = 5;
@@ -672,30 +754,14 @@ export default function ProviderProfile() {
 
           </div>{/* /flex 2col */}
 
-          {/* ── Section À-propos ───────────────────────── */}
-          {provider.description && (
-            <div className="mt-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Informations</h2>
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                {/* Tab */}
-                <div className="border-b border-slate-100 px-6 pt-4 pb-0">
-                  <span className="inline-block text-sm font-semibold text-slate-900 pb-3 border-b-2 border-slate-900">
-                    À-propos
-                  </span>
-                </div>
-                {/* Contenu */}
-                <div className="p-6">
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
-                    <AlignLeft size={16} className="text-violet-500" />
-                    Présentation
-                  </h3>
-                  <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-                    {provider.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* ── Section Informations (Accès + À-propos) ── */}
+          {(provider.description || provider.access_info || provider.payment_info) && (() => {
+            const hasAcces = !!(provider.address || provider.access_info || provider.payment_info);
+            const hasApropos = !!provider.description;
+            return (
+              <InfoTabs provider={provider} hasAcces={hasAcces} hasApropos={hasApropos} />
+            );
+          })()}
 
           {/* ── Carte + itinéraire (pleine largeur) ─── */}
           {provider.latitude && provider.longitude && (

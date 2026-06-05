@@ -54,6 +54,8 @@ model Provider {
   is_certified Boolean        @default(false)
   is_visible   Boolean        @default(true)
   admin_note   String?        @db.Text
+  access_info  String?        @db.Text
+  payment_info String?        @db.VarChar(255)
   created_at   DateTime       @default(now())
   user         User?          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   category     Category?      @relation(fields: [category_id], references: [id], onDelete: SetNull)
