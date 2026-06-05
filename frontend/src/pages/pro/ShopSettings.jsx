@@ -609,7 +609,8 @@ function RefusalModal({ onConfirm, onClose }) {
 
 // ─── Dashboard Pro ─────────────────────────────────────────────────────────────
 
-function ProDashboard({ shopData, onEditShop }) {
+function ProDashboard({ shopData, onEditShop, galleryPhotos, galleryUploading, galleryError, onGalleryUpload, onGalleryDelete, onSetMain }) {
+  const galleryRef = useRef(null);
   const token = localStorage.getItem('token');
   const [appointments,     setAppointments]     = useState([]);
   const [newClients,       setNewClients]       = useState([]);
@@ -792,6 +793,66 @@ function ProDashboard({ shopData, onEditShop }) {
               <Pencil size={13} /> Modifier la boutique
             </button>
           </div>
+        </div>
+
+        {/* ── Galerie photos ─────────────────────────────────────────── */}
+        <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-bold text-slate-900 flex items-center gap-2">
+                <Images size={16} className="text-sky-500" /> Photos de la boutique
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">{galleryPhotos.length}/10 photos · La photo ⭐ s'affiche en grand sur votre profil</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => galleryRef.current?.click()}
+              disabled={galleryUploading || galleryPhotos.length >= 10}
+              className="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold rounded-xl transition"
+            >
+              {galleryUploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+              {galleryUploading ? 'Upload...' : galleryPhotos.length >= 10 ? '10/10 max' : 'Ajouter des photos'}
+            </button>
+            <input ref={galleryRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={onGalleryUpload} />
+          </div>
+
+          {galleryError && (
+            <p className="mb-3 text-xs font-semibold text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">⚠ {galleryError}</p>
+          )}
+
+          {galleryPhotos.length === 0 ? (
+            <div
+              onClick={() => galleryRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center gap-2 text-slate-400 hover:border-sky-300 hover:text-sky-400 cursor-pointer transition"
+            >
+              <Images size={28} />
+              <p className="text-sm font-medium">Cliquez pour ajouter vos premières photos</p>
+              <p className="text-xs">JPG, PNG, WEBP · max 8 Mo par photo</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>
+              {galleryPhotos.map(photo => (
+                <div key={photo.id} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: photo.is_main ? '2.5px solid #f59e0b' : '2px solid #e2e8f0', aspectRatio: '1' }}>
+                  <img src={photo.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {photo.is_main && (
+                    <span style={{ position: 'absolute', top: 5, left: 5, background: '#f59e0b', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700, color: '#fff' }}>⭐ Principal</span>
+                  )}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', gap: 4, padding: 5, background: 'linear-gradient(to top, rgba(0,0,0,0.65), transparent)' }}>
+                    {!photo.is_main && (
+                      <button type="button" onClick={() => onSetMain(photo.id)} title="Photo principale"
+                        style={{ flex: 1, background: 'rgba(245,158,11,0.9)', border: 'none', borderRadius: 6, padding: 4, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Star size={12} />
+                      </button>
+                    )}
+                    <button type="button" onClick={() => onGalleryDelete(photo.id)} title="Supprimer"
+                      style={{ flex: 1, background: 'rgba(239,68,68,0.9)', border: 'none', borderRadius: 6, padding: 4, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── KPIs ───────────────────────────────────────────────────── */}
@@ -1348,7 +1409,18 @@ export default function ShopSettings() {
 
   // ─── Dashboard pro ─────────────────────────────────────────────────────────
   if (hasShop && view === 'dashboard') {
-    return <ProDashboard shopData={shopData} onEditShop={() => setView('form')} />;
+    return (
+      <ProDashboard
+        shopData={shopData}
+        onEditShop={() => setView('form')}
+        galleryPhotos={galleryPhotos}
+        galleryUploading={galleryUploading}
+        galleryError={galleryError}
+        onGalleryUpload={handleGalleryUpload}
+        onGalleryDelete={handleGalleryDelete}
+        onSetMain={handleSetMain}
+      />
+    );
   }
 
   // ─── Formulaire création / modification ────────────────────────────────────
@@ -1411,73 +1483,6 @@ export default function ShopSettings() {
               <Field label="Téléphone" icon={Phone} placeholder="06 00 00 00 00" value={profile.phone} onChange={setField('phone')} />
             </div>
           </SectionCard>
-
-          {/* ── Galerie photos (seulement si la boutique existe) ── */}
-          {shopData && <SectionCard icon={Images} gradient="linear-gradient(135deg,#0ea5e9,#0284c7)" title="Photos de la boutique">
-            <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-              Ajoutez jusqu'à 10 photos. Cliquez sur l'étoile pour choisir la photo principale (affichée en grand sur votre profil).
-            </p>
-
-            {/* Grille des photos */}
-            {galleryPhotos.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
-                {galleryPhotos.map(photo => (
-                  <div key={photo.id} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: photo.is_main ? '2px solid #f59e0b' : '2px solid #e2e8f0', aspectRatio: '1' }}>
-                    <img src={photo.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    {photo.is_main && (
-                      <span style={{ position: 'absolute', top: 6, left: 6, background: '#f59e0b', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <Star size={10} /> Principale
-                      </span>
-                    )}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', gap: 4, padding: 6, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }}>
-                      {!photo.is_main && (
-                        <button type="button" onClick={() => handleSetMain(photo.id)}
-                          title="Définir comme photo principale"
-                          style={{ flex: 1, background: 'rgba(245,158,11,0.9)', border: 'none', borderRadius: 6, padding: '4px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Star size={13} />
-                        </button>
-                      )}
-                      <button type="button" onClick={() => handleGalleryDelete(photo.id)}
-                        title="Supprimer"
-                        style={{ flex: 1, background: 'rgba(239,68,68,0.9)', border: 'none', borderRadius: 6, padding: '4px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Bouton upload */}
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleGalleryUpload}
-            />
-            <button
-              type="button"
-              onClick={() => galleryInputRef.current?.click()}
-              disabled={galleryUploading || galleryPhotos.length >= 10}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 18px', borderRadius: 12,
-                border: '2px dashed #cbd5e1',
-                background: '#f8fafc',
-                color: galleryPhotos.length >= 10 ? '#94a3b8' : '#475569',
-                fontSize: 13, fontWeight: 600, cursor: galleryPhotos.length >= 10 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              {galleryUploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
-              {galleryUploading ? 'Upload en cours...' : galleryPhotos.length >= 10 ? 'Maximum atteint (10/10)' : `Ajouter des photos (${galleryPhotos.length}/10)`}
-            </button>
-            {galleryError && (
-              <p style={{ marginTop: 8, color: '#ef4444', fontSize: 12, fontWeight: 600 }}>⚠ {galleryError}</p>
-            )}
-          </SectionCard>}
 
           <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
             {/* Légende colonnes */}
