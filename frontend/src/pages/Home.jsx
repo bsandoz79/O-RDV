@@ -100,6 +100,9 @@ export default function Home() {
           todayOpen:     pro.today_open,
           todayClose:    pro.today_close,
           todayIsClosed: pro.today_is_closed,
+          address:       pro.address || null,
+          zip_code:      pro.zip_code || null,
+          city:          pro.city || null,
         })));
         setLoading(false);
       })
