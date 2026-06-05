@@ -5,6 +5,7 @@ import {
   Camera, FileText, Hash, X, Calendar, User,
   ChevronRight, Pencil, LayoutDashboard,
   TrendingUp, Users, Euro, ChevronLeft, Ban, Archive,
+  Images, Star, Upload,
 } from 'lucide-react';
 import API_BASE_URL from "../../api/api";
 import './ShopSettings.css';
@@ -1159,6 +1160,9 @@ export default function ShopSettings() {
   const [imageFile,     setImageFile]     = useState(null);
   const [imagePreview,  setImagePreview]  = useState(null);
   const [services,      setServices]      = useState([{ label: '', price: '', duration: '', image_url: '' }]);
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const galleryInputRef = useRef(null);
   const [hours,         setHours]         = useState(INITIAL_HOURS);
   const [loading,       setLoading]       = useState(false);
   const [success,       setSuccess]       = useState(false);
@@ -1214,6 +1218,9 @@ export default function ShopSettings() {
           categoryId:  data.category_id ? String(data.category_id) : '',
         });
         if (data.image_url) setImagePreview(data.image_url.startsWith('http') ? data.image_url : `${API_BASE_URL.replace('/api', '')}${data.image_url}`);
+        // Charger les photos galerie
+        fetch(`${API_BASE_URL}/shop/photos/${data.id}`)
+          .then(r => r.json()).then(setGalleryPhotos).catch(() => {});
         if (data.services?.length > 0) {
           setServices(data.services.map(s => ({ label: s.label || '', price: s.price ?? '', duration: s.duration ?? '', image_url: s.image_url || '' })));
         }
@@ -1240,6 +1247,47 @@ export default function ShopSettings() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) { setImageFile(file); setImagePreview(URL.createObjectURL(file)); }
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const token = localStorage.getItem('token');
+    setGalleryUploading(true);
+    for (const file of files) {
+      if (galleryPhotos.length >= 10) break;
+      const fd = new FormData();
+      fd.append('photo', file);
+      const res = await fetch(`${API_BASE_URL}/shop/photos`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      if (res.ok) {
+        const photo = await res.json();
+        setGalleryPhotos(prev => [...prev, photo]);
+      }
+    }
+    setGalleryUploading(false);
+    e.target.value = '';
+  };
+
+  const handleGalleryDelete = async (photoId) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/shop/photos/${photoId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
+  };
+
+  const handleSetMain = async (photoId) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/shop/photos/${photoId}/main`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setGalleryPhotos(prev => prev.map(p => ({ ...p, is_main: p.id === photoId })));
   };
 
   const handleSubmit = async (e) => {
@@ -1364,6 +1412,70 @@ export default function ShopSettings() {
               </div>
               <Field label="Téléphone" icon={Phone} placeholder="06 00 00 00 00" value={profile.phone} onChange={setField('phone')} />
             </div>
+          </SectionCard>
+
+          {/* ── Galerie photos ── */}
+          <SectionCard icon={Images} gradient="linear-gradient(135deg,#0ea5e9,#0284c7)" title="Photos de la boutique">
+            <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+              Ajoutez jusqu'à 10 photos. Cliquez sur l'étoile pour choisir la photo principale (affichée en grand sur votre profil).
+            </p>
+
+            {/* Grille des photos */}
+            {galleryPhotos.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
+                {galleryPhotos.map(photo => (
+                  <div key={photo.id} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: photo.is_main ? '2px solid #f59e0b' : '2px solid #e2e8f0', aspectRatio: '1' }}>
+                    <img src={photo.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {photo.is_main && (
+                      <span style={{ position: 'absolute', top: 6, left: 6, background: '#f59e0b', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Star size={10} /> Principale
+                      </span>
+                    )}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', gap: 4, padding: 6, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }}>
+                      {!photo.is_main && (
+                        <button type="button" onClick={() => handleSetMain(photo.id)}
+                          title="Définir comme photo principale"
+                          style={{ flex: 1, background: 'rgba(245,158,11,0.9)', border: 'none', borderRadius: 6, padding: '4px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Star size={13} />
+                        </button>
+                      )}
+                      <button type="button" onClick={() => handleGalleryDelete(photo.id)}
+                        title="Supprimer"
+                        style={{ flex: 1, background: 'rgba(239,68,68,0.9)', border: 'none', borderRadius: 6, padding: '4px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bouton upload */}
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleGalleryUpload}
+            />
+            <button
+              type="button"
+              onClick={() => galleryInputRef.current?.click()}
+              disabled={galleryUploading || galleryPhotos.length >= 10}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 18px', borderRadius: 12,
+                border: '2px dashed #cbd5e1',
+                background: '#f8fafc',
+                color: galleryPhotos.length >= 10 ? '#94a3b8' : '#475569',
+                fontSize: 13, fontWeight: 600, cursor: galleryPhotos.length >= 10 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {galleryUploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+              {galleryUploading ? 'Upload en cours...' : galleryPhotos.length >= 10 ? 'Maximum atteint (10/10)' : `Ajouter des photos (${galleryPhotos.length}/10)`}
+            </button>
           </SectionCard>
 
           <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">

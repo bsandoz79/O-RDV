@@ -168,7 +168,11 @@ const getProviderProfile = async (req, res) => {
     try {
         const provider = await prisma.provider.findUnique({
             where: { id: Number(req.params.providerId) },
-            include: { services: true, businessHours: true },
+            include: {
+                services: true,
+                businessHours: true,
+                photos: { orderBy: [{ is_main: 'desc' }, { display_order: 'asc' }, { created_at: 'asc' }] },
+            },
         });
         if (!provider) return res.status(404).json({ error: "Prestataire introuvable" });
         const { businessHours, ...rest } = provider;
@@ -295,4 +299,82 @@ const setupShop = async (req, res) => {
     }
 };
 
-module.exports = { getCategories, getAllProviders, getProviderProfile, getShopInfo, setupShop };
+const getProviderPhotos = async (req, res) => {
+    try {
+        const photos = await prisma.providerPhoto.findMany({
+            where: { provider_id: Number(req.params.providerId) },
+            orderBy: [{ is_main: 'desc' }, { display_order: 'asc' }, { created_at: 'asc' }],
+        });
+        res.json(photos);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const addProviderPhoto = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'Aucun fichier envoyé.' });
+        const provider = await prisma.provider.findFirst({ where: { user_id: req.auth.userId } });
+        if (!provider) return res.status(404).json({ error: 'Boutique introuvable' });
+
+        const count = await prisma.providerPhoto.count({ where: { provider_id: provider.id } });
+        if (count >= 10) return res.status(400).json({ error: 'Maximum 10 photos atteint.' });
+
+        const photo = await prisma.providerPhoto.create({
+            data: {
+                provider_id: provider.id,
+                photo_url: req.file.path,
+                is_main: count === 0,
+                display_order: count,
+            },
+        });
+        res.status(201).json(photo);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const deleteProviderPhoto = async (req, res) => {
+    try {
+        const provider = await prisma.provider.findFirst({ where: { user_id: req.auth.userId } });
+        if (!provider) return res.status(404).json({ error: 'Boutique introuvable' });
+
+        const photo = await prisma.providerPhoto.findFirst({
+            where: { id: Number(req.params.photoId), provider_id: provider.id },
+        });
+        if (!photo) return res.status(404).json({ error: 'Photo introuvable' });
+
+        await prisma.providerPhoto.delete({ where: { id: photo.id } });
+
+        if (photo.is_main) {
+            const next = await prisma.providerPhoto.findFirst({
+                where: { provider_id: provider.id },
+                orderBy: { created_at: 'asc' },
+            });
+            if (next) await prisma.providerPhoto.update({ where: { id: next.id }, data: { is_main: true } });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const setMainPhoto = async (req, res) => {
+    try {
+        const provider = await prisma.provider.findFirst({ where: { user_id: req.auth.userId } });
+        if (!provider) return res.status(404).json({ error: 'Boutique introuvable' });
+
+        const photo = await prisma.providerPhoto.findFirst({
+            where: { id: Number(req.params.photoId), provider_id: provider.id },
+        });
+        if (!photo) return res.status(404).json({ error: 'Photo introuvable' });
+
+        await prisma.providerPhoto.updateMany({ where: { provider_id: provider.id }, data: { is_main: false } });
+        await prisma.providerPhoto.update({ where: { id: photo.id }, data: { is_main: true } });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getCategories, getAllProviders, getProviderProfile, getShopInfo, setupShop, getProviderPhotos, addProviderPhoto, deleteProviderPhoto, setMainPhoto };

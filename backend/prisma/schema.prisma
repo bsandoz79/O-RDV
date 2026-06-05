@@ -62,8 +62,21 @@ model Provider {
   appointments Appointment[]
   reviews      Review[]
   favorites    Favorite[]
+  photos       ProviderPhoto[]
 
   @@map("providers")
+}
+
+model ProviderPhoto {
+  id            Int      @id @default(autoincrement())
+  provider_id   Int
+  photo_url     String   @db.VarChar(255)
+  is_main       Boolean  @default(false)
+  display_order Int      @default(0)
+  created_at    DateTime @default(now())
+  provider      Provider @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@map("provider_photos")
 }
 
 model BusinessHour {

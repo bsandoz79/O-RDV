@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
   ChevronRight, Scissors, CheckCircle2, MessageSquare, ThumbsUp,
-  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan,
+  BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan, X, Images,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';
 import BookingModal from '../components/BookingModal';
@@ -61,6 +61,7 @@ export default function ProviderProfile() {
   const [adminNote, setAdminNote] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [adminMsg, setAdminMsg] = useState('');
+  const [lightboxIdx, setLightboxIdx] = useState(null);
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = storedUser.role === 'admin';
@@ -130,14 +131,118 @@ export default function ProviderProfile() {
     ? (provider.image_url.startsWith('http') ? provider.image_url : `${API_BASE_URL.replace('/api', '')}${provider.image_url}`)
     : 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=500&fit=crop';
 
+  const photos = provider.photos || [];
+  const mainPhoto = photos.find(p => p.is_main) || photos[0];
+  const mainUrl = mainPhoto ? mainPhoto.photo_url : imageUrl;
+  const otherPhotos = photos.filter(p => p.id !== mainPhoto?.id).slice(0, 4);
+  const hasGallery = photos.length > 0;
+
   const status = getOpenStatus(provider.hours);
 
   return (
     <>
       <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-        {/* ── Hero ─────────────────────────────────────────────────── */}
-        <div className="relative h-72 sm:h-96 overflow-hidden bg-slate-200">
+        {/* ── Galerie / Hero ───────────────────────────────────────── */}
+        {hasGallery ? (
+          /* Galerie style Planity */
+          <div className="relative bg-slate-100" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+            {/* Bouton retour */}
+            <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-slate-700 text-sm font-semibold px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm hover:bg-white transition">
+              <ArrowLeft size={14} /> Retour
+            </button>
+
+            {/* Grille photos */}
+            <div className="max-w-5xl mx-auto px-4 pt-12 pb-0">
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: 'repeat(2, 200px)', gap: 6, borderRadius: 16, overflow: 'hidden' }}>
+                {/* Photo principale */}
+                <div
+                  style={{ gridRow: '1 / 3', cursor: 'pointer', overflow: 'hidden' }}
+                  onClick={() => setLightboxIdx(photos.indexOf(mainPhoto))}
+                >
+                  <img src={mainUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                    onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
+                    onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                  />
+                </div>
+                {/* Photos secondaires */}
+                {[0,1,2,3].map(i => {
+                  const p = otherPhotos[i];
+                  const isLast = i === 3 && photos.length > 5;
+                  return (
+                    <div key={i} style={{ position: 'relative', overflow: 'hidden', background: '#e2e8f0', cursor: p ? 'pointer' : 'default' }}
+                      onClick={() => p && setLightboxIdx(photos.indexOf(p))}>
+                      {p ? (
+                        <>
+                          <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                            onMouseEnter={e => e.target.style.transform = 'scale(1.03)'}
+                            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                          />
+                          {isLast && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: 6 }}>
+                              <Images size={22} />
+                              <span style={{ fontSize: 13, fontWeight: 700 }}>Voir les {photos.length} photos</span>
+                            </div>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Nom et infos sous la grille */}
+              <div className="pt-5 pb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 flex items-center gap-2">
+                    {provider.name}
+                    {provider.is_certified && <BadgeCheck size={22} className="text-blue-500" title="Boutique certifiée" />}
+                  </h1>
+                  {status && (
+                    <span className={`mt-1 inline-flex text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {status.open ? '● ' : '○ '}{status.label}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Lightbox */}
+            {lightboxIdx !== null && (
+              <div
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={() => setLightboxIdx(null)}
+              >
+                <button style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+                  <X size={20} />
+                </button>
+                {lightboxIdx > 0 && (
+                  <button
+                    style={{ position: 'absolute', left: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', fontSize: 20 }}
+                    onClick={e => { e.stopPropagation(); setLightboxIdx(i => Math.max(0, i - 1)); }}
+                  >‹</button>
+                )}
+                <img
+                  src={photos[lightboxIdx]?.photo_url}
+                  alt=""
+                  style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 8 }}
+                  onClick={e => e.stopPropagation()}
+                />
+                {lightboxIdx < photos.length - 1 && (
+                  <button
+                    style={{ position: 'absolute', right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 50, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', fontSize: 20 }}
+                    onClick={e => { e.stopPropagation(); setLightboxIdx(i => Math.min(photos.length - 1, i + 1)); }}
+                  >›</button>
+                )}
+                <div style={{ position: 'absolute', bottom: 16, color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
+                  {lightboxIdx + 1} / {photos.length}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Hero classique (pas de galerie) */
+          <div className="relative h-72 sm:h-96 overflow-hidden bg-slate-200">
           <img src={imageUrl} alt={provider.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
@@ -173,6 +278,7 @@ export default function ProviderProfile() {
             </div>
           </div>
         </div>
+        )}
 
         {/* ── Barre outils admin ───────────────────────────────────── */}
         {isAdmin && (
