@@ -58,14 +58,17 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
     : [provider.image];
 
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [slideDir, setSlideDir] = useState(null); // 'left' | 'right' | null
   const currentPhoto = photos[photoIdx] || provider.image;
 
   const prev = (e) => {
     e.stopPropagation();
+    setSlideDir('left');
     setPhotoIdx(i => (i - 1 + photos.length) % photos.length);
   };
   const next = (e) => {
     e.stopPropagation();
+    setSlideDir('right');
     setPhotoIdx(i => (i + 1) % photos.length);
   };
 
@@ -84,9 +87,10 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
       {/* ── Image gauche avec carousel ───────────────────────────── */}
       <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden" style={{ width: '230px' }}>
         <img
+          key={photoIdx}
           src={currentPhoto}
           alt={provider.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`w-full h-full object-cover ${slideDir === 'right' ? 'carousel-from-right' : slideDir === 'left' ? 'carousel-from-left' : ''}`}
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10 pointer-events-none" />
@@ -114,7 +118,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
               {photos.map((_, i) => (
                 <button
                   key={i}
-                  onClick={e => { e.stopPropagation(); setPhotoIdx(i); }}
+                  onClick={e => { e.stopPropagation(); setSlideDir(i > photoIdx ? 'right' : 'left'); setPhotoIdx(i); }}
                   className={`rounded-full transition-all ${i === photoIdx ? 'w-3.5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`}
                 />
               ))}
