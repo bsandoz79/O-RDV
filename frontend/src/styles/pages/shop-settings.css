@@ -1,0 +1,107 @@
+.shop-settings-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding-top: 7rem;
+  padding-bottom: 4rem;
+  font-family: 'DM Sans', sans-serif;
+  color: #0f172a;
+}
+
+.shop-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.shop-header { margin-bottom: 2.5rem; }
+.shop-header h1 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  color: #0f172a;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+.shop-header p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.shop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.profile-grid .col-full { grid-column: 1 / -1; }
+
+.service-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  align-items: flex-end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+.service-row:hover {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 0.75rem;
+  transition: background 0.15s;
+}
+.hours-row:last-child  { border-bottom: none; }
+.hours-row--closed     { opacity: 0.5; }
+
+.day-label {
+  font-weight: 600;
+  color: #334155;
+  width: 90px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.hours-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.time-input    { width: 108px !important; }
+.hours-separator { color: #94a3b8; font-size: 11px; font-weight: 700; }
+
+.closed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+  user-select: none;
+}
+.closed-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  transition: color 0.2s;
+}
+.closed-toggle:hover .closed-label { color: #f43f5e; }

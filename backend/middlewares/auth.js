@@ -3,12 +3,12 @@ const prisma = require('../prisma/client');
 
 module.exports = async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        // Cookie httpOnly en priorité, Authorization header en fallback (impersonation admin)
+        const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
         if (!token) return res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Vérifie si le compte est banni
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
             select: { is_banned: true, ban_reason: true },

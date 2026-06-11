@@ -73,17 +73,13 @@ function applyImpersonationHash() {
   window.dispatchEvent(new Event('authChange'));
 }
 
-function isTokenExpired(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 < Date.now();
-  } catch {
-    return true;
-  }
-}
 
 function logout() {
-  localStorage.clear();
+  fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  }).catch(() => {});
+  localStorage.removeItem('user');
   window.dispatchEvent(new Event('authChange'));
   window.location.href = '/login?session=expired';
 }
@@ -102,18 +98,16 @@ function SessionGuard() {
 
   const resetTimer = () => {
     clearTimeout(timerRef.current);
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!localStorage.getItem('user')) return;
     timerRef.current = setTimeout(logout, INACTIVITY_DELAY);
   };
 
-  // Vérifie token expiré + ban à chaque navigation
+  // Ping le backend à chaque navigation pour détecter expiration cookie + ban
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    if (isTokenExpired(token)) { logout(); return; }
-    // Ping le backend pour détecter un ban en temps réel
-    fetch(`${process.env.REACT_APP_API_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!localStorage.getItem('user')) return;
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/user/me`, {
+      credentials: 'include',
+    })
       .then(r => r.json())
       .then(d => {
         if (d.banned) {
@@ -157,10 +151,9 @@ function RedirectBanner() {
 }
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || 'null');
 
-  if (!token || !user) {
+  if (!user) {
     sessionStorage.setItem('redirectMsg', 'Veuillez vous connecter pour accéder à cette page.');
     return <Navigate to="/login" replace />;
   }

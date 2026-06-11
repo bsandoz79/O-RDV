@@ -3,6 +3,15 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const prisma = require('../prisma/client');
 
+const isProd = process.env.NODE_ENV === 'production';
+
+const COOKIE_OPTS = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+};
+
 function getOAuth2Client() {
     return new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
@@ -63,6 +72,9 @@ const googleCallback = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Token dans le cookie httpOnly — plus dans l'URL
+        res.cookie('token', token, COOKIE_OPTS);
+
         const userJson = encodeURIComponent(JSON.stringify({
             id:         user.id,
             email:      user.email,
@@ -71,7 +83,7 @@ const googleCallback = async (req, res) => {
             last_name:  user.last_name,
         }));
 
-        res.redirect(`${FRONTEND_URL}/auth/callback?token=${encodeURIComponent(token)}&user=${userJson}`);
+        res.redirect(`${FRONTEND_URL}/auth/callback?user=${userJson}`);
     } catch (err) {
         console.error('[Google OAuth]', err.message);
         res.redirect(`${FRONTEND_URL}/login?error=google`);

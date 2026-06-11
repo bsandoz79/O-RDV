@@ -4,6 +4,15 @@ const prisma = require('../prisma/client');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const isProd = process.env.NODE_ENV === 'production';
+
+const COOKIE_OPTS = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 24h
+};
+
 const register = async (req, res) => {
     const { email, password, role } = req.body;
 
@@ -35,7 +44,8 @@ const register = async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.status(201).json({ token, user: { id: user.id, email, role: finalRole } });
+        res.cookie('token', token, COOKIE_OPTS);
+        res.status(201).json({ user: { id: user.id, email, role: finalRole } });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -56,14 +66,16 @@ const login = async (req, res) => {
         const match = await bcrypt.compare(password, user.password);
         if (!match) return res.status(401).json({ error: "Identifiants invalides" });
 
+        if (user.is_banned) return res.status(403).json({ error: "Compte suspendu.", banned: true, ban_reason: user.ban_reason });
+
         const token = jwt.sign(
             { id: user.id, role: user.role },
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '24h' }
         );
 
+        res.cookie('token', token, COOKIE_OPTS);
         res.json({
-            token,
             user: {
                 id: user.id,
                 email: user.email,
@@ -78,4 +90,9 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const logout = (req, res) => {
+    res.clearCookie('token', { ...COOKIE_OPTS, maxAge: 0 });
+    res.json({ message: "Déconnecté avec succès." });
+};
+
+module.exports = { register, login, logout };

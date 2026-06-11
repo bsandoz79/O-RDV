@@ -7,11 +7,10 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = params.get('token');
     const user  = params.get('user');
     const error = params.get('error');
 
-    if (error || !token || !user) {
+    if (error || !user) {
       const msg = error === 'banned'
         ? 'Ce compte est suspendu.'
         : 'Connexion Google échouée. Réessayez.';
@@ -21,8 +20,8 @@ export default function AuthCallback() {
     }
 
     try {
+      // Le token est dans le cookie httpOnly (posé par le backend lors du redirect)
       const parsed = JSON.parse(decodeURIComponent(user));
-      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(parsed));
       window.dispatchEvent(new Event('authChange'));
       navigate(parsed.role === 'pro' ? '/pro/settings' : '/account', { replace: true });

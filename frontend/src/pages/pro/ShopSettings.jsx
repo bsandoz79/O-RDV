@@ -8,7 +8,6 @@ import {
   Images, Star, Upload,
 } from 'lucide-react';
 import API_BASE_URL from "../../api/api";
-import './ShopSettings.css';
 
 const DraggablePinMap = lazy(() => import('../../components/DraggablePinMap'));
 

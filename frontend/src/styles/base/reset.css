@@ -1,0 +1,4 @@
+/* Réserve l'espace de la scrollbar en permanence — évite le décalage quand overflow:hidden */
+html {
+  scrollbar-gutter: stable;
+}

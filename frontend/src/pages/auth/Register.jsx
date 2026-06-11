@@ -28,13 +28,13 @@ export default function Register() {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password, role }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         window.dispatchEvent(new Event("authChange"));
 
