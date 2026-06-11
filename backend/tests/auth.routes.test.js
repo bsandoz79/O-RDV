@@ -34,7 +34,7 @@ describe('POST /api/auth/register', () => {
         expect(res.body.error).toMatch(/déjà/i);
     });
 
-    test('retourne 201 et un token pour un nouvel utilisateur', async () => {
+    test('retourne 201 et un cookie pour un nouvel utilisateur', async () => {
         prisma.user.findUnique.mockResolvedValueOnce(null);
         prisma.user.create.mockResolvedValueOnce({ id: 5, email: 'nouveau@test.com', role: 'user' });
 
@@ -43,20 +43,17 @@ describe('POST /api/auth/register', () => {
             .send({ email: 'nouveau@test.com', password: 'Password1', role: 'user' });
 
         expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty('token');
         expect(res.body.user).toMatchObject({ email: 'nouveau@test.com', role: 'user' });
+        expect(res.headers['set-cookie']).toBeDefined();
     });
 
-    test("force le rôle 'user' si on envoie 'admin'", async () => {
-        prisma.user.findUnique.mockResolvedValueOnce(null);
-        prisma.user.create.mockResolvedValueOnce({ id: 6, email: 'hacker@test.com', role: 'user' });
-
+    test("rejette le rôle 'admin' à l'inscription", async () => {
         const res = await request(app)
             .post('/api/auth/register')
             .send({ email: 'hacker@test.com', password: 'Password1', role: 'admin' });
 
-        expect(res.status).toBe(201);
-        expect(res.body.user.role).toBe('user');
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/rôle invalide/i);
     });
 });
 
@@ -86,12 +83,12 @@ describe('POST /api/auth/login', () => {
         expect(res.status).toBe(401);
     });
 
-    test('retourne 200 et un token si identifiants corrects', async () => {
+    test('retourne 200 et un cookie si identifiants corrects', async () => {
         const bcrypt = require('bcrypt');
         const hash = await bcrypt.hash('secret', 10);
         prisma.user.findUnique.mockResolvedValueOnce({
             id: 2, email: 'user@test.com', password: hash, role: 'pro',
-            first_name: 'Alice', last_name: 'Martin', phone: null,
+            first_name: 'Alice', last_name: 'Martin', phone: null, is_banned: false,
         });
 
         const res = await request(app)
@@ -99,7 +96,7 @@ describe('POST /api/auth/login', () => {
             .send({ email: 'user@test.com', password: 'secret' });
 
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('token');
         expect(res.body.user.role).toBe('pro');
+        expect(res.headers['set-cookie']).toBeDefined();
     });
 });

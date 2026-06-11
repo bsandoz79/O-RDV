@@ -11,6 +11,7 @@ jest.mock('../prisma/client', () => ({
 }));
 
 jest.mock('../utils/safeJson', () => (res, data) => res.json(data));
+jest.mock('../redis', () => ({ cacheGet: jest.fn(), cacheSet: jest.fn(), cacheDel: jest.fn() }));
 
 const prisma = require('../prisma/client');
 const reviewsRoutes = require('../routes/reviews');
@@ -46,7 +47,7 @@ describe('POST /api/reviews', () => {
             .send({ rating: 4 });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toMatch(/obligatoires/i);
+        expect(res.body.error).toMatch(/invalide/i);
     });
 
     test('retourne 400 si note hors plage (> 5)', async () => {

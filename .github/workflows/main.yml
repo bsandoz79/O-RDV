@@ -9,6 +9,14 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    env:
+      # Variables d'environnement pour les tests — valeurs fictives (Prisma est mocké)
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci_test_secret_key' }}
+      DATABASE_URL: mysql://test:test@localhost:3306/ordv_test
+      CLOUDINARY_CLOUD_NAME: test
+      CLOUDINARY_API_KEY: test
+      CLOUDINARY_API_SECRET: test
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v3
       - name: Setup Node.js
@@ -29,6 +37,8 @@ jobs:
 
   build-frontend:
     runs-on: ubuntu-latest
+    env:
+      REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://o-rdv-production.up.railway.app/api' }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup Node.js

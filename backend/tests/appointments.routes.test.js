@@ -51,7 +51,7 @@ describe('POST /api/appointments', () => {
             .send({ provider_id: 1 });
 
         expect(res.status).toBe(400);
-        expect(res.body.error).toMatch(/obligatoires/i);
+        expect(res.body.error).toMatch(/invalide/i);
     });
 
     test('retourne 400 si date dans le passé', async () => {
