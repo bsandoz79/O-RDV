@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -317,13 +317,12 @@ export default function ProviderProfile() {
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = storedUser.role === 'admin';
-  const token = localStorage.getItem('token');
-  const adminHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const adminHeaders = { 'Content-Type': 'application/json' };
 
   const adminAction = async (patch, label) => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/providers/${id}`, {
-        method: 'PATCH', headers: adminHeaders, body: JSON.stringify(patch),
+        method: 'PATCH', credentials: 'include', headers: adminHeaders, body: JSON.stringify(patch),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       setProvider(prev => ({ ...prev, ...patch }));
@@ -342,8 +341,7 @@ export default function ProviderProfile() {
       .then(r => { if (!r.ok) throw new Error('Prestataire introuvable'); return r.json(); })
       .then(d => { setProvider(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
-    const token = localStorage.getItem('token');
-    fetch(`${API_BASE_URL}/reviews/provider/${id}`, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+    fetch(`${API_BASE_URL}/reviews/provider/${id}`, storedUser ? { credentials: 'include' } : {})
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.reviews) setReviewData(d); })
       .catch(() => {});

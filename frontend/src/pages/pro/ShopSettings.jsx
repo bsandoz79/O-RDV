@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+﻿import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import {
   Store, Plus, Trash2, Clock, Save, MapPin,
   Building2, Loader2, CheckCircle, Phone,
@@ -609,7 +609,6 @@ function RefusalModal({ onConfirm, onClose }) {
 // ─── Dashboard Pro ─────────────────────────────────────────────────────────────
 
 function ProDashboard({ shopData, onEditShop }) {
-  const token = localStorage.getItem('token');
   const [appointments,     setAppointments]     = useState([]);
   const [newClients,       setNewClients]       = useState([]);
   const [loading,          setLoading]          = useState(true);
@@ -629,7 +628,7 @@ function ProDashboard({ shopData, onEditShop }) {
       });
 
   useEffect(() => {
-    const headers = { Authorization: `Bearer ${token}` };
+    const headers = {};
     Promise.all([
       fetchAppointments(headers),
       fetch(`${API_BASE_URL}/user/new-clients`, { headers }).then(r => r.json()),
@@ -640,7 +639,7 @@ function ProDashboard({ shopData, onEditShop }) {
     }).catch(() => {}).finally(() => setLoading(false));
 
     const interval = setInterval(() => {
-      fetchAppointments({ Authorization: `Bearer ${token}` }).catch(() => {});
+      fetchAppointments({ }).catch(() => {});
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -649,7 +648,7 @@ function ProDashboard({ shopData, onEditShop }) {
   const handleRefuseConfirm = async (reason, release) => {
     const id = refusalTarget;
     setRefusalTarget(null);
-    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+    const headers = { 'Content-Type': 'application/json' };
     try {
       const res = await fetch(`${API_BASE_URL}/user/appointments/${id}/refuse`, {
         method: 'PATCH',
@@ -658,7 +657,7 @@ function ProDashboard({ shopData, onEditShop }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
-      fetchAppointments({ Authorization: `Bearer ${token}` }).catch(() => {});
+      fetchAppointments({ }).catch(() => {});
     } catch (err) {
       alert(err.message);
     }
@@ -1163,10 +1162,8 @@ export default function ShopSettings() {
     if (!savedUser) { setCheckingShop(false); return; }
     const parsedUser = JSON.parse(savedUser);
     setUser(parsedUser);
-
-    const token = localStorage.getItem('token');
-    fetch(`${API_BASE_URL}/shop/info/${parsedUser.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch(`${API_BASE_URL}/shop/info/${parsedUser.id}`, { 
+      credentials: 'include', headers: { },
     })
       .then(res => {
         if (res.status === 404) {
@@ -1240,7 +1237,6 @@ export default function ShopSettings() {
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    const token = localStorage.getItem('token');
     setGalleryUploading(true);
     setGalleryError('');
     try {
@@ -1250,7 +1246,6 @@ export default function ShopSettings() {
         fd.append('photo', file);
         const res = await fetch(`${API_BASE_URL}/shop/photos`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
           body: fd,
         });
         if (res.ok) {
@@ -1270,19 +1265,15 @@ export default function ShopSettings() {
   };
 
   const handleGalleryDelete = async (photoId) => {
-    const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE_URL}/shop/photos/${photoId}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
   };
 
   const handleSetMain = async (photoId) => {
-    const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE_URL}/shop/photos/${photoId}/main`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setGalleryPhotos(prev => prev.map(p => ({ ...p, is_main: p.id === photoId })));
   };
@@ -1298,7 +1289,7 @@ export default function ShopSettings() {
       try {
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
-          { headers: { 'User-Agent': 'ORDV-App/1.0' } }
+          {  credentials: 'include', headers: { 'User-Agent': 'ORDV-App/1.0' } }
         );
         const geoData = await geoRes.json();
         if (geoData.length === 0) {
@@ -1318,24 +1309,21 @@ export default function ShopSettings() {
       );
       formData.append('services', JSON.stringify(flatServices));
       formData.append('hours',     JSON.stringify(Object.keys(hours).map(day => ({ day_of_week: day, ...hours[day] }))));
-
-      const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/shop/setup`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `Erreur serveur (${res.status}).`); }
 
       // Upload photos en attente (mode création ou photos ajoutées en édition)
       if (pendingPhotoFiles.length > 0) {
-        const infoRes = await fetch(`${API_BASE_URL}/shop/info/${user.id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const infoRes = await fetch(`${API_BASE_URL}/shop/info/${user.id}`, { credentials: 'include' });
         const infoData = infoRes.ok ? await infoRes.json() : null;
         if (infoData?.id) {
           for (const { file } of pendingPhotoFiles) {
             const fd = new FormData();
             fd.append('photo', file);
-            await fetch(`${API_BASE_URL}/shop/photos`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+            await fetch(`${API_BASE_URL}/shop/photos`, { method: 'POST', body: fd });
           }
           // Recharger les photos galerie
           const photosRes = await fetch(`${API_BASE_URL}/shop/photos/${infoData.id}`);

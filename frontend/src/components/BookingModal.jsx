@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, CalendarDays, Clock, CheckCircle2, Loader2, Bell, Lock } from 'lucide-react';
 import API_BASE_URL from '../api/api';
@@ -133,9 +133,8 @@ export default function BookingModal({ provider, preselectedService, onClose, in
   // ─── Confirmation / Envoi ────────────────────────────────────────────
   const handleConfirm = async () => {
     const user = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('token');
 
-    if (!user || !token) {
+    if (!user) {
       sessionStorage.setItem('booking_redirect', JSON.stringify({
         providerId: provider.id,
         serviceId: selectedService?.id,
@@ -172,12 +171,11 @@ export default function BookingModal({ provider, preselectedService, onClose, in
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/appointments`, {
+      const res = await fetch(`${API_BASE_URL}/appointments`, { 
         method: 'POST',
-        headers: {
+        credentials: 'include', headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+                  },
         body: JSON.stringify(payload),
       });
 
@@ -185,7 +183,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
         // Si un numéro a été saisi, on le sauvegarde dans le profil utilisateur
         if (phone.trim()) {
           // On récupère d'abord le profil complet pour ne pas écraser first_name / last_name
-          fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${API_BASE_URL}/user/me`, { credentials: 'include' })
             .then(r => r.json())
             .then(profile => {
               const payload = {
@@ -194,9 +192,9 @@ export default function BookingModal({ provider, preselectedService, onClose, in
                 email:      profile.email,
                 phone:      phone.trim(),
               };
-              fetch(`${API_BASE_URL}/user/update`, {
+              fetch(`${API_BASE_URL}/user/update`, { 
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                credentials: 'include', headers: { 'Content-Type': 'application/json', },
                 body: JSON.stringify(payload),
               }).catch(() => {});
               // Mettre à jour le localStorage avec le numéro

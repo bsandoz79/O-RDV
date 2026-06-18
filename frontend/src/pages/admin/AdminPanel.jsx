@@ -30,9 +30,8 @@ function StatCard({ icon: Icon, label, value, color }) {
 }
 
 export default function AdminPanel() {
-  const token = localStorage.getItem('token');
   const navigate = useNavigate();
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const fetchOpts = (extra = {}) => ({ credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...extra });
 
   const [tab, setTab]       = useState('users'); // 'users' | 'shops'
   const [users, setUsers]   = useState([]);
@@ -49,9 +48,9 @@ export default function AdminPanel() {
     if (!silent) setLoading(true);
     try {
       const [uRes, sRes, pRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/users`, { headers }),
-        fetch(`${API_BASE_URL}/admin/stats`, { headers }),
-        fetch(`${API_BASE_URL}/admin/providers`, { headers }),
+        fetch(`${API_BASE_URL}/admin/users`, fetchOpts()),
+        fetch(`${API_BASE_URL}/admin/stats`, fetchOpts()),
+        fetch(`${API_BASE_URL}/admin/providers`, fetchOpts()),
       ]);
       const [u, s, p] = await Promise.all([uRes.json(), sRes.json(), pRes.json()]);
       if (Array.isArray(u)) setUsers(prev => prev.length === u.length && prev.every((x, i) => x.id === u[i].id && x.is_banned === u[i].is_banned) ? prev : u);
@@ -72,10 +71,9 @@ export default function AdminPanel() {
     const u = banModal;
     setBanModal(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/users/${u.id}/ban`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ ban_reason: banReason || undefined }),
-      });
+      const res = await fetch(`${API_BASE_URL}/admin/users/${u.id}/ban`, fetchOpts({
+        method: 'PATCH', body: JSON.stringify({ ban_reason: banReason || undefined }),
+      }));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMsg({ type: 'success', text: data.is_banned ? `${u.email} suspendu.` : `${u.email} réactivé.` });
@@ -90,7 +88,7 @@ export default function AdminPanel() {
   const handleDelete = async (u) => {
     if (!window.confirm(`Supprimer définitivement ${u.email} ?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/users/${u.id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${API_BASE_URL}/admin/users/${u.id}`, fetchOpts({ method: 'DELETE' }));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMsg({ type: 'success', text: `Compte ${u.email} supprimé.` });
@@ -103,9 +101,9 @@ export default function AdminPanel() {
 
   const handleShop = async (shopId, patch) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/providers/${shopId}`, {
-        method: 'PATCH', headers, body: JSON.stringify(patch),
-      });
+      const res = await fetch(`${API_BASE_URL}/admin/providers/${shopId}`, fetchOpts({
+        method: 'PATCH', body: JSON.stringify(patch),
+      }));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       const label = patch.is_certified !== undefined

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   User, Mail, Lock, Save, KeyRound, Calendar, Clock,
@@ -64,7 +64,7 @@ function SectionCard({ icon: Icon, color, title, children }) {
   );
 }
 
-function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
+function AppointmentCard({ appt, role, onCancel, onReviewed }) {
   const past = isPast(appt.appointment_date);
   const isRefused = appt.status === 'cancelled_by_pro';
   const cancellable = !past && appt.status !== 'cancelled' && appt.status !== 'completed' && !isRefused;
@@ -138,7 +138,7 @@ function AppointmentCard({ appt, role, onCancel, token, onReviewed }) {
       )}
       {showReviewForm && (
         <div className="col-span-full w-full mt-1">
-          <ReviewForm appt={appt} token={token} onSubmitted={onReviewed} />
+          <ReviewForm appt={appt} onSubmitted={onReviewed} />
         </div>
       )}
     </div>
@@ -154,7 +154,7 @@ const REVIEW_SUB_CATS = [
   { key: 'qualite',  label: 'Qualité de la prestation' },
 ];
 
-function ReviewForm({ appt, token, onSubmitted }) {
+function ReviewForm({ appt, onSubmitted }) {
   const [subRatings, setSubRatings] = useState({});
   const [comment, setComment]       = useState('');
   const [status, setStatus]         = useState('idle');
@@ -165,9 +165,9 @@ function ReviewForm({ appt, token, onSubmitted }) {
     if (!allFilled) return;
     setStatus('loading');
     try {
-      const res = await fetch(`${API_BASE_URL}/reviews`, {
+      const res = await fetch(`${API_BASE_URL}/reviews`, { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include', headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify({
           appointment_id:  appt.id,
           comment,
@@ -328,7 +328,7 @@ function RefusalNotificationModal({ refusals, onClose }) {
 
 // ─── Éditeur horaires (pro) ──────────────────────────────────────────────────
 
-function HoursEditor({ token }) {
+function HoursEditor() {
   const [hours, setHours] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -336,7 +336,7 @@ function HoursEditor({ token }) {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    fetch(`${API_BASE_URL}/shop/info/${user.id}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE_URL}/shop/info/${user.id}`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         const map = {};
@@ -371,7 +371,6 @@ function HoursEditor({ token }) {
       formData.append('services', JSON.stringify([]));
       const res = await fetch(`${API_BASE_URL}/shop/setup`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const data = await res.json();
@@ -419,7 +418,6 @@ function HoursEditor({ token }) {
 
 export default function UserDashboard() {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = localStorage.getItem('token');
   const role = storedUser.role;
 
   const avatarInputRef = React.useRef(null);
@@ -446,7 +444,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (role === 'user') {
-      fetch(`${API_BASE_URL}/favorites`, { headers: { Authorization: `Bearer ${token}` } })
+      fetch(`${API_BASE_URL}/favorites`, { credentials: 'include' })
         .then(r => r.ok ? r.json() : [])
         .then(setFavorites)
         .catch(() => {});
@@ -454,7 +452,7 @@ export default function UserDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE_URL}/user/me`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setUserInfo(data);
@@ -464,7 +462,7 @@ export default function UserDashboard() {
 
   const loadAppointments = (silent = false) => {
     if (!silent) setLoadingAppts(true);
-    fetch(`${API_BASE_URL}/user/appointments`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE_URL}/user/appointments`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         const list = Array.isArray(data) ? data : [];
@@ -492,9 +490,9 @@ export default function UserDashboard() {
   const handleProfileSave = async () => {
     setSavingProfile(true); setProfileMsg({ type: '', text: '' });
     try {
-      const res = await fetch(`${API_BASE_URL}/user/update`, {
+      const res = await fetch(`${API_BASE_URL}/user/update`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include', headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(editForm),
       });
       const data = await res.json();
@@ -515,9 +513,9 @@ export default function UserDashboard() {
       return setPwMsg({ type: 'error', text: 'Mot de passe trop faible. Utilisez au moins 8 caractères avec une majuscule et un chiffre.' });
     setSavingPw(true); setPwMsg({ type: '', text: '' });
     try {
-      const res = await fetch(`${API_BASE_URL}/user/change-password`, {
+      const res = await fetch(`${API_BASE_URL}/user/change-password`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include', headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify({ current_password: pwForm.current_password, new_password: pwForm.new_password }),
       });
       const data = await res.json();
@@ -537,7 +535,6 @@ export default function UserDashboard() {
     try {
       const res = await fetch(`${API_BASE_URL}/user/profile-picture`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const data = await res.json();
@@ -557,7 +554,6 @@ export default function UserDashboard() {
       unreadRefusals.map(appt =>
         fetch(`${API_BASE_URL}/user/appointments/${appt.id}/mark-read`, {
           method: 'PATCH',
-          headers: { Authorization: `Bearer ${token}` },
         })
       )
     );
@@ -577,7 +573,7 @@ export default function UserDashboard() {
     setCancelling(true);
     try {
       const res = await fetch(`${API_BASE_URL}/user/appointments/${cancelTarget.id}/cancel`, {
-        method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
+        method: 'PATCH',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -761,7 +757,6 @@ export default function UserDashboard() {
               try {
                 const res = await fetch(`${API_BASE_URL}/user/account`, {
                   method: 'DELETE',
-                  headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
                   localStorage.clear();
@@ -782,7 +777,7 @@ export default function UserDashboard() {
         {/* Horaires (pro uniquement) */}
         {role === 'pro' && (
           <SectionCard icon={Clock} color="text-purple-600" title="Mes horaires d'ouverture">
-            <HoursEditor token={token} />
+            <HoursEditor />
           </SectionCard>
         )}
 
@@ -812,7 +807,7 @@ export default function UserDashboard() {
                     <button
                       onClick={async e => {
                         e.preventDefault();
-                        await fetch(`${API_BASE_URL}/favorites/${p.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                        await fetch(`${API_BASE_URL}/favorites/${p.id}`, { method: 'POST' });
                         setFavorites(prev => prev.filter(f => f.id !== p.id));
                       }}
                       className="flex-shrink-0 text-rose-400 hover:text-slate-300 transition"
@@ -856,7 +851,7 @@ export default function UserDashboard() {
             <>
               <div className="space-y-3">
                 {displayedAppts.map(appt => (
-                  <AppointmentCard key={appt.id} appt={appt} role={role} onCancel={handleCancel} token={token} onReviewed={loadAppointments} />
+                  <AppointmentCard key={appt.id} appt={appt} role={role} onCancel={handleCancel} onReviewed={loadAppointments} />
                 ))}
               </div>
               {appointments.length > 3 && (

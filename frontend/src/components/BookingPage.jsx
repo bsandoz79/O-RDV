@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // Import de l'URL centralisée
 import API_BASE_URL from '../api/api';
@@ -35,9 +35,8 @@ const BookingPage = () => {
     // 3. ENREGISTRER LE RDV DANS LA BASE
     const handleBooking = async (time) => {
         const user = JSON.parse(localStorage.getItem('user'));
-        const token = localStorage.getItem('token'); // Récupération du token
 
-        if (!user || !token) {
+        if (!user) {
             alert("Vous devez être connecté pour réserver !");
             navigate('/login');
             return;
@@ -54,10 +53,8 @@ const BookingPage = () => {
             // Utilisation de API_BASE_URL et ajout du Header Authorization (Vigile)
             const res = await fetch(`${API_BASE_URL}/appointments/book`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Protection de la route
-                },
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(appointmentData)
             });
 

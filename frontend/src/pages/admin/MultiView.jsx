@@ -31,10 +31,9 @@ function IframePanel({ panel, users }) {
   const loadUser = async (userId) => {
     if (!userId) { setIframeSrc(''); return; }
     setLoading(true); setError('');
-    const adminHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
     try {
       const res = await fetch(`${API_BASE_URL}/admin/impersonate/${userId}`, {
-        method: 'POST', headers: adminHeaders,
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -124,8 +123,7 @@ export default function MultiView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const adminHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
-    fetch(`${API_BASE_URL}/admin/users`, { headers: adminHeaders })
+    fetch(`${API_BASE_URL}/admin/users`, { credentials: 'include', headers: { 'Content-Type': 'application/json' } })
       .then(r => {
         if (!r.ok) throw new Error(`Erreur ${r.status} — backend non déployé ?`);
         return r.json();

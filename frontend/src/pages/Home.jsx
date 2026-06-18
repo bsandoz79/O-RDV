@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
+﻿import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, SlidersHorizontal, Star, X } from "lucide-react";
@@ -50,11 +50,10 @@ export default function Home() {
   const disableGeo = () => { setUserPosition(null); setGeoStatus('idle'); };
 
   const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    if (!token || !storedUser) return;
-    fetch(`${API_BASE_URL}/favorites`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!storedUser) return;
+    fetch(`${API_BASE_URL}/favorites`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : [])
       .then(list => setFavoriteIds(new Set(list.map(f => f.id))))
       .catch(() => {});
@@ -331,9 +330,9 @@ export default function Home() {
                       provider={provider}
                       onClick={() => navigate(`/provider/${provider.id}`)}
                       isFavorite={favoriteIds.has(provider.id)}
-                      onFavoriteToggle={token ? async (id) => {
+                      onFavoriteToggle={storedUser ? async (id) => {
                         const res = await fetch(`${API_BASE_URL}/favorites/${id}`, {
-                          method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                          method: 'POST',
                         });
                         if (res.ok) {
                           const { favorited } = await res.json();
