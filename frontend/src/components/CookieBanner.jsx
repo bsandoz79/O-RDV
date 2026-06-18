@@ -8,13 +8,8 @@ export default function CookieBanner() {
     if (!localStorage.getItem("cookie_consent")) setVisible(true);
   }, []);
 
-  function accept() {
+  function dismiss() {
     localStorage.setItem("cookie_consent", "accepted");
-    setVisible(false);
-  }
-
-  function refuse() {
-    localStorage.setItem("cookie_consent", "refused");
     setVisible(false);
   }
 
@@ -27,8 +22,8 @@ export default function CookieBanner() {
         <Cookie size={22} className="text-rose-400 flex-shrink-0 mt-0.5 sm:mt-0" />
 
         <div className="flex-1 text-sm text-slate-300 leading-relaxed">
-          <span className="font-semibold text-white">Ce site utilise des cookies.</span>{" "}
-          Un cookie d'authentification (<span className="font-mono text-rose-300 text-xs">token</span>) est déposé lors de votre connexion pour sécuriser votre session. Aucun cookie publicitaire ou de traçage n'est utilisé.{" "}
+          <span className="font-semibold text-white">Ce site utilise uniquement des cookies strictement nécessaires.</span>{" "}
+          Un cookie de session (<span className="font-mono text-rose-300 text-xs">token</span>) est déposé lors de votre connexion pour sécuriser votre accès. Il ne peut pas être désactivé car il est indispensable au fonctionnement du site. Aucun cookie publicitaire ou de traçage n'est utilisé.{" "}
           <a href="/politique-confidentialite" className="text-rose-400 underline hover:text-rose-300 transition">
             En savoir plus
           </a>
@@ -36,19 +31,13 @@ export default function CookieBanner() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
-            onClick={refuse}
-            className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 rounded-xl transition"
+            onClick={dismiss}
+            className="px-5 py-2 text-sm font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition"
           >
-            Refuser
+            J'ai compris
           </button>
           <button
-            onClick={accept}
-            className="px-4 py-2 text-sm font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition"
-          >
-            Accepter
-          </button>
-          <button
-            onClick={refuse}
+            onClick={dismiss}
             className="p-1.5 text-slate-500 hover:text-white transition"
             aria-label="Fermer"
           >
