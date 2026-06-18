@@ -82,10 +82,10 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
     : (provider.distance || '');
 
   return (
-    <article className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <article className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden" onClick={onClick}>
 
       {/* ── Image gauche avec carousel ───────────────────────────── */}
-      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer" style={{ width: '230px' }} onClick={onClick}>
+      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer" style={{ width: '230px' }}>
         <img
           key={photoIdx}
           src={currentPhoto}
@@ -155,7 +155,6 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
 
         <div className="p-5 pb-4 space-y-2.5">
           <h3
-            onClick={onClick}
             className="text-lg font-bold text-slate-900 group-hover:text-rose-500 transition-colors cursor-pointer leading-tight"
           >
             {provider.name}
@@ -189,7 +188,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
 
         <div className="px-5 py-3.5 flex items-center justify-between border-t border-slate-100">
           <button
-            onClick={onClick}
+            onClick={e => e.stopPropagation()}
             className="text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors underline underline-offset-2"
           >
             Plus d'informations

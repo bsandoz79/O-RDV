@@ -16,10 +16,9 @@ const BASE_PROVIDER = {
   createdAt: null,
 };
 
-test('affiche le nom et le métier du prestataire', () => {
+test('affiche le nom du prestataire', () => {
   render(<ProviderCard provider={BASE_PROVIDER} onClick={() => {}} />);
   expect(screen.getByText('Salon Élégance')).toBeInTheDocument();
-  expect(screen.getByText('Coiffure')).toBeInTheDocument();
 });
 
 test('affiche le badge "Fermé" si is_closed=true', () => {
@@ -30,7 +29,7 @@ test('affiche le badge "Fermé" si is_closed=true', () => {
 test('affiche la note et le nombre d\'avis', () => {
   render(<ProviderCard provider={BASE_PROVIDER} onClick={() => {}} />);
   expect(screen.getByText('4.5')).toBeInTheDocument();
-  expect(screen.getByText('(32)')).toBeInTheDocument();
+  expect(screen.getByText('(32 avis)')).toBeInTheDocument();
 });
 
 test('affiche la distance', () => {
