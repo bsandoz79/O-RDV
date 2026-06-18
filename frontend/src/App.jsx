@@ -18,6 +18,7 @@ import CGU from "./pages/legal/CGU";
 import AdminPanel from "./pages/admin/AdminPanel";
 import MultiView from "./pages/admin/MultiView";
 import NotFound from "./pages/NotFound";
+import CookieBanner from "./components/CookieBanner";
 
 const INACTIVITY_DELAY = 30 * 60 * 1000;
 
@@ -229,6 +230,7 @@ function App() {
         <p>© {new Date().getFullYear()} O'RDV — Tous droits réservés</p>
       </footer>
     </Router>
+    <CookieBanner />
     </HelmetProvider>
   );
 }
