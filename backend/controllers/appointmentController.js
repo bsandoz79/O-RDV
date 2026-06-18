@@ -1,4 +1,5 @@
 const prisma = require('../prisma/client');
+const logger = require('../logger');
 
 const createAppointment = async (req, res) => {
     const { provider_id, service_id, appointment_date, phone, send_sms_reminder } = req.body;
@@ -83,9 +84,10 @@ const createAppointment = async (req, res) => {
             appointmentId = appt.id;
         }
 
+        logger.info('Rendez-vous créé', { appointmentId, clientId: client_id, providerId: Number(provider_id), serviceId: Number(service_id) });
         res.status(201).json({ message: "Rendez-vous créé avec succès !", appointmentId });
     } catch (err) {
-        console.error("[createAppointment] Erreur complète:", err);
+        logger.error('Erreur création rendez-vous', { message: err.message, clientId: req.auth?.userId });
         res.status(500).json({ error: err.message || "Erreur lors de l'enregistrement du rendez-vous" });
     }
 };

@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const prisma = require('../prisma/client');
+const logger = require('../logger');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -44,9 +45,11 @@ const register = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        logger.info('Inscription réussie', { userId: user.id, email, role: finalRole });
         res.cookie('token', token, COOKIE_OPTS);
         res.status(201).json({ user: { id: user.id, email, role: finalRole } });
     } catch (err) {
+        logger.error('Erreur inscription', { email, message: err.message });
         res.status(500).json({ error: err.message });
     }
 };
@@ -61,12 +64,21 @@ const login = async (req, res) => {
 
     try {
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return res.status(401).json({ error: "Identifiants invalides" });
+        if (!user) {
+            logger.warn('Tentative de connexion — email inconnu', { email });
+            return res.status(401).json({ error: "Identifiants invalides" });
+        }
 
         const match = await bcrypt.compare(password, user.password);
-        if (!match) return res.status(401).json({ error: "Identifiants invalides" });
+        if (!match) {
+            logger.warn('Tentative de connexion — mot de passe incorrect', { userId: user.id });
+            return res.status(401).json({ error: "Identifiants invalides" });
+        }
 
-        if (user.is_banned) return res.status(403).json({ error: "Compte suspendu.", banned: true, ban_reason: user.ban_reason });
+        if (user.is_banned) {
+            logger.warn('Connexion refusée — compte banni', { userId: user.id });
+            return res.status(403).json({ error: "Compte suspendu.", banned: true, ban_reason: user.ban_reason });
+        }
 
         const token = jwt.sign(
             { id: user.id, role: user.role },
@@ -74,6 +86,7 @@ const login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        logger.info('Connexion réussie', { userId: user.id, role: user.role });
         res.cookie('token', token, COOKIE_OPTS);
         res.json({
             user: {
@@ -86,11 +99,13 @@ const login = async (req, res) => {
             },
         });
     } catch (err) {
+        logger.error('Erreur connexion', { message: err.message });
         res.status(500).json({ error: err.message });
     }
 };
 
 const logout = (req, res) => {
+    logger.info('Déconnexion', { userId: req.auth?.userId });
     res.clearCookie('token', { ...COOKIE_OPTS, maxAge: 0 });
     res.json({ message: "Déconnecté avec succès." });
 };

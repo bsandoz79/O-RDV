@@ -2,7 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const morgan = require('morgan');
 require('dotenv').config();
+
+const logger = require('./logger');
 
 const migrate = require('./migrate');
 
@@ -31,6 +34,10 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(express.json());
+app.use(morgan('combined', {
+    stream: { write: msg => logger.http(msg.trim()) },
+    skip: (req) => req.url === '/',
+}));
 app.use('/api', apiLimiter);
 
 // --- FICHIERS STATIQUES ---
@@ -58,17 +65,20 @@ app.get('/', (req, res) => {
 
 // --- GESTION DES ERREURS 404 ---
 app.use((req, res) => {
+    logger.warn(`404 ${req.method} ${req.originalUrl}`);
     res.status(404).json({ error: "Route non trouvée" });
+});
+
+// --- GESTION DES ERREURS 500 ---
+app.use((err, req, res, next) => {
+    logger.error(`500 ${req.method} ${req.originalUrl}`, { message: err.message, stack: err.stack });
+    res.status(500).json({ error: "Erreur interne du serveur" });
 });
 
 // --- LANCEMENT DU SERVEUR ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
-    console.log(`--------------------------------------------------`);
-    console.log(`✅ Serveur démarré sur : http://localhost:${PORT}`);
-    console.log(`📂 Dossier uploads : ${path.join(__dirname, 'uploads')}`);
-    console.log(`🗄️  Base de données cible : ${process.env.DB_NAME}`);
-    console.log(`--------------------------------------------------`);
-    await migrate().catch(err => console.error('Migration échouée:', err.message));
-    getRedis(); // Initialise la connexion Redis au démarrage
+    logger.info(`Serveur démarré sur le port ${PORT}`, { env: process.env.NODE_ENV || 'development' });
+    await migrate().catch(err => logger.error('Migration échouée', { message: err.message }));
+    getRedis();
 });
