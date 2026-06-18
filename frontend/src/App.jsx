@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 
 import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
@@ -170,6 +171,7 @@ const DashboardPro = () => <div className="p-10"><h1>🏢 Interface Prestataire<
 
 function App() {
   return (
+    <HelmetProvider>
     <Router>
       <SessionGuard />
       <NavbarConditional />
@@ -227,6 +229,7 @@ function App() {
         <p>© {new Date().getFullYear()} O'RDV — Tous droits réservés</p>
       </footer>
     </Router>
+    </HelmetProvider>
   );
 }
 

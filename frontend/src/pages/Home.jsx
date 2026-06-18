@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, SlidersHorizontal, Star, X } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
@@ -148,6 +149,12 @@ export default function Home() {
   const mapTop = NAV_H + stickyH + 8;
 
   return (
+    <>
+    <Helmet>
+      <title>O'RDV — Réservation beauté en ligne | Coiffeur, Institut, Spa</title>
+      <meta name="description" content="Trouvez et réservez votre prestataire beauté en ligne : coiffeur, institut de beauté, spa, nail art. Disponibilités en temps réel, réservation en quelques clics." />
+      <link rel="canonical" href="https://o-rdv.vercel.app/" />
+    </Helmet>
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: "#fafafa" }}>
 
       {/* Hero */}
@@ -371,5 +378,6 @@ export default function Home() {
         )}
       </div>
     </div>
+    </>
   );
 }

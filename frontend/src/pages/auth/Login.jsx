@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import API_BASE_URL from '../../api/api';
 
 export default function Login() {
@@ -52,6 +53,12 @@ export default function Login() {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Connexion — O'RDV</title>
+      <meta name="description" content="Connectez-vous à O'RDV pour gérer vos rendez-vous beauté en ligne." />
+      <meta name="robots" content="noindex" />
+    </Helmet>
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
         <div className="text-center mb-8">
@@ -143,5 +150,6 @@ export default function Login() {
         </p>
       </div>
     </div>
+    </>
   );
 }

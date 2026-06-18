@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
@@ -392,8 +393,42 @@ export default function ProviderProfile() {
 
   const status = getOpenStatus(provider.hours);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": provider.name,
+    "description": provider.description || `${provider.name} — réservation en ligne sur O'RDV`,
+    "url": `https://o-rdv.vercel.app/provider/${provider.id}`,
+    "telephone": provider.phone || undefined,
+    "address": provider.address ? {
+      "@type": "PostalAddress",
+      "streetAddress": provider.address,
+      "addressLocality": provider.city || "",
+      "postalCode": provider.zip_code || "",
+      "addressCountry": "FR",
+    } : undefined,
+    "image": provider.image || undefined,
+    "aggregateRating": provider.avg_rating ? {
+      "@type": "AggregateRating",
+      "ratingValue": parseFloat(provider.avg_rating).toFixed(1),
+      "reviewCount": provider.review_count || 1,
+      "bestRating": "5",
+      "worstRating": "1",
+    } : undefined,
+  };
+
   return (
     <>
+      <Helmet>
+        <title>{provider.name} — Réservation en ligne | O'RDV</title>
+        <meta name="description" content={`Réservez en ligne chez ${provider.name}${provider.city ? ` à ${provider.city}` : ''}. ${provider.description ? provider.description.slice(0, 100) : 'Disponibilités en temps réel, confirmation immédiate.'}`} />
+        <link rel="canonical" href={`https://o-rdv.vercel.app/provider/${provider.id}`} />
+        <meta property="og:title" content={`${provider.name} | O'RDV`} />
+        <meta property="og:description" content={`Réservez chez ${provider.name} sur O'RDV.`} />
+        {provider.image && <meta property="og:image" content={provider.image} />}
+        <meta property="og:url" content={`https://o-rdv.vercel.app/provider/${provider.id}`} />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
       <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
         {/* ── Galerie / Hero ───────────────────────────────────────── */}

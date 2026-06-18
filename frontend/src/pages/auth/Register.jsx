@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Store, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import API_BASE_URL from "../../api/api";
 import PasswordStrength, { getPasswordScore } from "../../components/PasswordStrength";
 
@@ -51,6 +52,12 @@ export default function Register() {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Inscription — O'RDV</title>
+      <meta name="description" content="Créez votre compte O'RDV gratuitement et réservez vos rendez-vous beauté en ligne." />
+      <meta name="robots" content="noindex" />
+    </Helmet>
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
 
@@ -167,5 +174,6 @@ export default function Register() {
         </p>
       </div>
     </div>
+    </>
   );
 }
