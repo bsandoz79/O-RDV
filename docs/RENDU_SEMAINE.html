@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendu de Sprint — O'RDV</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose:    #f43f5e;
+      --rose-light: #fff1f2;
+      --slate-900: #0f172a;
+      --slate-700: #334155;
+      --slate-500: #64748b;
+      --slate-200: #e2e8f0;
+      --slate-50:  #f8fafc;
+      --emerald:  #10b981;
+      --amber:    #f59e0b;
+      --blue:     #3b82f6;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #fff;
+      color: var(--slate-700);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    /* ── HEADER ──────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1a0a2e 100%);
+      color: #fff;
+      padding: 48px 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(244,63,94,0.25) 0%, transparent 70%);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .logo-badge {
+      width: 52px; height: 52px;
+      background: var(--rose);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .header-title span { color: var(--rose); }
+    .header-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 2px;
+    }
+    .header-meta {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: .08em; }
+    .meta-value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
+
+    /* ── LAYOUT ──────────────────────────────── */
+    .container { max-width: 900px; margin: 0 auto; padding: 48px 60px; }
+
+    /* ── SECTION ─────────────────────────────── */
+    .section { margin-bottom: 44px; }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--rose);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--slate-200);
+    }
+    .section-heading {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 20px;
+    }
+
+    /* ── LINKS ───────────────────────────────── */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .link-card {
+      border: 1.5px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color .2s, box-shadow .2s;
+      display: block;
+    }
+    .link-card:hover { border-color: var(--rose); box-shadow: 0 4px 12px rgba(244,63,94,0.1); }
+    .link-label { font-size: 11px; color: var(--slate-500); margin-bottom: 4px; }
+    .link-name { font-size: 13px; font-weight: 600; color: var(--slate-900); }
+    .link-url { font-size: 11px; color: var(--rose); margin-top: 2px; word-break: break-all; }
+
+    /* ── FEATURES ────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .feature-block {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .feature-block-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .icon-rose    { background: var(--rose-light); }
+    .icon-blue    { background: #eff6ff; }
+    .icon-emerald { background: #ecfdf5; }
+    .icon-amber   { background: #fffbeb; }
+    .icon-violet  { background: #f5f3ff; }
+
+    .feature-list { list-style: none; }
+    .feature-list li {
+      font-size: 12.5px;
+      color: var(--slate-500);
+      padding: 3px 0;
+      padding-left: 14px;
+      position: relative;
+    }
+    .feature-list li::before {
+      content: '·';
+      position: absolute;
+      left: 2px;
+      color: var(--rose);
+      font-weight: 700;
+    }
+
+    /* ── STATS ───────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--rose);
+      line-height: 1;
+    }
+    .stat-label { font-size: 11px; color: var(--slate-500); margin-top: 4px; }
+
+    /* ── TABLE ───────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--slate-500);
+      border-bottom: 2px solid var(--slate-200);
+      padding: 8px 12px;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--slate-200);
+      color: var(--slate-700);
+    }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-done     { background: #ecfdf5; color: #059669; }
+    .badge-progress { background: #eff6ff; color: #2563eb; }
+    .badge-todo     { background: #fefce8; color: #d97706; }
+    .badge-high     { background: var(--rose-light); color: var(--rose); }
+    .badge-mid      { background: #fffbeb; color: #d97706; }
+    .badge-low      { background: var(--slate-50); color: var(--slate-500); }
+
+    .progress-bar-wrap {
+      background: var(--slate-200);
+      border-radius: 99px;
+      height: 6px;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      height: 6px;
+      border-radius: 99px;
+      background: var(--rose);
+    }
+
+    /* ── TECH ────────────────────────────────── */
+    .tech-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tech-tag {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-700);
+    }
+
+    /* ── COVERAGE CMD ────────────────────────── */
+    .code-block {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-top: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.8;
+    }
+    .code-block .comment { color: #475569; }
+    .code-block .cmd { color: #38bdf8; }
+    .code-block .path { color: #4ade80; }
+
+    /* ── FOOTER ──────────────────────────────── */
+    .footer {
+      background: var(--slate-50);
+      border-top: 1.5px solid var(--slate-200);
+      padding: 20px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+    .footer strong { color: var(--slate-700); }
+
+    /* ── PRINT ───────────────────────────────── */
+    @media print {
+      body { font-size: 12px; }
+      .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .stat-card, .feature-block, .link-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .code-block { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo-badge">O</div>
+    <div>
+      <div class="header-title">O<span>'</span>RDV — Rendu de Sprint</div>
+      <div class="header-subtitle">Plateforme de réservation de rendez-vous beauté en ligne</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="meta-item">
+      <span class="meta-label">Développeur</span>
+      <span class="meta-value">Baptiste Sandoz</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Formation</span>
+      <span class="meta-value">CDA — Concepteur Développeur d'Applications</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Date</span>
+      <span class="meta-value">28 mai 2026</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Branche</span>
+      <span class="meta-value">develop</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── LIENS ──────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Ressources du projet</div>
+    <div class="links-grid">
+      <a class="link-card" href="https://o-rdv.vercel.app" target="_blank">
+        <div class="link-label">Frontend déployé</div>
+        <div class="link-name">Vercel — React App</div>
+        <div class="link-url">o-rdv.vercel.app</div>
+      </a>
+      <a class="link-card" href="https://o-rdv-production.up.railway.app" target="_blank">
+        <div class="link-label">Backend déployé</div>
+        <div class="link-name">Railway — API Express</div>
+        <div class="link-url">o-rdv-production.up.railway.app</div>
+      </a>
+      <a class="link-card" href="https://trello.com/b/gd2sUljs/ordv" target="_blank">
+        <div class="link-label">Gestion de projet</div>
+        <div class="link-name">Trello — Board O'RDV</div>
+        <div class="link-url">trello.com/b/gd2sUljs</div>
+      </a>
+      <a class="link-card" href="https://github.com/bsandoz79/O-RDV" target="_blank">
+        <div class="link-label">Code source</div>
+        <div class="link-name">GitHub — Repository</div>
+        <div class="link-url">github.com/bsandoz79/O-RDV</div>
+      </a>
+      <a class="link-card" href="https://github.com/bsandoz79/O-RDV/actions" target="_blank">
+        <div class="link-label">Intégration continue</div>
+        <div class="link-name">GitHub Actions — CI/CD</div>
+        <div class="link-url">github.com/…/actions</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── STATS TESTS ─────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Tests &amp; Couverture de code</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">45</div>
+        <div class="stat-label">Tests backend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">36</div>
+        <div class="stat-label">Tests frontend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">39%</div>
+        <div class="stat-label">Couverture backend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">100%</div>
+        <div class="stat-label">PasswordStrength</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Fichier / Module</th>
+          <th>Avant</th>
+          <th>Après</th>
+          <th>Progression</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Backend global</strong></td>
+          <td>21%</td>
+          <td><strong>39%</strong></td>
+          <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:39%"></div></div></td>
+        </tr>
+        <tr>
+          <td>PasswordStrength.jsx</td>
+          <td>—</td>
+          <td><strong>100%</strong></td>
+          <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:100%"></div></div></td>
+        </tr>
+        <tr>
+          <td>ProviderCard.jsx</td>
+          <td>34%</td>
+          <td><strong>80%</strong></td>
+          <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:80%"></div></div></td>
+        </tr>
+        <tr>
+          <td>Login.jsx</td>
+          <td>57%</td>
+          <td><strong>75%</strong></td>
+          <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:75%"></div></div></td>
+        </tr>
+        <tr>
+          <td>Register.jsx</td>
+          <td>28%</td>
+          <td><strong>60%</strong></td>
+          <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:60%"></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <span class="comment"># Génération du rapport de couverture en local</span><br>
+      <span class="cmd">cd</span> backend  &amp;&amp; <span class="cmd">npm run test:coverage</span>
+      <span class="comment">  # → <span class="path">backend/coverage/lcov-report/index.html</span></span><br>
+      <span class="cmd">cd</span> frontend &amp;&amp; <span class="cmd">npm run test:coverage</span>
+      <span class="comment">  # → <span class="path">frontend/coverage/lcov-report/index.html</span></span>
+    </div>
+  </div>
+
+  <!-- ── FONCTIONNALITES ─────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Fonctionnalités développées</div>
+    <div class="features-grid">
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-rose">🔐</div>
+          Authentification
+        </div>
+        <ul class="feature-list">
+          <li>Inscription / Connexion email + JWT 24h</li>
+          <li>Google OAuth 2.0</li>
+          <li>Indicateur de force mot de passe (4 niveaux)</li>
+          <li>Rate limiting anti brute-force</li>
+          <li>Timeout de session 30 min</li>
+          <li>Déconnexion auto si banni</li>
+        </ul>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-blue">👤</div>
+          Espace Client
+        </div>
+        <ul class="feature-list">
+          <li>Recherche par nom, ville, catégorie</li>
+          <li>Tri par distance GPS, note, alpha</li>
+          <li>Filtre "Ouvert maintenant" et par note</li>
+          <li>Réservation de créneau</li>
+          <li>Annulation de rendez-vous</li>
+          <li>Favoris prestataires</li>
+          <li>Avis + note + like</li>
+          <li>Synchronisation Google Calendar</li>
+          <li>Modification profil + avatar</li>
+          <li>Suppression compte (RGPD)</li>
+        </ul>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-emerald">🏪</div>
+          Espace Prestataire
+        </div>
+        <ul class="feature-list">
+          <li>Configuration profil établissement</li>
+          <li>Gestion des services avec images</li>
+          <li>Horaires d'ouverture par jour</li>
+          <li>Pin manuel sur la carte</li>
+          <li>Dashboard : clients, RDV, occupation</li>
+          <li>Confirmation / Refus de RDV</li>
+          <li>Consultation des avis reçus</li>
+        </ul>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-amber">🛡️</div>
+          Espace Admin
+        </div>
+        <ul class="feature-list">
+          <li>Ban / Unban utilisateurs</li>
+          <li>Certification et visibilité prestataires</li>
+          <li>KPIs temps réel (auto-refresh 5s)</li>
+          <li>Impersonation utilisateur</li>
+          <li>Vue 3 rôles simultanés (iframe)</li>
+        </ul>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-violet">🗺️</div>
+          Cartographie
+        </div>
+        <ul class="feature-list">
+          <li>Carte Leaflet / OpenStreetMap</li>
+          <li>Itinéraire OSRM (voiture, vélo, marche)</li>
+          <li>Liens Waze + Google Maps</li>
+          <li>Carte multi-marqueurs (accueil)</li>
+          <li>Géocodage Nominatim</li>
+        </ul>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-block-title">
+          <div class="feature-icon icon-rose">⚙️</div>
+          Infrastructure
+        </div>
+        <ul class="feature-list">
+          <li>Railway (backend + MySQL)</li>
+          <li>Vercel (frontend React)</li>
+          <li>Cloudinary (images CDN)</li>
+          <li>GitHub Actions CI/CD</li>
+          <li>Docker (Dockerfile + compose)</li>
+          <li>Auto-migration BDD au démarrage</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── CE QUI RESTE ────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Ce qui reste à faire</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Priorité</th>
+          <th>Tâche</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-high">Haute</span></td>
+          <td><strong>Dossier Professionnel</strong> — rédaction et mise en forme</td>
+          <td><span class="badge badge-progress">En cours</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-high">Haute</span></td>
+          <td><strong>Maquettes Figma</strong> — finalisation des écrans</td>
+          <td><span class="badge badge-progress">En cours</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-high">Haute</span></td>
+          <td><strong>Dossier de projet</strong> — captures d'écran + sections à compléter</td>
+          <td><span class="badge badge-todo">À faire</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-mid">Moyenne</span></td>
+          <td><strong>NoSQL (Redis)</strong> — cache sur la liste des prestataires</td>
+          <td><span class="badge badge-todo">À faire</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-low">Basse</span></td>
+          <td><strong>Diaporama</strong> — présentation CDA</td>
+          <td><span class="badge badge-todo">À faire</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── STACK TECHNIQUE ────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Stack technique</div>
+    <div class="tech-tags">
+      <span class="tech-tag">Node.js</span>
+      <span class="tech-tag">Express</span>
+      <span class="tech-tag">Prisma ORM</span>
+      <span class="tech-tag">MySQL 8</span>
+      <span class="tech-tag">React 18</span>
+      <span class="tech-tag">Tailwind CSS</span>
+      <span class="tech-tag">JWT</span>
+      <span class="tech-tag">Google OAuth 2.0</span>
+      <span class="tech-tag">bcrypt</span>
+      <span class="tech-tag">Leaflet</span>
+      <span class="tech-tag">OSRM</span>
+      <span class="tech-tag">Cloudinary</span>
+      <span class="tech-tag">Jest</span>
+      <span class="tech-tag">Supertest</span>
+      <span class="tech-tag">React Testing Library</span>
+      <span class="tech-tag">Docker</span>
+      <span class="tech-tag">GitHub Actions</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
+<div class="footer">
+  <div><strong>Baptiste Sandoz</strong> — CDA 2026</div>
+  <div>O'RDV — Plateforme de réservation beauté</div>
+  <div>Rendu du 28 mai 2026</div>
+</div>
+
+</body>
+</html>
