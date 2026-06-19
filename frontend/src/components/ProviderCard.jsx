@@ -82,7 +82,14 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
     : (provider.distance || '');
 
   return (
-    <article className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden" onClick={onClick}>
+    <article
+      className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+      onClick={onClick}
+      tabIndex={0}
+      role="button"
+      aria-label={`Voir la fiche de ${provider.name}`}
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick?.()}
+    >
 
       {/* ── Image gauche avec carousel ───────────────────────────── */}
       <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer" style={{ width: '230px' }}>
@@ -114,10 +121,13 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             </button>
 
             {/* Dots */}
-            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
+            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1" role="tablist" aria-label="Photos">
               {photos.map((_, i) => (
                 <button
                   key={i}
+                  role="tab"
+                  aria-selected={i === photoIdx}
+                  aria-label={`Photo ${i + 1} sur ${photos.length}`}
                   onClick={e => { e.stopPropagation(); setSlideDir(i > photoIdx ? 'right' : 'left'); setPhotoIdx(i); }}
                   className={`rounded-full transition-all ${i === photoIdx ? 'w-3.5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`}
                 />
@@ -127,8 +137,11 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
         )}
 
         {/* Badge ouvert/fermé */}
-        <span className={`absolute top-3 left-3 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${openBadge.style}`}>
-          <span className={`w-1.5 h-1.5 rounded-full bg-white ${openBadge.label === 'Ouvert' ? 'animate-pulse' : 'opacity-60'}`} />
+        <span
+          className={`absolute top-3 left-3 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm ${openBadge.style}`}
+          aria-label={`Statut : ${openBadge.label}`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full bg-white ${openBadge.label === 'Ouvert' ? 'animate-pulse' : 'opacity-60'}`} aria-hidden="true" />
           {openBadge.label}
         </span>
 
@@ -189,12 +202,14 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
         <div className="px-5 py-3.5 flex items-center justify-between border-t border-slate-100">
           <button
             onClick={e => e.stopPropagation()}
+            aria-label={`Plus d'informations sur ${provider.name}`}
             className="text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors underline underline-offset-2"
           >
             Plus d'informations
           </button>
           <button
             onClick={e => { e.stopPropagation(); onClick && onClick(); }}
+            aria-label={`Prendre rendez-vous chez ${provider.name}`}
             className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-rose-500 transition-colors duration-200"
           >
             Prendre RDV

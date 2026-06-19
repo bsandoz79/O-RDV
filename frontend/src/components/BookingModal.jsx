@@ -245,16 +245,23 @@ export default function BookingModal({ provider, preselectedService, onClose, in
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      aria-hidden="true"
     >
-      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-modal-title"
+        className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+        aria-hidden="false"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Réservation</p>
-            <h2 className="text-base font-bold text-slate-900">{provider.name}</h2>
+            <h2 id="booking-modal-title" className="text-base font-bold text-slate-900">{provider.name}</h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-500">
-            <X size={18} />
+          <button onClick={onClose} aria-label="Fermer la fenêtre de réservation" className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-500">
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -360,36 +367,41 @@ export default function BookingModal({ provider, preselectedService, onClose, in
 
               {/* Mini calendrier */}
               <div className="flex items-center justify-between mb-4">
-                <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100 transition">
-                  <ChevronLeft size={16} />
+                <button onClick={prevMonth} aria-label="Mois précédent" className="p-1.5 rounded-lg hover:bg-slate-100 transition">
+                  <ChevronLeft size={16} aria-hidden="true" />
                 </button>
-                <span className="text-sm font-semibold text-slate-800 capitalize">
+                <span className="text-sm font-semibold text-slate-800 capitalize" aria-live="polite" aria-atomic="true">
                   {MONTHS_FR[viewMonth]} {viewYear}
                 </span>
-                <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100 transition">
-                  <ChevronRight size={16} />
+                <button onClick={nextMonth} aria-label="Mois suivant" className="p-1.5 rounded-lg hover:bg-slate-100 transition">
+                  <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 mb-2">
+              <div className="grid grid-cols-7 mb-2" role="row">
                 {DAYS_FR_SHORT.map(d => (
-                  <div key={d} className="text-center text-xs font-medium text-slate-400 py-1">{d}</div>
+                  <div key={d} role="columnheader" aria-label={d} className="text-center text-xs font-medium text-slate-400 py-1">{d}</div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-y-1">
+              <div className="grid grid-cols-7 gap-y-1" role="grid" aria-label="Calendrier de réservation">
                 {calendarDays.map((date, i) => {
-                  if (!date) return <div key={`empty-${i}`} />;
+                  if (!date) return <div key={`empty-${i}`} role="gridcell" />;
                   const past = isPast(date);
                   const closed = closedDayNames.has(getDayName(date));
                   const disabled = past || closed;
                   const isSelected = selectedDate && toDateString(date) === toDateString(selectedDate);
+                  const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
                   return (
                     <button
                       key={i}
+                      role="gridcell"
                       onClick={() => !disabled && handleDayClick(date)}
                       disabled={disabled}
+                      aria-label={label}
+                      aria-pressed={isSelected}
+                      aria-disabled={disabled}
                       className={`
                         mx-auto w-9 h-9 rounded-xl text-sm font-medium transition
                         ${isSelected ? 'bg-rose-500 text-white shadow-md' : ''}
@@ -410,9 +422,10 @@ export default function BookingModal({ provider, preselectedService, onClose, in
             <>
               <button
                 onClick={() => setStep('calendar')}
+                aria-label="Retour au calendrier pour changer de date"
                 className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-4 transition"
               >
-                <ChevronLeft size={13} /> Changer de date
+                <ChevronLeft size={13} aria-hidden="true" /> Changer de date
               </button>
 
               <div className="flex items-center gap-2 mb-4 text-sm font-medium text-slate-700">
@@ -429,12 +442,15 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               ) : slots.length === 0 ? (
                 <p className="text-center text-slate-400 text-sm py-8">Aucun créneau disponible.</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1" role="list" aria-label="Créneaux disponibles">
                   {slots.map(({ time, available }) => (
                     <button
                       key={time}
+                      role="listitem"
                       disabled={!available}
                       onClick={() => available && handleTimeClick(time)}
+                      aria-label={available ? `Réserver le créneau à ${time}` : `Créneau ${time} indisponible`}
+                      aria-disabled={!available}
                       className={`
                         flex items-center justify-center gap-1 min-h-[44px] rounded-xl text-xs font-semibold transition
                         ${available
@@ -442,7 +458,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
                           : 'bg-slate-100 text-slate-300 cursor-not-allowed line-through'}
                       `}
                     >
-                      <Clock size={10} className={available ? 'text-rose-400' : 'text-slate-300'} />
+                      <Clock size={10} className={available ? 'text-rose-400' : 'text-slate-300'} aria-hidden="true" />
                       {time}
                     </button>
                   ))}

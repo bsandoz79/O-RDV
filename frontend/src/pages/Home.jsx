@@ -172,13 +172,16 @@ export default function Home() {
             {userPosition ? "Prestataires triés par proximité." : "Découvrez nos prestataires partout en France."}
           </p>
           <div className="search-glow relative flex items-center bg-white rounded-2xl overflow-hidden transition-all duration-300 max-w-lg mx-auto" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
-            <Search size={18} className="absolute left-4 text-slate-400 flex-shrink-0" />
+            <Search size={18} className="absolute left-4 text-slate-400 flex-shrink-0" aria-hidden="true" />
+            <label htmlFor="search-providers" className="sr-only">Rechercher un prestataire par nom ou ville</label>
             <input
-              type="text"
+              id="search-providers"
+              type="search"
               placeholder="Nom, ville..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-4 text-slate-800 text-sm placeholder:text-slate-400 bg-transparent outline-none"
+              aria-label="Rechercher un prestataire par nom ou ville"
             />
           </div>
         </div>
@@ -194,9 +197,10 @@ export default function Home() {
 
           {/* Catégories */}
           {categories.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto py-3" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 overflow-x-auto py-3" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtrer par catégorie">
               <button
                 onClick={() => setActiveCategory(null)}
+                aria-pressed={activeCategory === null}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200
                   ${activeCategory === null
                     ? 'bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-200'
@@ -210,12 +214,13 @@ export default function Home() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                    aria-pressed={activeCategory === cat.id}
                     className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200
                       ${activeCategory === cat.id
                         ? 'bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-200'
                         : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
                   >
-                    <Icon size={13} />{cat.name}
+                    <Icon size={13} aria-hidden="true" />{cat.name}
                   </button>
                 );
               })}
@@ -223,8 +228,8 @@ export default function Home() {
           )}
 
           {/* Filtres */}
-          <div className="flex flex-wrap items-center gap-2 py-2.5 border-t border-slate-100">
-            <div className="flex items-center gap-1 mr-1">
+          <div className="flex flex-wrap items-center gap-2 py-2.5 border-t border-slate-100" role="group" aria-label="Filtres et tri">
+            <div className="flex items-center gap-1 mr-1" aria-hidden="true">
               <SlidersHorizontal size={12} className="text-slate-400" />
               <span className="text-xs font-semibold text-slate-500">Trier :</span>
             </div>
@@ -235,41 +240,48 @@ export default function Home() {
               { key: 'name',     label: 'A–Z' },
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setSortBy(key)}
+                aria-pressed={sortBy === key}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all
                   ${sortBy === key ? 'bg-violet-600 border-violet-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-violet-400'}`}>
                 {label}
               </button>
             ))}
 
-            <div className="w-px h-4 bg-slate-200 mx-1" />
+            <div className="w-px h-4 bg-slate-200 mx-1" aria-hidden="true" />
 
             <button onClick={() => setOpenNow(v => !v)}
+              aria-pressed={openNow}
               className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
                 ${openNow ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${openNow ? 'bg-white' : 'bg-emerald-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${openNow ? 'bg-white' : 'bg-emerald-400'}`} aria-hidden="true" />
               Ouvert maintenant
             </button>
 
             {[3, 4].map(n => (
               <button key={n} onClick={() => setMinRating(minRating === n ? null : n)}
+                aria-pressed={minRating === n}
+                aria-label={`Note minimum ${n} étoiles`}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1
                   ${minRating === n ? 'bg-amber-400 border-amber-400 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600'}`}>
-                {n}+ <Star size={10} className={minRating === n ? 'fill-white text-white' : 'fill-amber-400 text-amber-400'} />
+                {n}+ <Star size={10} className={minRating === n ? 'fill-white text-white' : 'fill-amber-400 text-amber-400'} aria-hidden="true" />
               </button>
             ))}
 
             {(sortBy !== 'distance' || openNow || minRating !== null) && (
               <button onClick={() => { setSortBy('distance'); setOpenNow(false); setMinRating(null); }}
+                aria-label="Réinitialiser tous les filtres"
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all flex items-center gap-1">
-                <X size={11} /> Réinitialiser
+                <X size={11} aria-hidden="true" /> Réinitialiser
               </button>
             )}
 
-            <div className="w-px h-4 bg-slate-200 mx-1" />
+            <div className="w-px h-4 bg-slate-200 mx-1" aria-hidden="true" />
 
             <button
               onClick={userPosition ? disableGeo : requestGeo}
               disabled={geoStatus === 'loading'}
+              aria-pressed={!!userPosition}
+              aria-label={geoStatus === 'denied' ? "Géolocalisation refusée — modifiez les permissions du navigateur" : userPosition ? "Désactiver la géolocalisation" : "Activer la géolocalisation"}
               title={geoStatus === 'denied' ? "Accès refusé — cliquez sur le cadenas dans la barre d'adresse pour autoriser" : ''}
               className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
                 ${userPosition
@@ -280,7 +292,7 @@ export default function Home() {
                       ? 'bg-white border-slate-200 text-slate-400'
                       : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
             >
-              <MapPin size={11} className={geoStatus === 'loading' ? 'animate-pulse' : ''} />
+              <MapPin size={11} className={geoStatus === 'loading' ? 'animate-pulse' : ''} aria-hidden="true" />
               {userPosition ? 'Ma position' : geoStatus === 'denied' ? 'Localisation refusée' : geoStatus === 'loading' ? 'Localisation...' : 'Ma position'}
             </button>
           </div>

@@ -77,14 +77,15 @@ export default function Navbar() {
         </Link>
 
         {/* Liens centraux */}
-        <nav className="app-navbar__links flex items-center gap-2">
-          
+        <nav className="app-navbar__links flex items-center gap-2" aria-label="Navigation principale">
+
           {user && (
             <Link
               to="/account"
+              aria-current={location.pathname === "/account" ? "page" : undefined}
               className={`app-navbar__link flex items-center gap-1.5 ${location.pathname === "/account" ? "app-navbar__link--active" : ""}`}
             >
-              <User size={14} />
+              <User size={14} aria-hidden="true" />
               Mon Compte
             </Link>
           )}
@@ -92,13 +93,14 @@ export default function Navbar() {
           {(user?.role === "pro" || user?.role === "admin") && (
             <Link
               to="/pro/settings"
+              aria-current={location.pathname === "/pro/settings" ? "page" : undefined}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm border transition-all ${
                 location.pathname === "/pro/settings"
                   ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
                   : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
               }`}
             >
-              <Briefcase size={14} />
+              <Briefcase size={14} aria-hidden="true" />
               Espace Pro
             </Link>
           )}
@@ -106,9 +108,10 @@ export default function Navbar() {
           {user?.role === "admin" && (
             <Link
               to="/admin"
+              aria-current={location.pathname === "/admin" ? "page" : undefined}
               className={`app-navbar__link font-bold text-rose-400 flex items-center gap-1.5 ${location.pathname === "/admin" ? "app-navbar__link--active" : ""}`}
             >
-              <ShieldCheck size={14} />
+              <ShieldCheck size={14} aria-hidden="true" />
               Admin
             </Link>
           )}

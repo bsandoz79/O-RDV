@@ -94,13 +94,15 @@ export default function Register() {
           </button>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4" aria-label="Formulaire d'inscription">
 
           <div className="relative">
-            <label className="sr-only">Adresse email</label>
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <label htmlFor="register-email" className="sr-only">Adresse email</label>
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
             <input
+              id="register-email"
               type="email"
+              autoComplete="email"
               placeholder="Adresse email"
               className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm transition-all"
               required
@@ -111,9 +113,10 @@ export default function Register() {
 
           {isPro && (
             <div className="relative animate-in fade-in duration-300">
-              <label className="sr-only">Nom de l'établissement</label>
-              <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <label htmlFor="register-shop-name" className="sr-only">Nom de l'établissement</label>
+              <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
               <input
+                id="register-shop-name"
                 type="text"
                 placeholder="Nom de l'établissement"
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm"
@@ -123,10 +126,12 @@ export default function Register() {
           )}
 
           <div className="relative">
-            <label className="sr-only">Mot de passe</label>
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <label htmlFor="register-password" className="sr-only">Mot de passe</label>
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
             <input
+              id="register-password"
               type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
               placeholder="Mot de passe (8 caractères minimum)"
               className="w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 text-sm transition-all"
               required
