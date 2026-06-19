@@ -332,7 +332,7 @@ export default function Home() {
                       isFavorite={favoriteIds.has(provider.id)}
                       onFavoriteToggle={storedUser ? async (id) => {
                         const res = await fetch(`${API_BASE_URL}/favorites/${id}`, {
-                          method: 'POST',
+                          method: 'POST', credentials: 'include',
                         });
                         if (res.ok) {
                           const { favorited } = await res.json();
