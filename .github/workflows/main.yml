@@ -18,17 +18,17 @@ jobs:
       CLOUDINARY_API_SECRET: test
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
-          node-version: '18'
+          node-version: '22'
       - name: Install dependencies
         run: cd backend && npm install
       - name: Run tests with coverage
         run: cd backend && npm run test:coverage
       - name: Upload backend coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: backend-coverage
@@ -40,11 +40,11 @@ jobs:
     env:
       REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://o-rdv-production.up.railway.app/api' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
-          node-version: '18'
+          node-version: '22'
       - name: Install dependencies
         run: cd frontend && npm install --legacy-peer-deps
       - name: Run tests with coverage
@@ -52,7 +52,7 @@ jobs:
         env:
           CI: false
       - name: Upload frontend coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: frontend-coverage
