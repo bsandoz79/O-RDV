@@ -11,9 +11,10 @@ jest.mock('../api/api', () => 'http://localhost:5000/api');
 
 import Register from '../pages/auth/Register';
 import { MemoryRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
 function renderRegister() {
-  return render(<MemoryRouter><Register /></MemoryRouter>);
+  return render(<HelmetProvider><MemoryRouter><Register /></MemoryRouter></HelmetProvider>);
 }
 
 test("affiche le titre de la page d'inscription", () => {

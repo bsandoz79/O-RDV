@@ -53,7 +53,7 @@ test('n\'affiche pas le badge "Nouveau" pour un ancien prestataire', () => {
 test('appelle onClick au clic sur la carte', () => {
   const handleClick = jest.fn();
   render(<ProviderCard provider={BASE_PROVIDER} onClick={handleClick} />);
-  fireEvent.click(screen.getByRole('article'));
+  fireEvent.click(screen.getByRole('button', { name: /voir la fiche/i }));
   expect(handleClick).toHaveBeenCalledTimes(1);
 });
 
@@ -64,17 +64,18 @@ test("affiche 'Pas encore d'avis' si aucune note", () => {
 });
 
 test("affiche le badge 'Ouvert' si le prestataire est ouvert maintenant", () => {
-  const now = new Date();
-  const openH  = String(now.getHours()).padStart(2, '0');
-  const closeH = String((now.getHours() + 2) % 24).padStart(2, '0');
+  // Heure figée à 10h00 : le test ne dépend plus de l'heure d'exécution
+  jest.useFakeTimers('modern');
+  jest.setSystemTime(new Date(2026, 0, 15, 10, 0));
   const provider = {
     ...BASE_PROVIDER,
     todayIsClosed: false,
-    todayOpen:  `${openH}:00`,
-    todayClose: `${closeH}:00`,
+    todayOpen:  '09:00',
+    todayClose: '18:00',
   };
   render(<ProviderCard provider={provider} onClick={() => {}} />);
   expect(screen.getByText('Ouvert')).toBeInTheDocument();
+  jest.useRealTimers();
 });
 
 test('affiche le bouton favori et appelle onFavoriteToggle', () => {

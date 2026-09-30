@@ -12,9 +12,10 @@ jest.mock('../api/api', () => 'http://localhost:5000/api');
 
 import Login from '../pages/auth/Login';
 import { MemoryRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
 function renderLogin() {
-  return render(<MemoryRouter><Login /></MemoryRouter>);
+  return render(<HelmetProvider><MemoryRouter><Login /></MemoryRouter></HelmetProvider>);
 }
 
 test('affiche le titre de la page de connexion', () => {
@@ -25,7 +26,7 @@ test('affiche le titre de la page de connexion', () => {
 test('affiche le formulaire avec email et mot de passe', () => {
   renderLogin();
   expect(screen.getByPlaceholderText('votre@email.com')).toBeInTheDocument();
-  expect(screen.getByLabelText(/mot de passe/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/^mot de passe$/i)).toBeInTheDocument();
 });
 
 test('affiche le bouton de soumission', () => {
@@ -48,7 +49,7 @@ test('affiche "Vérification..." pendant le chargement', async () => {
   fireEvent.change(screen.getByPlaceholderText('votre@email.com'), {
     target: { value: 'a@a.com' },
   });
-  const passwordInput = screen.getByLabelText(/mot de passe/i);
+  const passwordInput = screen.getByLabelText(/^mot de passe$/i);
   fireEvent.change(passwordInput, { target: { value: 'pass' } });
   fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
@@ -63,7 +64,7 @@ test('affiche le message d\'erreur retourné par le serveur', async () => {
 
   renderLogin();
   fireEvent.change(screen.getByPlaceholderText('votre@email.com'), { target: { value: 'x@x.com' } });
-  fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: 'wrong' } });
+  fireEvent.change(screen.getByLabelText(/^mot de passe$/i), { target: { value: 'wrong' } });
   fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
   expect(await screen.findByText('Identifiants invalides.')).toBeInTheDocument();
@@ -74,7 +75,7 @@ test('affiche une erreur si le serveur est injoignable', async () => {
 
   renderLogin();
   fireEvent.change(screen.getByPlaceholderText('votre@email.com'), { target: { value: 'x@x.com' } });
-  fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: 'pass' } });
+  fireEvent.change(screen.getByLabelText(/^mot de passe$/i), { target: { value: 'pass' } });
   fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
   expect(await screen.findByText(/impossible de contacter le serveur/i)).toBeInTheDocument();
