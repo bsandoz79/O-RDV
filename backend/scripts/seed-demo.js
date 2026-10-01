@@ -50,6 +50,12 @@ const dayName = ymd => new Date(ymd + 'T12:00:00Z').toLocaleDateString('en-US', 
 const toMin = hm => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
 const timeOnly = hm => { const d = new Date(0); const [h, m] = hm.split(':').map(Number); d.setUTCHours(h, m, 0, 0); return d; };
 const daysAgo = n => new Date(Date.now() - n * 86400000);
+// Exécute fn sur chaque élément par lots parallèles (beaucoup plus rapide sur une base distante)
+async function inBatches(items, fn, size = 25) {
+  const out = [];
+  for (let i = 0; i < items.length; i += size) out.push(...await Promise.all(items.slice(i, i + size).map(fn)));
+  return out;
+}
 
 async function clean() {
   const { count } = await prisma.user.deleteMany({ where: { email: { endsWith: `@${D.DEMO_DOMAIN}` } } });
@@ -147,8 +153,7 @@ async function seedAll() {
     appts.push({ shop, service, ymd, start, off: d, client: demoClient, demo: demoStatus });
   }
 
-  const created = [];
-  for (const a of appts) {
+  const created = await inBatches(appts, async a => {
     let status, refusal = null, isRead = true;
     if (a.off < 0) {
       const r = rand();
@@ -164,24 +169,22 @@ async function seedAll() {
       appointment_date: date, status, refusal_reason: refusal, is_read: isRead,
       created_at: new Date(Math.min(date.getTime() - 86400000 * (1 + Math.floor(rand() * 10)), Date.now())),
     } });
-    created.push({ ...a, row, status });
-  }
+    return { ...a, row, status };
+  });
 
   // ── Avis (≈ 65 % des RDV terminés) ─────────────────────────────────────────
-  const reviews = [];
-  for (const a of created) {
-    if (a.status !== 'completed') continue;
-    if (a.demo ? a.demo === 'to_review' : !chance(0.65)) continue; // le RDV démo le plus récent reste « à noter »
+  const toReview = created.filter(a => a.status === 'completed' && (a.demo ? a.demo !== 'to_review' : chance(0.65)));
+  const reviews = await inBatches(toReview, async a => { // le RDV démo le plus récent reste « à noter »
     const r = a.shop.isDemo ? rand() * 0.75 : rand(); // le salon de démo est un peu mieux noté
     const rating = r < 0.5 ? 5 : r < 0.85 ? 4 : r < 0.95 ? 3 : 2;
     const sub = () => Math.max(1, Math.min(5, rating + (chance(0.3) ? (chance(0.5) ? 1 : -1) : 0)));
-    reviews.push(await prisma.review.create({ data: {
+    return prisma.review.create({ data: {
       client_id: a.client.id, provider_id: a.shop.provider.id, appointment_id: a.row.id, rating,
       rating_accueil: sub(), rating_proprete: sub(), rating_ambiance: sub(), rating_qualite: sub(),
       comment: chance(0.85) ? pick(D.COMMENTS[rating]) : null,
       created_at: new Date(Math.min(a.row.appointment_date.getTime() + 86400000 * (1 + Math.floor(rand() * 3)), Date.now())),
-    } }));
-  }
+    } });
+  });
 
   // ── Likes et favoris ───────────────────────────────────────────────────────
   const likes = [];
