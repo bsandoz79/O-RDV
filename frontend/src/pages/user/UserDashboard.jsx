@@ -33,12 +33,6 @@ const STATUS_LABELS = {
   completed:        'Terminé',
 };
 
-const DAY_LABELS = {
-  monday:'Lundi', tuesday:'Mardi', wednesday:'Mercredi',
-  thursday:'Jeudi', friday:'Vendredi', saturday:'Samedi', sunday:'Dimanche',
-};
-const DAY_ORDER = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-
 // ─── Sous-composants ────────────────────────────────────────────────────────
 
 function Alert({ type, message, onClose }) {
@@ -322,94 +316,6 @@ function RefusalNotificationModal({ refusals, onClose }) {
           J'ai compris
         </button>
       </div>
-    </div>
-  );
-}
-
-// ─── Éditeur horaires (pro) ──────────────────────────────────────────────────
-
-function HoursEditor() {
-  const [hours, setHours] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState({ type: '', text: '' });
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    fetch(`${API_BASE_URL}/shop/info/${user.id}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        const map = {};
-        (data.hours || []).forEach(h => {
-          const day = h.day_of_week?.toLowerCase();
-          if (day) map[day] = {
-            open:   h.open_time  ? String(h.open_time).substring(0, 5)  : '09:00',
-            close:  h.close_time ? String(h.close_time).substring(0, 5) : '18:00',
-            closed: !!h.is_closed,
-          };
-        });
-        // Remplir les jours manquants
-        DAY_ORDER.forEach(d => { if (!map[d]) map[d] = { open: '09:00', close: '18:00', closed: false }; });
-        setHours(map);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const handleChange = (day, field, val) =>
-    setHours(h => ({ ...h, [day]: { ...h[day], [field]: val } }));
-
-  const handleSave = async () => {
-    setSaving(true);
-    setMsg({ type: '', text: '' });
-    const hoursArray = DAY_ORDER.map(day => ({ day_of_week: day, ...hours[day] }));
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    try {
-      const formData = new FormData();
-      formData.append('profile', JSON.stringify({ name: '', description: '', address: '', zipCode: '', city: '', phone: '' }));
-      formData.append('hours', JSON.stringify(hoursArray));
-      formData.append('services', JSON.stringify([]));
-      const res = await fetch(`${API_BASE_URL}/shop/setup`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setMsg({ type: 'success', text: 'Horaires mis à jour !' });
-    } catch (err) {
-      setMsg({ type: 'error', text: err.message });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) return <div className="flex justify-center py-6"><Loader2 size={24} className="animate-spin text-rose-400" /></div>;
-
-  return (
-    <div className="space-y-3">
-      <Alert type={msg.type} message={msg.text} onClose={() => setMsg({ type: '', text: '' })} />
-      {DAY_ORDER.map(day => (
-        <div key={day} className={`flex items-center gap-3 py-2 px-3 rounded-xl ${hours[day]?.closed ? 'opacity-50 bg-slate-50' : 'bg-white border border-slate-100'}`}>
-          <span className="w-24 text-sm font-semibold text-slate-600">{DAY_LABELS[day]}</span>
-          <input type="time" disabled={hours[day]?.closed} value={hours[day]?.open || '09:00'}
-            onChange={e => handleChange(day, 'open', e.target.value)}
-            className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-rose-400 disabled:bg-slate-100" />
-          <span className="text-slate-400 text-sm">→</span>
-          <input type="time" disabled={hours[day]?.closed} value={hours[day]?.close || '18:00'}
-            onChange={e => handleChange(day, 'close', e.target.value)}
-            className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-rose-400 disabled:bg-slate-100" />
-          <label className="flex items-center gap-1.5 ml-auto text-xs text-slate-500 cursor-pointer select-none">
-            <input type="checkbox" checked={hours[day]?.closed || false}
-              onChange={() => handleChange(day, 'closed', !hours[day]?.closed)}
-              className="accent-rose-500" />
-            Fermé
-          </label>
-        </div>
-      ))}
-      <button onClick={handleSave} disabled={saving}
-        className="mt-2 flex items-center gap-2 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
-        {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Enregistrer les horaires
-      </button>
     </div>
   );
 }
@@ -777,7 +683,10 @@ export default function UserDashboard() {
         {/* Horaires (pro uniquement) */}
         {role === 'pro' && (
           <SectionCard icon={Clock} color="text-purple-600" title="Mes horaires d'ouverture">
-            <HoursEditor />
+            <p className="text-sm text-slate-500 mb-3">Les horaires se gèrent avec le reste de votre boutique.</p>
+            <Link to="/pro/settings" className="inline-flex items-center gap-2 text-sm font-semibold text-purple-600 border border-purple-200 hover:bg-purple-500 hover:text-white px-4 py-2 rounded-xl transition">
+              Gérer ma boutique et mes horaires
+            </Link>
           </SectionCard>
         )}
 
