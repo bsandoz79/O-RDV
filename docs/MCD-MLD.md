@@ -12,6 +12,7 @@ Le MCD décrit les entités métier et leurs associations, indépendamment de to
 | **PRESTATAIRE** | #id_prestataire, nom, description, adresse, code_postal, ville, téléphone, image, latitude, longitude, certifié, visible, note_admin |
 | **CATEGORIE** | #id_categorie, libellé, icône |
 | **SERVICE** | #id_service, libellé, prix, durée (min), image |
+| **PHOTO** | #id_photo, url, est_principale, ordre_affichage, date_ajout |
 | **HORAIRE** | #id_horaire, jour_semaine, heure_ouverture, heure_fermeture, est_fermé |
 | **RENDEZ_VOUS** | #id_rdv, date_heure, statut {en_attente, confirmé, annulé, annulé_pro, terminé}, raison_refus, créneau_libéré, lu |
 | **AVIS** | #id_avis, note (1-5), commentaire, date_création |
@@ -30,6 +31,9 @@ PRESTATAIRE ──(1,1)── DEFINI ──(1,n)── HORAIRE
 
 PRESTATAIRE ──(1,1)── PROPOSE ──(0,n)── SERVICE
      Un service appartient à un seul prestataire
+
+PRESTATAIRE ──(1,1)── ILLUSTRE ──(0,n)── PHOTO
+     Galerie de 10 photos maximum, dont une principale
 
 UTILISATEUR ──(0,n)── RESERVE ──(0,n)── PRESTATAIRE
   via RENDEZ_VOUS (#id_rdv, date_heure, statut)
@@ -158,6 +162,15 @@ erDiagram
         datetime created_at
     }
 
+    provider_photos {
+        int      id            PK
+        int      provider_id   FK
+        varchar  photo_url
+        boolean  is_main
+        int      display_order
+        datetime created_at
+    }
+
     users        ||--o|  providers      : "possede"
     categories   ||--o{  providers      : "categorise"
     providers    ||--|{  business_hours : "horaires"
@@ -172,6 +185,7 @@ erDiagram
     users        ||--o{  review_likes   : "like"
     users        ||--o{  favorites      : "favori"
     providers    ||--o{  favorites      : "est favori"
+    providers    ||--o{  provider_photos : "illustre"
 ```
 
 ## Contraintes notables
@@ -185,6 +199,7 @@ erDiagram
 | Unique | `favorites (user_id, provider_id)` | Pas de doublon en favoris |
 | Cascade | `providers → users` | Suppression user = suppression pro |
 | Cascade | `appointments → users, providers, services` | Suppression en cascade |
+| Cascade | `provider_photos → providers` | Suppression du salon = suppression de sa galerie |
 
 ## Enums
 

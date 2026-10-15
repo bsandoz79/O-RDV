@@ -5,7 +5,7 @@ O'RDV est une solution de prise de rendez-vous en temps réel dédiée aux servi
 ## Objectifs du Projet
 - Gestion d'agendas dynamiques pour les prestataires.
 - Recherche multicritère avec géolocalisation.
-- Modèle Freemium (Abonnements Basic et Premium).
+- Gratuit pour les clients et les professionnels.
 
 ## Stack Technique
 - Frontend : React.js (Architecture SPA).

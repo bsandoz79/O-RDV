@@ -23,7 +23,7 @@
 
 ### Initialisation du schéma
 Le schéma est **initialisé automatiquement** au démarrage du backend via `backend/migrate.js`.
-Les tables créées : `users`, `categories`, `providers`, `business_hours`, `services`, `appointments`.
+Les 10 tables créées : `users`, `categories`, `providers`, `provider_photos`, `business_hours`, `services`, `appointments`, `reviews`, `review_likes`, `favorites`.
 Les 6 catégories de base sont insérées automatiquement (`INSERT IGNORE`).
 
 ---

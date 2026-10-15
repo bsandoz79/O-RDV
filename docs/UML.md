@@ -218,8 +218,18 @@ classDiagram
         +DateTime created_at
     }
 
+    class ProviderPhoto {
+        +int id
+        +int provider_id
+        +String photo_url
+        +bool is_main
+        +int display_order
+        +DateTime created_at
+    }
+
     User "1" --> "0..1" Provider : possède
     Provider "1" --> "0..*" Service : propose
+    Provider "1" --> "0..10" ProviderPhoto : illustre
     Provider "1" --> "7" BusinessHour : définit
     Provider "1" --> "0..*" Appointment : reçoit
     Provider "1" --> "0..*" Review : reçoit

@@ -58,11 +58,9 @@
 
 Les établissements de beauté — coiffeurs, barbiers, instituts de soins, nail art — gèrent encore aujourd'hui la majorité de leurs rendez-vous par téléphone ou par messages. Ce fonctionnement manuel engendre des problèmes récurrents : appels manqués en dehors des heures d'ouverture, doubles réservations, oublis, et perte de temps pour les deux parties.
 
-Les solutions existantes comme Planity ou Treatwell répondent à ce besoin, mais elles s'adressent principalement aux grandes enseignes et appliquent des commissions sur chaque réservation ou des abonnements mensuels élevés, inaccessibles pour les petites structures indépendantes.
-
 J'ai choisi ce projet parce qu'il couvre l'ensemble du spectre technique attendu pour le titre CDA : modélisation de base de données relationnelle, développement d'une API REST sécurisée, développement d'interfaces utilisateur modernes, déploiement en production avec CI/CD. Il représente aussi une problématique métier réelle et concrète, que j'ai pu valider auprès de proches gérant des petits commerces.
 
-O'RDV se positionne comme une alternative légère, gratuite et open-source : n'importe quel prestataire peut s'inscrire, configurer son établissement et recevoir des réservations en ligne sans frais ni commission.
+O'RDV est une application légère et gratuite : n'importe quel prestataire peut s'inscrire, configurer son établissement et recevoir des réservations en ligne.
 
 ![Page d'accueil — liste des prestataires](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Aceuille.png>)
 
@@ -86,7 +84,7 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 
 | Fonctionnalité | Description |
 |---|---|
-| Inscription / Connexion | Email + mot de passe ou Google OAuth 2.0 |
+| Inscription / Connexion | Email + mot de passe ou Google OAuth 2.0 ; JWT en cookie httpOnly |
 | Recherche de prestataires | Par nom, ville, catégorie avec filtres avancés |
 | Géolocalisation | Tri par distance GPS, affichage sur carte Leaflet |
 | Favoris | Ajout/suppression de prestataires favoris |
@@ -102,6 +100,8 @@ O'RDV est une plateforme web de mise en relation entre des clients et des presta
 | Fonctionnalité | Description |
 |---|---|
 | Configuration profil | Nom, description, adresse, photo, localisation sur carte |
+| Section À propos | Présentation libre de l'établissement, visible sur la fiche publique |
+| Accès & Paiement | Informations d'accès (parking, transports) et moyens de paiement configurables |
 | Gestion des services | Ajout/modification/suppression avec photos et tarifs |
 | Horaires d'ouverture | Configuration par jour de la semaine |
 | Gestion des RDV | Confirmation ou refus avec motif |
@@ -242,6 +242,7 @@ O'RDV/
 │   ├── routes/           ← Définition des endpoints
 │   ├── prisma/           ← Schéma et client ORM
 │   ├── tests/            ← Tests Jest
+│   ├── logger.js         ← Winston logger (dev : colorisé, prod : JSON)
 │   └── index.js          ← Point d'entrée
 ├── frontend/             ← Application React
 │   ├── src/
@@ -472,8 +473,8 @@ function SessionGuard({ children }) {
   useEffect(() => {
     const checkSession = () => {
       const lastActivity = localStorage.getItem('lastActivity');
-      const token = localStorage.getItem('token');
-      if (token && lastActivity) {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser && lastActivity) {
         const diff = Date.now() - parseInt(lastActivity);
         if (diff > 30 * 60 * 1000) {  // 30 minutes
           localStorage.clear();
@@ -488,6 +489,56 @@ function SessionGuard({ children }) {
 }
 ```
 
+#### Référencement naturel (SEO)
+
+`react-helmet-async` est utilisé pour injecter dynamiquement les balises `<title>` et `<meta>` propres à chaque page. Chaque fiche prestataire a son propre titre et ses propres métadonnées.
+
+```jsx
+// ProviderProfile.jsx — Titre, meta et données structurées JSON-LD
+<Helmet>
+  <title>{provider.name} — Réservation en ligne | O'RDV</title>
+  <meta name="description"
+    content={`Réservez chez ${provider.name} à ${provider.city}.`} />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": provider.name,
+      "url": `https://o-rdv.vercel.app/provider/${provider.id}`,
+      "telephone": provider.phone || undefined,
+      "address": { "@type": "PostalAddress", "addressLocality": provider.city },
+      "aggregateRating": provider.avg_rating ? {
+        "@type": "AggregateRating",
+        "ratingValue": provider.avg_rating,
+        "reviewCount": provider.review_count
+      } : undefined,
+    })}
+  </script>
+</Helmet>
+```
+
+Les données structurées **JSON-LD LocalBusiness** permettent à Google d'afficher des rich snippets (note, adresse, téléphone) directement dans les résultats de recherche. Le sitemap est accessible à `https://o-rdv.vercel.app/sitemap.xml` et soumis à **Google Search Console**. Les pages d'authentification portent `<meta name="robots" content="noindex" />` pour éviter leur indexation.
+
+#### Bannière de consentement RGPD
+
+```jsx
+// CookieBanner.jsx — Affiché au premier accès si pas de cookie_consent
+export default function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("cookie_consent")) setVisible(true);
+  }, []);
+
+  function dismiss() {
+    localStorage.setItem("cookie_consent", "accepted");
+    setVisible(false);
+  }
+  // ...
+}
+```
+
+La bannière informe l'utilisateur que seul un cookie de session (`token`) est déposé — **strictement nécessaire** au fonctionnement — et qu'aucun cookie publicitaire ou de traçage n'est utilisé. Selon la CNIL, les cookies strictement nécessaires ne requièrent pas de consentement préalable : la bannière est donc informative et ne s'affiche qu'une seule fois (au premier accès).
+
 #### Authentification Google OAuth — Flux complet
 
 ![Page de connexion avec bouton "Continuer avec Google"](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Page Connexion inscrire avec google.png>)
@@ -501,7 +552,14 @@ function SessionGuard({ children }) {
 **Inscription :**
 
 ```javascript
-// authController.js — Validation + hashage + JWT
+// authController.js — Validation + hashage + cookie httpOnly
+const COOKIE_OPTS = {
+  httpOnly: true,                           // Inaccessible au JavaScript du navigateur
+  secure: isProd,                           // HTTPS uniquement en production
+  sameSite: isProd ? 'none' : 'lax',       // Cross-origin en prod (Railway ↔ Vercel)
+  maxAge: 24 * 60 * 60 * 1000,             // 24h
+};
+
 const register = async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -530,17 +588,21 @@ const register = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );
-  res.status(201).json({ token, user: { id: user.id, email, role: finalRole } });
+
+  // Le token n'est plus retourné dans le body — il est posé en cookie httpOnly
+  res.cookie('token', token, COOKIE_OPTS);
+  res.status(201).json({ user: { id: user.id, email, role: finalRole } });
 };
 ```
 
 **Middleware d'authentification JWT :**
 
 ```javascript
-// middlewares/auth.js — Vérification token + check ban
+// middlewares/auth.js — Cookie httpOnly en priorité, Authorization header en fallback
 module.exports = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    // Cookie httpOnly (sessions normales) ou header Authorization (impersonation admin)
+    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
     if (!token)
       return res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
 
@@ -565,6 +627,18 @@ module.exports = async (req, res, next) => {
     res.status(401).json({ error: "Requête non authentifiée !" });
   }
 };
+```
+
+Côté frontend, toutes les requêtes authentifiées utilisent `credentials: 'include'` — le navigateur envoie automatiquement le cookie sans que le JavaScript n'y ait accès :
+
+```javascript
+// Avant (localStorage + header Authorization)
+fetch('/api/user/me', {
+  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+});
+
+// Après (cookie httpOnly automatique)
+fetch('/api/user/me', { credentials: 'include' });
 ```
 
 #### Système de réservation — Logique anti-conflit
@@ -647,6 +721,48 @@ const toggleFavorite = async (req, res) => {
 ![Carte prestataire — cœur favori activé (rouge)](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Carte prestataire avec favorie activé.png>)
 
 ![Dashboard client — section "Mes prestataires favoris"](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/Mes prestataire favoris.png>)
+
+#### Journalisation applicative — Winston + Morgan
+
+Le backend intègre un système de logs structurés via **Winston** (logger applicatif) et **Morgan** (logs HTTP). En développement les logs sont colorisés dans le terminal ; en production ils sont émis en JSON pour être ingérables par un agrégateur de logs (Railway Logs, Datadog…).
+
+```javascript
+// logger.js — Configuration Winston
+const logger = createLogger({
+  level: isProd ? 'info' : 'debug',
+  format: isProd
+    ? format.combine(format.timestamp(), format.json())
+    : format.combine(
+        format.colorize(),
+        format.timestamp({ format: 'HH:mm:ss' }),
+        format.printf(({ timestamp, level, message, ...meta }) => {
+          const extra = Object.keys(meta).length ? ' ' + JSON.stringify(meta) : '';
+          return `${timestamp} [${level}] ${message}${extra}`;
+        })
+      ),
+  transports: [new transports.Console()],
+});
+```
+
+```javascript
+// index.js — Morgan pipe vers Winston + handlers 404/500
+app.use(morgan('combined', {
+  stream: { write: msg => logger.http(msg.trim()) },
+  skip: req => req.url === '/',        // Exclure les health-checks
+}));
+
+app.use((req, res) => {
+  logger.warn(`404 ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: 'Route introuvable.' });
+});
+
+app.use((err, req, res, next) => {
+  logger.error('Erreur serveur', { message: err.message, stack: err.stack });
+  res.status(500).json({ error: 'Erreur interne.' });
+});
+```
+
+Les événements métier critiques sont tracés avec contexte : inscription, connexion, tentatives échouées, ban détecté, RDV créé, erreurs contrôleurs.
 
 #### Dashboard administrateur — Impersonation
 
@@ -767,7 +883,7 @@ L'application suit une architecture **3 couches** clairement séparées :
 │  COUCHE DONNÉES SQL │   │  COUCHE DONNÉES NoSQL        │
 │    MySQL 8          │   │    Redis                     │
 │    Prisma ORM       │   │    (cache clé-valeur)        │
-│    9 tables         │   │    TTL 5 minutes             │
+│    10 tables        │   │    TTL 5 minutes             │
 └─────────────────────┘   └──────────────────────────────┘
 ```
 
@@ -812,13 +928,14 @@ Le schéma complet est disponible dans `docs/MCD-MLD.md` et rendu visuellement s
 
 #### Tables et relations
 
-La base de données contient **9 tables** :
+La base de données contient **10 tables** :
 
 ```
 users ─────────────── providers (1 user → 0 ou 1 provider)
 providers ─────────── categories (N providers → 1 category)
 providers ─────────── business_hours (1 provider → 7 horaires)
 providers ─────────── services (1 provider → N services)
+providers ─────────── provider_photos (1 provider → 0 à 10 photos)
 users ──────────────── appointments (1 user → N appointments)
 providers ─────────── appointments (1 provider → N appointments)
 services ─────────── appointments (1 service → N appointments)
@@ -1090,7 +1207,7 @@ L'application est couverte par deux niveaux de tests :
 ```
 Test Suites: 7 passed, 7 total
 Tests:       45 passed, 45 total
-Time:        3.49s
+Time:        3.49 s
 ```
 
 ![Tests backend — 7 suites, 45 tests passés](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/npm test backend.png>)
@@ -1113,7 +1230,7 @@ Time:        3.49s
 ```
 Test Suites: 4 passed, 4 total
 Tests:       36 passed, 36 total
-Time:        4.12s
+Time:        4.12 s
 ```
 
 ![Tests frontend — 4 suites, 36 tests passés](<C:/Users/bapts/Desktop/Ecole IT/.ProjetCDA/Screens O'RDV/npm test frontend.png>)
@@ -1372,11 +1489,21 @@ const token = jwt.sign(
   process.env.JWT_SECRET,   // Jamais en dur dans le code
   { expiresIn: '24h' }
 );
+
+// Transmis via cookie httpOnly — jamais exposé dans la réponse JSON
+res.cookie('token', token, {
+  httpOnly: true,              // Inaccessible à document.cookie / localStorage
+  secure: isProd,              // HTTPS uniquement en production
+  sameSite: isProd ? 'none' : 'lax',
+  maxAge: 24 * 60 * 60 * 1000,
+});
 ```
 
-- Token stocké côté client dans `localStorage`
-- Vérifié à chaque requête protégée par le middleware `auth.js`
-- Expiration courte (24h) pour limiter la fenêtre d'exposition
+- Token stocké dans un **cookie httpOnly** — inaccessible au JavaScript, protège contre les attaques XSS
+- Le frontend n'a jamais accès au token lui-même ; il utilise `credentials: 'include'` pour l'envoyer automatiquement
+- Vérifié à chaque requête protégée par le middleware `auth.js` (lecture `req.cookies.token`)
+- Expiration 24h ; déconnexion explicite via `res.clearCookie('token')`
+- Fallback `Authorization: Bearer` maintenu pour l'impersonation admin (iframes isolées)
 
 ### 5.2 Hashage des mots de passe
 
@@ -1468,14 +1595,10 @@ const deleteAccount = async (req, res) => {
 ```
 
 - **Droit à l'effacement** : suppression complète en cascade (toutes les données liées)
-- **Politique de confidentialité** : page dédiée accessible depuis le footer
+- **Cookie httpOnly** : le token de session ne peut pas être lu par des scripts tiers
+- **Bannière de consentement** : affichée au premier accès, informant de l'usage d'un unique cookie strictement nécessaire (pas de traçage, pas de publicité)
+- **Politique de confidentialité** : page dédiée accessible depuis le footer et liée dans la bannière
 - **Mentions légales** : page dédiée conforme aux obligations légales
-
-> 📸 **CAPTURE D'ÉCRAN 41**
-> *Insérer ici : screenshot de la page "Politique de confidentialité" de l'application*
-
-> 📸 **CAPTURE D'ÉCRAN 42**
-> *Insérer ici : screenshot de la section "Zone de danger" dans le dashboard avec le bouton de suppression de compte*
 
 ---
 
@@ -1567,6 +1690,27 @@ iframeWindow.fetch = createAuthenticatedFetch(token, iframeWindow.fetch);
 
 ---
 
+### Difficulté 6 : Migration du JWT de localStorage vers un cookie httpOnly
+
+**Problème :** En phase de revue sécurité, j'ai identifié que stocker le JWT dans `localStorage` expose l'application aux attaques **XSS** : un script malveillant injecté dans la page peut lire `localStorage.getItem('token')` et voler le jeton d'authentification. La solution recommandée par l'OWASP est de stocker le token dans un cookie `httpOnly`, inaccessible au JavaScript.
+
+**Cause :** L'architecture initiale passait le token dans le `body` JSON de la réponse de login, le stockait en `localStorage` côté client, et l'envoyait dans chaque requête via l'en-tête `Authorization: Bearer <token>`. Cette approche est répandue dans les tutoriels mais constitue un anti-pattern de sécurité.
+
+**Solution :** Migration en 3 couches :
+1. **Backend** — `res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'none' })` remplace le champ `token` dans le JSON de réponse ; `req.cookies?.token` remplace `req.headers.authorization` dans le middleware.
+2. **Frontend** — `credentials: 'include'` sur tous les `fetch()` remplace les en-têtes `Authorization: Bearer ${token}`.
+3. **Tests** — Les tests Jest qui vérifiaient la présence d'un `token` dans la réponse JSON ont été adaptés pour tester le cookie `set-cookie` retourné par le backend.
+
+```javascript
+// backend/middlewares/auth.js — Lecture prioritaire du cookie
+const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+// Le fallback Authorization est conservé pour l'impersonation admin (iframes)
+```
+
+**Apprentissage :** La migration a nécessité de parcourir et corriger 8 fichiers frontend qui lisaient encore `localStorage.getItem('token')`. Cela m'a appris l'importance de centraliser l'accès au token dès le début du projet (via un fichier `api.js` unique) plutôt que d'y accéder directement depuis chaque composant. Avec une couche d'abstraction centralisée, la migration n'aurait touché qu'un seul fichier.
+
+---
+
 ## 7. Bilan et perspectives
 
 ### 7.1 Compétences acquises
@@ -1607,10 +1751,10 @@ Fonctionnalités envisagées pour une V2 :
 | BC01 | Contribuer à la gestion de projet | ✅ Trello Kanban, user stories |
 | BC02 | Analyser les besoins et maquetter | ✅ Figma, use cases UML |
 | BC02 | Définir l'architecture logicielle | ✅ Architecture 3 couches, MVC |
-| BC02 | Concevoir une BDD relationnelle | ✅ MySQL, 9 tables, MLD Mermaid |
+| BC02 | Concevoir une BDD relationnelle | ✅ MySQL, 10 tables, MLD Mermaid |
 | BC02 | Composants d'accès données SQL | ✅ Prisma ORM, $queryRaw |
 | BC02 | Composants d'accès données NoSQL | ✅ Redis (cache prestataires) |
-| BC03 | Préparer et exécuter les tests | ✅ Jest, 38 tests automatisés |
+| BC03 | Préparer et exécuter les tests | ✅ Jest, 81 tests automatisés (45 backend + 36 frontend) |
 | BC03 | Documenter le déploiement | ✅ README, DEPLOYMENT.md, .env.example |
 | BC03 | Mise en production DevOps | ✅ CI/CD GitHub Actions, Docker, Railway/Vercel |
 

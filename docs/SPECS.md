@@ -51,11 +51,7 @@ II. Architecture Fonctionnelle (MVP) & Critères d'Acceptation
 
 III. Modèle Économique
 
-    Abonnement Basic : Gratuit pour le référencement standard.
-
-    Abonnement Premium : 9,99€ HT/mois pour une visibilité accrue.
-
-    Modèle Transactionnel : Commission de 1€ par réservation honorée.
+    O'RDV est gratuit, pour les clients comme pour les professionnels.
 
 IV. Roadmap (12 Semaines)
 
