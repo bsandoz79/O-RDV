@@ -113,12 +113,14 @@ export default function Home() {
   useEffect(fetchProviders, [activeCategory, userPosition]);
 
   const filteredProviders = useMemo(() => {
+    // Minuscules, sans accents ni tirets : « Saint-Étienne » = « saint etienne »
+    const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[-']/g, ' ');
+    const words = norm(searchQuery).split(/\s+/).filter(Boolean);
     let list = providers.filter(p => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (!(p.name.toLowerCase().includes(q) ||
-              (p.metier || '').toLowerCase().includes(q) ||
-              (p.distance || '').toLowerCase().includes(q))) return false;
+      if (words.length) {
+        // Chaque mot tapé doit apparaître dans le nom, le métier, la ville, le code postal ou l'adresse
+        const haystack = norm([p.name, p.metier, p.city, p.zip_code, p.address].join(' '));
+        if (!words.every(w => haystack.includes(w))) return false;
       }
       if (openNow) {
         if (p.todayIsClosed) return false;
@@ -173,15 +175,15 @@ export default function Home() {
           </p>
           <div className="search-glow relative flex items-center bg-white rounded-2xl overflow-hidden transition-all duration-300 max-w-lg mx-auto" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
             <Search size={18} className="absolute left-4 text-slate-400 flex-shrink-0" aria-hidden="true" />
-            <label htmlFor="search-providers" className="sr-only">Rechercher un prestataire par nom ou ville</label>
+            <label htmlFor="search-providers" className="sr-only">Rechercher un prestataire par nom, ville ou code postal</label>
             <input
               id="search-providers"
               type="search"
-              placeholder="Nom, ville..."
+              placeholder="Nom, ville, code postal..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-4 text-slate-800 text-sm placeholder:text-slate-400 bg-transparent outline-none"
-              aria-label="Rechercher un prestataire par nom ou ville"
+              aria-label="Rechercher un prestataire par nom, ville ou code postal"
             />
           </div>
         </div>
