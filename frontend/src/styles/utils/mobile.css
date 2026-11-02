@@ -1,0 +1,14 @@
+/* ── Ajustements globaux mobile ──────────────── */
+
+/* Empêche tout débordement horizontal accidentel */
+body { overflow-x: clip; }
+
+@media (max-width: 639px) {
+  /* iOS zoome automatiquement sur les champs < 16px : on force 16px sur mobile */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea { font-size: 16px !important; }
+
+  /* Remonté pour ne pas chevaucher les barres d'action fixées en bas */
+  .scroll-top-btn { bottom: 84px; right: 14px; width: 40px; height: 40px; }
+}

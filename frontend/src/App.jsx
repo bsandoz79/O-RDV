@@ -142,7 +142,7 @@ function RedirectBanner() {
   });
   if (!msg) return null;
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2 max-w-sm text-center">
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-4 sm:px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2 w-[calc(100%-2rem)] max-w-sm text-center">
       <AlertTriangle size={16} className="flex-shrink-0" />
       <span>{msg}</span>
       <button onClick={() => setMsg('')} className="ml-2 text-amber-500 hover:text-amber-700" aria-label="Fermer">

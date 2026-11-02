@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, SlidersHorizontal, Star, X } from "lucide-react";
+import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, SlidersHorizontal, Star, X, Map as MapIcon, List } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
 import API_BASE_URL from '../api/api';
 
@@ -24,6 +24,13 @@ export default function Home() {
   const [userPosition, setUserPosition] = useState(null);
   const [geoStatus, setGeoStatus] = useState('idle'); // 'idle' | 'loading' | 'granted' | 'denied'
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [showMobileMap, setShowMobileMap] = useState(false);
+
+  // Bloque le scroll de la page quand la carte plein écran mobile est ouverte
+  useEffect(() => {
+    document.body.style.overflow = showMobileMap ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showMobileMap]);
 
   const stickyRef = useRef(null);
   const [stickyH, setStickyH] = useState(110);
@@ -159,7 +166,7 @@ export default function Home() {
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: "#fafafa" }}>
 
       {/* Hero */}
-      <section className="hero-bg relative overflow-hidden px-4 pt-16 pb-16 text-white">
+      <section className="hero-bg relative overflow-hidden px-4 pt-24 pb-10 sm:pb-16 text-white">
         <div className="hero-orb absolute -top-16 -right-16 w-96 h-96 rounded-full pointer-events-none" />
         <div className="hero-orb-2 absolute -bottom-12 -left-12 w-72 h-72 rounded-full pointer-events-none" />
         <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -170,7 +177,7 @@ export default function Home() {
             </span>
             ,<br />à portée de main.
           </h1>
-          <p className="text-slate-300 text-base sm:text-lg mb-8 max-w-md mx-auto leading-relaxed">
+          <p className="text-slate-300 text-base sm:text-lg mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed">
             {userPosition ? "Prestataires triés par proximité." : "Découvrez nos prestataires partout en France."}
           </p>
           <div className="search-glow relative flex items-center bg-white rounded-2xl overflow-hidden transition-all duration-300 max-w-lg mx-auto" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
@@ -195,11 +202,11 @@ export default function Home() {
         className="sticky z-30 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm"
         style={{ top: NAV_H }}
       >
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
           {/* Catégories */}
           {categories.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto py-3" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtrer par catégorie">
+            <div className="flex gap-2 overflow-x-auto py-2.5 sm:py-3 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtrer par catégorie">
               <button
                 onClick={() => setActiveCategory(null)}
                 aria-pressed={activeCategory === null}
@@ -230,7 +237,7 @@ export default function Home() {
           )}
 
           {/* Filtres */}
-          <div className="flex flex-wrap items-center gap-2 py-2.5 border-t border-slate-100" role="group" aria-label="Filtres et tri">
+          <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 py-2.5 border-t border-slate-100 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [&>*]:flex-shrink-0" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtres et tri">
             <div className="flex items-center gap-1 mr-1" aria-hidden="true">
               <SlidersHorizontal size={12} className="text-slate-400" />
               <span className="text-xs font-semibold text-slate-500">Trier :</span>
@@ -303,10 +310,10 @@ export default function Home() {
       </div>
 
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* Compteur */}
-        <div className="py-4 flex items-center gap-3">
+        <div className="py-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="font-display text-xl font-bold text-slate-900">
             {userPosition ? "À proximité" : "Tous les prestataires"}
           </h2>
@@ -390,6 +397,29 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* ── Carte plein écran (mobile / tablette) ─────────────────────────── */}
+      {showMobileMap && (
+        <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-slate-100" style={{ top: NAV_H }}>
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-rose-500" size={32} /></div>}>
+            <ProvidersMap
+              providers={filteredProviders}
+              userPosition={userPosition}
+              onProviderClick={(p) => navigate(`/provider/${p.id}`)}
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {!loading && !fetchError && (
+        <button
+          onClick={() => setShowMobileMap(v => !v)}
+          className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-slate-900 text-white text-sm font-semibold shadow-xl shadow-slate-900/30"
+          aria-label={showMobileMap ? 'Afficher la liste' : 'Afficher la carte'}
+        >
+          {showMobileMap ? <><List size={16} aria-hidden="true" /> Liste</> : <><MapIcon size={16} aria-hidden="true" /> Carte</>}
+        </button>
+      )}
     </div>
     </>
   );

@@ -10,6 +10,7 @@
 /* ── Utilitaires ─────────────────────────────── */
 @import './utils/animations.css';
 @import './utils/scroll-top.css';
+@import './utils/mobile.css';
 
 /* ── Composants ──────────────────────────────── */
 @import './components/navbar.css';

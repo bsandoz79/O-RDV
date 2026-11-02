@@ -50,10 +50,10 @@ function Alert({ type, message, onClose }) {
 function SectionCard({ icon: Icon, color, title, children }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className={`flex items-center gap-3 px-6 py-4 border-b border-slate-100 ${color}`}>
+      <div className={`flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-slate-100 ${color}`}>
         <Icon size={18} /><h3 className="font-bold text-base">{title}</h3>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   );
 }
@@ -65,12 +65,12 @@ function AppointmentCard({ appt, role, onCancel, onReviewed }) {
   const showReviewForm    = role !== 'pro' && appt.status === 'completed' && !Number(appt.has_review);
   const showReviewSummary = role !== 'pro' && appt.status === 'completed' && Number(appt.has_review) > 0;
   return (
-    <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' || isRefused ? 'border-slate-100 opacity-70' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
-      <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
+    <div className={`flex flex-wrap items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border transition-all ${past || appt.status === 'cancelled' || isRefused ? 'border-slate-100 opacity-70' : 'border-slate-200 hover:border-rose-200 hover:bg-rose-50/20'}`}>
+      <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-rose-50 border border-rose-100 flex flex-col items-center justify-center">
         <span className="text-[10px] font-bold text-rose-400 uppercase">
           {new Date(appt.appointment_date).toLocaleDateString('fr-FR', { month: 'short' })}
         </span>
-        <span className="text-2xl font-black text-rose-500 leading-none">
+        <span className="text-xl sm:text-2xl font-black text-rose-500 leading-none">
           {new Date(appt.appointment_date).getDate()}
         </span>
       </div>
@@ -84,7 +84,7 @@ function AppointmentCard({ appt, role, onCancel, onReviewed }) {
             <User size={11} /> {appt.client_first_name || ''} {appt.client_last_name || appt.client_email}
           </p>
         ) : (
-          <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+          <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-1">
             <Store size={11} /> {appt.provider_name}
             {appt.provider_city && <><MapPin size={11} className="ml-1" />{appt.provider_city}</>}
           </p>
@@ -95,7 +95,7 @@ function AppointmentCard({ appt, role, onCancel, onReviewed }) {
           </p>
         )}
       </div>
-      <div className="flex flex-col items-end gap-2">
+      <div className="w-full sm:w-auto flex flex-row flex-wrap sm:flex-col items-center sm:items-end gap-2 pl-[3.75rem] sm:pl-0">
         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${STATUS_STYLES[appt.status] || STATUS_STYLES.pending}`}>
           {STATUS_LABELS[appt.status] || appt.status}
         </span>
@@ -124,14 +124,14 @@ function AppointmentCard({ appt, role, onCancel, onReviewed }) {
         )}
       </div>
       {showReviewSummary && (
-        <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-2">
+        <div className="basis-full mt-1 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl flex flex-wrap items-start gap-2">
           <StarDisplay rating={Number(appt.review_rating)} size={13} />
           {appt.review_comment && <p className="text-xs text-slate-600 leading-relaxed">{appt.review_comment}</p>}
           {!appt.review_comment && <p className="text-xs text-slate-400 italic">Avis publié</p>}
         </div>
       )}
       {showReviewForm && (
-        <div className="col-span-full w-full mt-1">
+        <div className="basis-full w-full mt-1">
           <ReviewForm appt={appt} onSubmitted={onReviewed} />
         </div>
       )}
@@ -187,8 +187,8 @@ function ReviewForm({ appt, onSubmitted }) {
       <p className="text-xs font-semibold text-slate-700 mb-1">Comment s'est passé ce RDV ?</p>
 
       {REVIEW_SUB_CATS.map(({ key, label }) => (
-        <div key={key} className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 w-40 flex-shrink-0">{label}</span>
+        <div key={key} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-xs text-slate-500 w-full sm:w-40 flex-shrink-0">{label}</span>
           <StarPicker value={subRatings[key] || 0} onChange={v => setSubRatings(p => ({ ...p, [key]: v }))} />
         </div>
       ))}
@@ -497,8 +497,8 @@ export default function UserDashboard() {
   const initials = `${userInfo?.first_name?.[0] || ''}${userInfo?.last_name?.[0] || ''}`.toUpperCase() || userInfo?.email?.[0]?.toUpperCase() || '?';
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 pt-20 sm:pt-24 pb-16 px-3 sm:px-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
 
         {/* En-tête */}
         <div className="flex items-center gap-4">
@@ -532,8 +532,8 @@ export default function UserDashboard() {
                 : <Camera size={11} className="text-slate-500" />}
             </button>
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 truncate">
               {userInfo?.first_name ? `${userInfo.first_name} ${userInfo.last_name || ''}` : userInfo?.email || 'Mon compte'}
             </h1>
             <p className="text-sm text-slate-400 capitalize">
@@ -575,7 +575,7 @@ export default function UserDashboard() {
                     value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
                 </div>
               </div>
-              <div className="flex gap-3 pt-1">
+              <div className="flex flex-wrap gap-3 pt-1">
                 <button onClick={handleProfileSave} disabled={savingProfile}
                   className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
                   {savingProfile ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Enregistrer
@@ -596,7 +596,7 @@ export default function UserDashboard() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail size={15} className="text-slate-400" />
-                <span className="text-slate-700">{userInfo?.email}</span>
+                <span className="text-slate-700 break-all">{userInfo?.email}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone size={15} className="text-slate-400" />
@@ -769,7 +769,7 @@ export default function UserDashboard() {
                 }
               } catch { alert('Erreur réseau.'); }
             }}
-            className="flex items-center gap-2 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 border border-red-200 hover:border-red-500 text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 border border-red-200 hover:border-red-500 text-sm font-semibold px-5 py-2.5 rounded-xl transition"
           >
             <X size={14} /> Supprimer mon compte définitivement
           </button>

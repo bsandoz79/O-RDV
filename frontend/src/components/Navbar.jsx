@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Briefcase, User, LogOut, ShieldCheck } from "lucide-react"; 
+import { Briefcase, User, LogOut, ShieldCheck, Menu, X } from "lucide-react";
 
 export function ScrollToTop() {
   const [show, setShow] = useState(false);
@@ -30,6 +30,10 @@ export function ScrollToTop() {
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Ferme le menu mobile à chaque changement de page
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
   // ─── ÉTAT D'AUTHENTIFICATION RÉACTIF ──────────────────────────────────────
   // On initialise l'état directement en lisant le localStorage
@@ -67,6 +71,8 @@ export default function Navbar() {
   };
   // ───────────────────────────────────────────────────────────────────────────
 
+  const isActive = (path) => location.pathname === path;
+
   return (
     <header className="app-navbar">
       <div className="app-navbar__inner">
@@ -76,14 +82,14 @@ export default function Navbar() {
           <span className="app-navbar__logo-text">O'RDV</span>
         </Link>
 
-        {/* Liens centraux */}
+        {/* Liens centraux (desktop) */}
         <nav className="app-navbar__links flex items-center gap-2" aria-label="Navigation principale">
 
           {user && (
             <Link
               to="/account"
-              aria-current={location.pathname === "/account" ? "page" : undefined}
-              className={`app-navbar__link flex items-center gap-1.5 ${location.pathname === "/account" ? "app-navbar__link--active" : ""}`}
+              aria-current={isActive("/account") ? "page" : undefined}
+              className={`app-navbar__link flex items-center gap-1.5 ${isActive("/account") ? "app-navbar__link--active" : ""}`}
             >
               <User size={14} aria-hidden="true" />
               Mon Compte
@@ -93,9 +99,9 @@ export default function Navbar() {
           {(user?.role === "pro" || user?.role === "admin") && (
             <Link
               to="/pro/settings"
-              aria-current={location.pathname === "/pro/settings" ? "page" : undefined}
+              aria-current={isActive("/pro/settings") ? "page" : undefined}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm border transition-all ${
-                location.pathname === "/pro/settings"
+                isActive("/pro/settings")
                   ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
                   : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
               }`}
@@ -108,8 +114,8 @@ export default function Navbar() {
           {user?.role === "admin" && (
             <Link
               to="/admin"
-              aria-current={location.pathname === "/admin" ? "page" : undefined}
-              className={`app-navbar__link font-bold text-rose-400 flex items-center gap-1.5 ${location.pathname === "/admin" ? "app-navbar__link--active" : ""}`}
+              aria-current={isActive("/admin") ? "page" : undefined}
+              className={`app-navbar__link font-bold text-rose-400 flex items-center gap-1.5 ${isActive("/admin") ? "app-navbar__link--active" : ""}`}
             >
               <ShieldCheck size={14} aria-hidden="true" />
               Admin
@@ -120,9 +126,9 @@ export default function Navbar() {
         {/* Boutons d'authentification */}
         <div className="app-navbar__auth">
           {user ? (
-            <button 
+            <button
               onClick={handleLogout}
-              className="app-navbar__btn-ghost flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-all"
+              className="app-navbar__btn-ghost app-navbar__logout flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-all"
             >
               <LogOut size={16} /> Déconnexion
             </button>
@@ -132,8 +138,43 @@ export default function Navbar() {
               <Link to="/register" className="app-navbar__btn-cta">S'inscrire</Link>
             </>
           )}
+
+          {/* Burger (mobile, utilisateur connecté) */}
+          {user && (
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="app-navbar__burger"
+              aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Menu déroulant mobile */}
+      {user && menuOpen && (
+        <nav id="mobile-menu" className="app-navbar__mobile" aria-label="Navigation mobile">
+          <Link to="/account" className={`app-navbar__mobile-link ${isActive("/account") ? "app-navbar__mobile-link--active" : ""}`}>
+            <User size={16} aria-hidden="true" /> Mon Compte
+          </Link>
+          {(user.role === "pro" || user.role === "admin") && (
+            <Link to="/pro/settings" className={`app-navbar__mobile-link ${isActive("/pro/settings") ? "app-navbar__mobile-link--active" : ""}`}>
+              <Briefcase size={16} aria-hidden="true" /> Espace Pro
+            </Link>
+          )}
+          {user.role === "admin" && (
+            <Link to="/admin" className={`app-navbar__mobile-link text-rose-400 ${isActive("/admin") ? "app-navbar__mobile-link--active" : ""}`}>
+              <ShieldCheck size={16} aria-hidden="true" /> Admin
+            </Link>
+          )}
+          <button onClick={handleLogout} className="app-navbar__mobile-link text-rose-400">
+            <LogOut size={16} aria-hidden="true" /> Déconnexion
+          </button>
+        </nav>
+      )}
     </header>
   );
 }

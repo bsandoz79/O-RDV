@@ -17,12 +17,12 @@ const ROLE_LABELS = { admin: 'Admin', pro: 'Pro', user: 'Client' };
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: color + '20' }}>
+    <div className="bg-white rounded-2xl p-3 sm:p-5 border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: color + '20' }}>
         <Icon size={20} style={{ color }} />
       </div>
       <div>
-        <p className="text-2xl font-black text-slate-900">{value ?? '—'}</p>
+        <p className="text-xl sm:text-2xl font-black text-slate-900">{value ?? '—'}</p>
         <p className="text-xs text-slate-500">{label}</p>
       </div>
     </div>
@@ -127,13 +127,13 @@ export default function AdminPanel() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-12 px-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 pt-20 pb-12 px-3 sm:px-4" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
               <Crown size={22} className="text-purple-500" /> Administration
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">Supervision et gestion des comptes</p>
@@ -193,7 +193,8 @@ export default function AdminPanel() {
             {loading ? (
               <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Chargement...</div>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[560px]">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
                     <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Boutique</th>
@@ -246,6 +247,7 @@ export default function AdminPanel() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         )}
@@ -256,7 +258,8 @@ export default function AdminPanel() {
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Chargement...</div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Utilisateur</th>
@@ -314,6 +317,7 @@ export default function AdminPanel() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           {!loading && filtered.length === 0 && (
             <p className="text-center py-10 text-slate-400 text-sm">Aucun utilisateur trouvé.</p>

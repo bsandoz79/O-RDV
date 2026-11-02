@@ -154,7 +154,7 @@ function InfoTabs({ provider, hasAcces, hasApropos }) {
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
         {/* Onglets */}
-        <div className="flex border-b border-slate-100 px-6 pt-4">
+        <div className="flex border-b border-slate-100 px-4 sm:px-6 pt-4">
           {hasAcces && (
             <button onClick={() => setTab('acces')}
               className={`mr-8 pb-3 text-sm font-semibold border-b-2 transition
@@ -173,7 +173,7 @@ function InfoTabs({ provider, hasAcces, hasApropos }) {
 
         {/* Contenu Accès */}
         {tab === 'acces' && (
-          <div className="p-6 space-y-5">
+          <div className="p-4 sm:p-6 space-y-5">
             {/* Adresse */}
             {provider.address && (
               <div>
@@ -211,7 +211,7 @@ function InfoTabs({ provider, hasAcces, hasApropos }) {
 
         {/* Contenu À-propos */}
         {tab === 'apropos' && (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
               <AlignLeft size={15} className="text-violet-500" />
               Présentation
@@ -255,7 +255,7 @@ function ServiceGroupBlock({ group, onSelectService }) {
         {visible.map(s => (
           <div key={s.id}
             onClick={() => onSelectService(s)}
-            className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 cursor-pointer transition border-b border-slate-100 last:border-b-0">
+            className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-slate-50 cursor-pointer transition border-b border-slate-100 last:border-b-0">
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-slate-800 text-sm">{s.label}</p>
               {s.duration && (
@@ -265,7 +265,7 @@ function ServiceGroupBlock({ group, onSelectService }) {
               )}
             </div>
             <span className="text-sm font-bold text-slate-700 flex-shrink-0">{formatPrice(s.price)}</span>
-            <button className="flex-shrink-0 px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-rose-500 transition-colors">
+            <button className="flex-shrink-0 px-3 sm:px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-rose-500 transition-colors">
               Choisir
             </button>
           </div>
@@ -439,14 +439,14 @@ export default function ProviderProfile() {
                   <ArrowLeft size={13} /> Retour
                 </button>
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2 leading-tight">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2 leading-tight">
                       {provider.name}
                       {provider.is_certified && <BadgeCheck size={18} className="text-blue-500 flex-shrink-0" title="Boutique certifiée" />}
                     </h1>
                     {(provider.address || provider.city) && (
-                      <p className="text-sm text-slate-500 flex items-center gap-1 mt-1 hover:text-slate-700 cursor-default">
-                        <MapPin size={12} className="flex-shrink-0" />
+                      <p className="text-sm text-slate-500 flex items-start gap-1 mt-1 hover:text-slate-700 cursor-default">
+                        <MapPin size={12} className="flex-shrink-0 mt-1" />
                         {[provider.address, provider.zip_code, provider.city].filter(Boolean).join(', ')}
                       </p>
                     )}
@@ -459,7 +459,7 @@ export default function ProviderProfile() {
                   </div>
                   <button
                     onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                    className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
+                    className="hidden sm:flex flex-shrink-0 items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-rose-500 transition-colors"
                   >
                     Prendre RDV
                   </button>
@@ -467,8 +467,20 @@ export default function ProviderProfile() {
               </div>
             </div>
 
+            {/* Mobile : photo principale + compteur */}
+            <div className="sm:hidden px-4 pb-4">
+              <div className="relative h-60 rounded-2xl overflow-hidden cursor-pointer" onClick={() => setLightboxIdx(0)}>
+                <img src={mainUrl} alt={provider.name} className="w-full h-full object-cover" />
+                {photos.length > 1 && (
+                  <span className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <Images size={13} /> {photos.length} photos
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Grille photos adaptative selon le nombre de photos */}
-            <div className="max-w-5xl mx-auto px-4 pb-4">
+            <div className="hidden sm:block max-w-5xl mx-auto px-4 pb-4">
               {(() => {
                 const n = photos.length;
                 const imgStyle = { width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.4s' };
@@ -549,7 +561,7 @@ export default function ProviderProfile() {
 
             {/* Titre sous la grille */}
             <div className="max-w-5xl mx-auto px-4 pt-5 pb-1">
-              <h2 className="text-xl font-black text-slate-900">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900">
                 Réserver en ligne pour un RDV chez {provider.name}
               </h2>
               <p className="text-sm text-slate-400 mt-1">
@@ -568,7 +580,7 @@ export default function ProviderProfile() {
                     <X size={17} />
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: '4px 4px 40px' }}
+                <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 4, padding: '4px 4px 40px' }}
                   onClick={e => e.stopPropagation()}>
                   {photos.map(p => (
                     <div key={p.id} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '4/3' }}>
@@ -585,12 +597,12 @@ export default function ProviderProfile() {
           <img src={imageUrl} alt={provider.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-          <button onClick={() => navigate(-1)} className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-sm font-medium px-3 py-1.5 rounded-xl border border-white/20 hover:bg-white/30 transition">
+          <button onClick={() => navigate(-1)} className="absolute top-20 left-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-sm font-medium px-3 py-1.5 rounded-xl border border-white/20 hover:bg-white/30 transition">
             <ArrowLeft size={14} /> Retour
           </button>
 
           {/* Nom + statut dans le hero */}
-          <div className="absolute bottom-6 left-6 right-6">
+          <div className="absolute bottom-10 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
             <div className="flex items-center gap-2 mb-2">
               {status && (
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${status.open ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-white'}`}>
@@ -598,7 +610,7 @@ export default function ProviderProfile() {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow flex items-center gap-2">
+            <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight drop-shadow flex items-center gap-2">
               {provider.name}
               {provider.is_certified && <BadgeCheck size={22} className="text-blue-400 flex-shrink-0" title="Boutique certifiée" />}
             </h1>
@@ -672,7 +684,7 @@ export default function ProviderProfile() {
 
           {/* Card infos + CTA — uniquement en mode hero (pas en mode galerie, déjà affiché au-dessus) */}
           {!hasGallery && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="space-y-2 flex-1">
                   {provider.description && (
@@ -692,7 +704,7 @@ export default function ProviderProfile() {
                   )}
                 </div>
                 <button onClick={() => { setPreselectedService(null); setModalOpen(true); }}
-                  className="flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-rose-100 transition text-sm whitespace-nowrap">
+                  className="hidden sm:flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-rose-100 transition text-sm whitespace-nowrap">
                   <CalendarPlus size={16} /> Prendre rendez-vous
                 </button>
               </div>
@@ -709,7 +721,7 @@ export default function ProviderProfile() {
 
             {/* ── Prestations style Planity ───────────────── */}
             <div className="flex-1 min-w-0">
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
                 <h2 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
                   <Scissors size={18} className="text-rose-400" /> Choix de la prestation
                 </h2>
@@ -741,11 +753,11 @@ export default function ProviderProfile() {
             {/* ── Colonne droite : Notes/Avis + Horaires ── */}
             <div className="w-full lg:w-72 flex-shrink-0">
               {/* Note globale / Avis */}
-              <div className="sticky top-20">
+              <div className="lg:sticky lg:top-20">
               <ReviewSidebar reviewData={reviewData} />
 
               {/* Horaires */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <Clock size={18} className="text-rose-400" /> Horaires
                 </h2>
@@ -812,6 +824,18 @@ export default function ProviderProfile() {
 
         </div>
       </div>
+
+      {/* Barre de réservation fixe (mobile) */}
+      {!modalOpen && (
+        <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 py-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+          <button
+            onClick={() => { setPreselectedService(null); setModalOpen(true); }}
+            className="w-full flex items-center justify-center gap-2 bg-violet-600 active:bg-rose-500 text-white font-bold py-3.5 rounded-xl text-sm"
+          >
+            <CalendarPlus size={16} /> Prendre rendez-vous
+          </button>
+        </div>
+      )}
 
       {modalOpen && (
         <BookingModal

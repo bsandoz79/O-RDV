@@ -91,27 +91,24 @@ const SectionCard = ({ icon: Icon, gradient, title, children }) => (
 
 // Ligne de service simplifiée (sans image)
 const ServiceLine = ({ service, onUpdate, onRemove }) => (
-  <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+  <div className="service-line">
     <input
-      className="custom-input"
+      className="custom-input service-line__label"
       placeholder="Nom de la prestation (ex: Coupe courte)"
-      style={{ flex: 3 }}
       type="text"
       value={service.label}
       onChange={e => onUpdate('label', e.target.value)}
     />
     <input
-      className="custom-input"
+      className="custom-input service-line__price"
       placeholder="Prix €"
-      style={{ width: 80 }}
       type="number"
       value={service.price}
       onChange={e => onUpdate('price', e.target.value)}
     />
     <input
-      className="custom-input"
+      className="custom-input service-line__duration"
       placeholder="min"
-      style={{ width: 72 }}
       type="number"
       value={service.duration}
       onChange={e => onUpdate('duration', e.target.value)}
@@ -169,12 +166,12 @@ function AppointmentPopover({ appt, onClose, onRefuse }) {
   const canRefuse = !['cancelled', 'cancelled_by_pro', 'completed'].includes(appt.status);
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ background: 'rgba(15,23,42,0.25)', backdropFilter: 'blur(2px)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-5 w-72 shadow-xl"
+        className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl"
         style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -300,7 +297,7 @@ function WeeklyPlanning({ weekAppointments, shopHours, onRefuse }) {
     <div className="bg-white rounded-2xl overflow-hidden mb-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
 
       {/* ── En-tête de la carte ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
             <Calendar size={15} className="text-blue-500" />
@@ -538,12 +535,12 @@ function RefusalModal({ onConfirm, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(2px)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-6 w-80 shadow-xl"
+        className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-xl"
         style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -751,12 +748,12 @@ function ProDashboard({ shopData, onEditShop }) {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20 pb-12" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <div className="max-w-6xl mx-auto px-4 space-y-5">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 space-y-4 sm:space-y-5">
 
         {/* ── Topbar boutique ────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
           <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#f43f5e,#8b5cf6)' }} />
-          <div className="flex items-center gap-4 px-6 py-4">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4">
             {shopImage ? (
               <img src={shopImage} alt={shopData.name} className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-slate-200" />
             ) : (
@@ -785,7 +782,7 @@ function ProDashboard({ shopData, onEditShop }) {
             </div>
             <button
               onClick={onEditShop}
-              className="flex-shrink-0 flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-4 py-2 rounded-xl transition"
+              className="w-full sm:w-auto justify-center flex-shrink-0 flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-4 py-2.5 sm:py-2 rounded-xl transition"
             >
               <Pencil size={13} /> Modifier la boutique
             </button>
@@ -793,10 +790,10 @@ function ProDashboard({ shopData, onEditShop }) {
         </div>
 
         {/* ── KPIs ───────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {kpis.map(({ icon: Icon, label, value, unit, color }) => (
-            <div key={label} className="bg-white rounded-2xl p-5 flex items-center gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
+            <div key={label} className="bg-white rounded-2xl p-3 sm:p-5 flex items-center gap-2.5 sm:gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
                 <Icon size={18} style={{ color }} />
               </div>
               <div className="min-w-0">
@@ -806,7 +803,7 @@ function ProDashboard({ shopData, onEditShop }) {
                     <span className="text-xs text-slate-400">Calcul…</span>
                   </div>
                 ) : (
-                  <p className="text-xl font-black text-slate-900 leading-none">
+                  <p className="text-lg sm:text-xl font-black text-slate-900 leading-none">
                     {value}
                     <span className="text-xs font-semibold text-slate-400 ml-1">{unit}</span>
                   </p>
@@ -824,7 +821,7 @@ function ProDashboard({ shopData, onEditShop }) {
 
         {/* ── Liste des rendez-vous ──────────────────────────────────── */}
         <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-50">
                 <Calendar size={14} className="text-rose-500" />
@@ -864,7 +861,7 @@ function ProDashboard({ shopData, onEditShop }) {
                 return (
                   <div
                     key={appt.id}
-                    className={`flex items-center gap-4 px-6 py-4 transition-all hover:bg-slate-50 ${idx > 0 ? 'border-t border-slate-100' : ''}`}
+                    className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 transition-all hover:bg-slate-50 ${idx > 0 ? 'border-t border-slate-100' : ''}`}
                     style={{ opacity: isPast || CANCELLED_STATUSES.includes(appt.status) ? 0.5 : 1 }}
                   >
                     {/* Bloc date */}
@@ -914,7 +911,7 @@ function ProDashboard({ shopData, onEditShop }) {
         {/* ── Historique des rendez-vous ────────────────────────────── */}
         {!loading && (
           <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-slate-100">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-100">
                 <Archive size={14} className="text-slate-500" />
               </div>
@@ -999,7 +996,7 @@ function ProDashboard({ shopData, onEditShop }) {
         {/* ── Nouveaux clients du mois ──────────────────────────────── */}
         {!loading && (
           <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-violet-50">
                   <Users size={14} className="text-violet-500" />
@@ -1022,7 +1019,7 @@ function ProDashboard({ shopData, onEditShop }) {
                 {newClients.map((client, idx) => (
                   <div
                     key={client.id}
-                    className={`flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition ${idx > 0 ? 'border-t border-slate-100' : ''}`}
+                    className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3.5 hover:bg-slate-50 transition ${idx > 0 ? 'border-t border-slate-100' : ''}`}
                   >
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white" style={{ background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)' }}>
                       {(client.first_name?.[0] || client.email?.[0] || '?').toUpperCase()}
@@ -1034,7 +1031,7 @@ function ProDashboard({ shopData, onEditShop }) {
                       <p className="text-xs text-slate-400 truncate">{client.email}</p>
                     </div>
                     {client.phone && (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500 flex-shrink-0">
+                      <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 flex-shrink-0">
                         <Phone size={11} />
                         {client.phone}
                       </div>
@@ -1057,10 +1054,10 @@ function ProDashboard({ shopData, onEditShop }) {
           const avg = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
 
           return (
-            <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+            <div className="bg-white rounded-2xl p-4 sm:p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="font-bold text-slate-900 flex items-center gap-2">
+                  <h2 className="font-bold text-slate-900 flex flex-wrap items-center gap-2">
                     ⭐ Avis clients
                     {avg && <span className="text-sm font-black text-amber-500">{avg}</span>}
                     <span className="text-xs text-slate-400 font-normal">({reviews.length} avis)</span>
@@ -1088,7 +1085,7 @@ function ProDashboard({ shopData, onEditShop }) {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                         <span className="text-sm font-semibold text-slate-800">
                           {[r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Client'}
                         </span>
@@ -1364,7 +1361,7 @@ export default function ShopSettings() {
       <div className="shop-container">
         <header className="shop-header">
           {hasShop ? (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h1>Modifier ma boutique</h1>
                 <p>Mettez à jour votre profil, catalogue et disponibilités.</p>
@@ -1504,21 +1501,21 @@ export default function ShopSettings() {
 
           <SectionCard icon={Store} gradient="linear-gradient(135deg,#f43f5e,#e11d48)" title="Catalogue">
             {/* Légende colonnes */}
-            <div style={{ display: 'flex', gap: 8, padding: '0 0 6px 0', borderBottom: '2px solid #f1f5f9', marginBottom: 4 }}>
-              <span style={{ flex: 3, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Prestation</span>
-              <span style={{ width: 80, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Prix €</span>
-              <span style={{ width: 72, fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Durée</span>
+            <div className="service-legend">
+              <span style={{ flex: 3 }}>Prestation</span>
+              <span style={{ width: 80 }}>Prix €</span>
+              <span style={{ width: 72 }}>Durée</span>
               <span style={{ width: 32 }} />
             </div>
 
             {serviceGroups.map((group, gi) => (
-              <div key={gi} style={{ marginBottom: 20, background: '#f8fafc', borderRadius: 14, padding: '12px 14px', border: '1px solid #e2e8f0' }}>
+              <div key={gi} style={{ marginBottom: 20, background: '#f8fafc', borderRadius: 14, padding: '12px 12px', border: '1px solid #e2e8f0' }}>
                 {/* Nom de la catégorie */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <input
                     className="custom-input"
                     placeholder="Nom de la catégorie (ex: Coupe femme, Soins…)"
-                    style={{ flex: 1, fontWeight: 700, fontSize: 13 }}
+                    style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 13 }}
                     value={group.name}
                     onChange={e => {
                       const updated = [...serviceGroups];

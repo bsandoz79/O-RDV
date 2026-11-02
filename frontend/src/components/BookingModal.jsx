@@ -251,21 +251,21 @@ export default function BookingModal({ provider, preselectedService, onClose, in
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-modal-title"
-        className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+        className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]"
         aria-hidden="false"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <div>
+        <div className="flex-shrink-0 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+          <div className="min-w-0">
             <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Réservation</p>
-            <h2 id="booking-modal-title" className="text-base font-bold text-slate-900">{provider.name}</h2>
+            <h2 id="booking-modal-title" className="text-base font-bold text-slate-900 truncate">{provider.name}</h2>
           </div>
           <button onClick={onClose} aria-label="Fermer la fenêtre de réservation" className="p-2 rounded-xl hover:bg-slate-100 transition text-slate-500">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-5 sm:px-6 py-5 overflow-y-auto" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
           {/* ÉTAPE — AUTH REQUIRED */}
           {step === 'auth_required' && (
             <div className="flex flex-col items-center text-center py-6 gap-4">
@@ -310,7 +310,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               </p>
 
               <p className="text-xs text-slate-400 mt-1">Ajouter à votre agenda :</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 <a
                   href={buildGoogleCalendarUrl({
                     title: `${provider.name} — ${selectedService?.label}`,
@@ -346,7 +346,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               {!preselectedService && provider.services?.length > 0 && (
                 <div className="mb-5">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prestation</p>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
                     {provider.services.map(s => (
                       <button
                         key={s.id}
@@ -403,7 +403,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
                       aria-pressed={isSelected}
                       aria-disabled={disabled}
                       className={`
-                        mx-auto w-9 h-9 rounded-xl text-sm font-medium transition
+                        mx-auto w-10 h-10 sm:w-9 sm:h-9 rounded-xl text-sm font-medium transition
                         ${isSelected ? 'bg-rose-500 text-white shadow-md' : ''}
                         ${!disabled && !isSelected ? 'hover:bg-rose-50 hover:text-rose-600 text-slate-700' : ''}
                         ${disabled ? 'text-slate-300 cursor-not-allowed' : ''}
@@ -442,7 +442,7 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               ) : slots.length === 0 ? (
                 <p className="text-center text-slate-400 text-sm py-8">Aucun créneau disponible.</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1" role="list" aria-label="Créneaux disponibles">
+                <div className="grid grid-cols-3 gap-2 max-h-[45vh] sm:max-h-52 overflow-y-auto pr-1" role="list" aria-label="Créneaux disponibles">
                   {slots.map(({ time, available }) => (
                     <button
                       key={time}
@@ -478,22 +478,22 @@ export default function BookingModal({ provider, preselectedService, onClose, in
               </button>
 
               <div className="bg-slate-50 rounded-2xl p-4 space-y-3 mb-5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Établissement</span>
-                  <span className="font-semibold text-slate-800">{provider.name}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500 flex-shrink-0">Établissement</span>
+                  <span className="font-semibold text-slate-800 text-right">{provider.name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Prestation</span>
-                  <span className="font-semibold text-slate-800">{selectedService?.label ?? '—'}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500 flex-shrink-0">Prestation</span>
+                  <span className="font-semibold text-slate-800 text-right">{selectedService?.label ?? '—'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Date</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500 flex-shrink-0">Date</span>
                   <span className="font-semibold text-slate-800">
                     {selectedDate?.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Heure</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500 flex-shrink-0">Heure</span>
                   <span className="font-semibold text-slate-800">{selectedTime}</span>
                 </div>
                 {selectedService?.price && (

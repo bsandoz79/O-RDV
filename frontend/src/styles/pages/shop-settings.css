@@ -105,3 +105,46 @@
   transition: color 0.2s;
 }
 .closed-toggle:hover .closed-label { color: #f43f5e; }
+
+/* ── Catalogue : ligne de prestation ─────────── */
+.service-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.service-line__label    { flex: 3; min-width: 0; }
+.service-line__price    { width: 80px; }
+.service-line__duration { width: 72px; }
+
+.service-legend {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 6px 0;
+  border-bottom: 2px solid #f1f5f9;
+  margin-bottom: 4px;
+}
+.service-legend span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 639px) {
+  .shop-settings-page { padding-top: 5.5rem; }
+  .shop-header { margin-bottom: 1.5rem; }
+
+  /* Le nom de la prestation passe sur sa propre ligne, prix + durée en dessous */
+  .service-line { flex-wrap: wrap; padding: 10px 0; }
+  .service-line__label    { flex: 1 1 100%; }
+  .service-line__price,
+  .service-line__duration { flex: 1; width: auto; }
+  .service-legend { display: none; }
+
+  .day-label { width: 100%; }
+  .hours-controls { width: 100%; }
+  .time-input { width: auto !important; flex: 1; min-width: 0; }
+}

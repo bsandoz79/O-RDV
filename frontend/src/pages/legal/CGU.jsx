@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 export default function CGU() {
   return (
-    <div className="min-h-screen bg-slate-50 py-16 px-4">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-10">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12 sm:pb-16 px-3 sm:px-4">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-10">
         <Link to="/" className="text-rose-500 text-sm font-semibold hover:underline mb-6 block">← Retour</Link>
         <h1 className="text-3xl font-black text-slate-900 mb-2">Conditions Générales d'Utilisation</h1>
         <p className="text-slate-500 text-sm mb-8">En vigueur au 1er mai 2026</p>

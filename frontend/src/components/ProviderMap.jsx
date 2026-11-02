@@ -136,7 +136,7 @@ export default function ProviderMap({ provider }) {
   const wazeUrl   = `https://waze.com/ul?ll=${provider.latitude},${provider.longitude}&navigate=yes`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6">
+    <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -156,7 +156,7 @@ export default function ProviderMap({ provider }) {
       </div>
 
       {/* Onglets de mode */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {MODES.map(({ key, label, Icon }) => (
           <button key={key} onClick={() => setMode(key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition border ${

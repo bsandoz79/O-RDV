@@ -83,7 +83,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
 
   return (
     <article
-      className="group flex bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+      className="group flex flex-col sm:flex-row bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
       onClick={onClick}
       tabIndex={0}
       role="button"
@@ -92,7 +92,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
     >
 
       {/* ── Image gauche avec carousel ───────────────────────────── */}
-      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer" style={{ width: '230px' }}>
+      <div className="relative flex-shrink-0 bg-slate-100 overflow-hidden cursor-pointer w-full h-48 sm:w-[230px] sm:h-auto">
         <img
           key={photoIdx}
           src={currentPhoto}
@@ -107,14 +107,14 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           <>
             <button
               onClick={prev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition opacity-0 group-hover:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Photo précédente"
             >
               <ChevronLeft size={15} />
             </button>
             <button
               onClick={next}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition opacity-0 group-hover:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Photo suivante"
             >
               <ChevronRight size={15} />
@@ -166,7 +166,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
       {/* ── Contenu droit ────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 min-w-0 justify-between">
 
-        <div className="p-5 pb-4 space-y-2.5">
+        <div className="p-4 sm:p-5 pb-3 sm:pb-4 space-y-2.5">
           <h3
             className="text-lg font-bold text-slate-900 group-hover:text-rose-500 transition-colors cursor-pointer leading-tight"
           >
@@ -190,7 +190,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             <span className="text-xs text-slate-400 italic">Pas encore d'avis</span>
           )}
 
-          <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-slate-100">
+          <div className="bg-slate-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-3 border border-slate-100">
             <CalendarDays size={16} className="text-slate-400 flex-shrink-0" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prochaine disponibilité</p>
@@ -199,7 +199,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           </div>
         </div>
 
-        <div className="px-5 py-3.5 flex items-center justify-between border-t border-slate-100">
+        <div className="px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between gap-3 border-t border-slate-100">
           <button
             onClick={e => e.stopPropagation()}
             aria-label={`Plus d'informations sur ${provider.name}`}
