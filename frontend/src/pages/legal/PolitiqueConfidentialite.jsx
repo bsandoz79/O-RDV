@@ -69,7 +69,7 @@ export default function PolitiqueConfidentialite() {
           <h2 className="text-lg font-bold text-slate-800 mb-3">Sécurité</h2>
           <p className="text-slate-600 text-sm leading-relaxed">
             Les mots de passe sont chiffrés via l'algorithme bcrypt. Les communications sont sécurisées par HTTPS.
-            Les données sont stockées sur des serveurs sécurisés (Railway, USA).
+            Les données sont stockées sur des serveurs sécurisés situés en France (o2switch, Clermont-Ferrand).
           </p>
         </section>
 

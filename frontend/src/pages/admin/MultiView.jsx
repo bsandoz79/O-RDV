@@ -156,7 +156,7 @@ export default function MultiView() {
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
           <AlertCircle size={32} className="text-red-400" />
           <p className="text-slate-400 text-sm">Impossible de charger les comptes.</p>
-          <p className="text-slate-500 text-xs">Le backend Railway doit être déployé avec les routes admin.</p>
+          <p className="text-slate-500 text-xs">Le backend doit être déployé avec les routes admin.</p>
         </div>
       ) : (
         <div className="flex-1 grid grid-cols-3 overflow-hidden">

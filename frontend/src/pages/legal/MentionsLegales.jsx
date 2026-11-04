@@ -20,7 +20,7 @@ export default function MentionsLegales() {
         <section className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-3">Hébergement</h2>
           <p className="text-slate-600 text-sm leading-relaxed">
-            <strong>Backend & Base de données :</strong> Railway (San Francisco, CA, USA) — railway.app<br />
+            <strong>Backend & Base de données :</strong> O2SWITCH SAS, 222 boulevard Gustave Flaubert, 63000 Clermont-Ferrand, France — o2switch.fr<br />
             <strong>Frontend :</strong> Vercel Inc. (San Francisco, CA, USA) — vercel.com
           </p>
         </section>
