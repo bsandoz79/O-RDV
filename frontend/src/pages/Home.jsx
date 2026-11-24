@@ -1,7 +1,7 @@
-﻿import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, SlidersHorizontal, Star, X, Map as MapIcon, List } from "lucide-react";
+import { Search, Scissors, Sparkles, Palette, Heart, Smile, Zap, Store, Loader2, MapPin, Star, ChevronDown, LayoutGrid, Map as MapIcon, List } from "lucide-react";
 import ProviderCard from "../components/ProviderCard";
 import API_BASE_URL from '../api/api';
 
@@ -34,7 +34,16 @@ export default function Home() {
 
   const stickyRef = useRef(null);
   const [stickyH, setStickyH] = useState(110);
-  const NAV_H = 68;
+  const NAV_H = 64;
+  const [stuck, setStuck] = useState(false);
+
+  // Ombre sous la barre de filtres quand elle est collée sous la navbar
+  useEffect(() => {
+    const onScroll = () => setStuck(!!stickyRef.current && stickyRef.current.getBoundingClientRect().top <= NAV_H + 1);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -154,7 +163,8 @@ export default function Home() {
     });
   }, [providers, searchQuery, openNow, minRating, sortBy]);
 
-  const mapTop = NAV_H + stickyH + 8;
+  const mapTop = NAV_H + stickyH + 16;
+  const activeCategoryName = categories.find(c => c.id === activeCategory)?.name;
 
   return (
     <>
@@ -196,114 +206,84 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Barre sticky : catégories + filtres ───────────────────────────── */}
-      <div
-        ref={stickyRef}
-        className="sticky z-30 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm"
-        style={{ top: NAV_H }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      {/* ── Barre de filtres, collée sous la navbar ───────────────────────── */}
+      <div ref={stickyRef} className={`filters ${stuck ? 'filters--stuck' : ''}`} style={{ top: NAV_H }}>
+        <div className="filters__inner">
 
-          {/* Catégories */}
+          {/* Catégories : onglets avec icône */}
           {categories.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto py-2.5 sm:py-3 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtrer par catégorie">
-              <button
-                onClick={() => setActiveCategory(null)}
-                aria-pressed={activeCategory === null}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200
-                  ${activeCategory === null
-                    ? 'bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-200'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
-              >
-                Tous
-              </button>
-              {categories.map((cat) => {
-                const Icon = ICON_MAP[cat.icon] || Store;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-                    aria-pressed={activeCategory === cat.id}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200
-                      ${activeCategory === cat.id
-                        ? 'bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-200'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
-                  >
-                    <Icon size={13} aria-hidden="true" />{cat.name}
-                  </button>
-                );
-              })}
+            <div className="filters__cats-wrap">
+              <div className="filters__cats" role="group" aria-label="Filtrer par catégorie">
+                <button type="button" className="filters__cat" onClick={() => setActiveCategory(null)} aria-pressed={activeCategory === null}>
+                  <LayoutGrid size={20} strokeWidth={1.75} aria-hidden="true" />
+                  Tous
+                </button>
+                {categories.map((cat) => {
+                  const Icon = ICON_MAP[cat.icon] || Store;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className="filters__cat"
+                      onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                      aria-pressed={activeCategory === cat.id}
+                    >
+                      <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Filtres */}
-          <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 py-2.5 border-t border-slate-100 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [&>*]:flex-shrink-0" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Filtres et tri">
-            <div className="flex items-center gap-1 mr-1" aria-hidden="true">
-              <SlidersHorizontal size={12} className="text-slate-400" />
-              <span className="text-xs font-semibold text-slate-500">Trier :</span>
+          {/* Filtres à gauche, tri à droite */}
+          <div className="filters__row">
+            <div className="filters__chips" role="group" aria-label="Filtres">
+              <button
+                type="button"
+                className="chip"
+                onClick={userPosition ? disableGeo : requestGeo}
+                disabled={geoStatus === 'loading'}
+                aria-pressed={!!userPosition}
+                title={geoStatus === 'denied' ? "Accès refusé : autorisez la localisation dans le cadenas de la barre d'adresse" : undefined}
+              >
+                <MapPin size={14} className={geoStatus === 'loading' ? 'animate-pulse' : ''} aria-hidden="true" />
+                {geoStatus === 'loading' ? 'Localisation…' : geoStatus === 'denied' && !userPosition ? 'Localisation refusée' : 'Autour de moi'}
+              </button>
+
+              <button type="button" className="chip" onClick={() => setOpenNow(v => !v)} aria-pressed={openNow}>
+                <span className="chip__dot" aria-hidden="true" />
+                Ouvert maintenant
+              </button>
+
+              <span className="filters__sep" aria-hidden="true" />
+
+              {[4, 3].map(n => (
+                <button key={n} type="button" className="chip" onClick={() => setMinRating(minRating === n ? null : n)}
+                  aria-pressed={minRating === n} aria-label={`Note minimum ${n} étoiles`}>
+                  <Star size={13} className="chip__star" aria-hidden="true" />
+                  {n},0 et plus
+                </button>
+              ))}
+
+              {(openNow || minRating !== null || activeCategory !== null || searchQuery) && (
+                <button type="button" className="filters__reset"
+                  onClick={() => { setOpenNow(false); setMinRating(null); setActiveCategory(null); setSearchQuery(''); }}>
+                  Tout effacer
+                </button>
+              )}
             </div>
 
-            {[
-              { key: 'distance', label: '📍 Distance' },
-              { key: 'rating',   label: '⭐ Mieux notés' },
-              { key: 'name',     label: 'A–Z' },
-            ].map(({ key, label }) => (
-              <button key={key} onClick={() => setSortBy(key)}
-                aria-pressed={sortBy === key}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all
-                  ${sortBy === key ? 'bg-violet-600 border-violet-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-violet-400'}`}>
-                {label}
-              </button>
-            ))}
-
-            <div className="w-px h-4 bg-slate-200 mx-1" aria-hidden="true" />
-
-            <button onClick={() => setOpenNow(v => !v)}
-              aria-pressed={openNow}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
-                ${openNow ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${openNow ? 'bg-white' : 'bg-emerald-400'}`} aria-hidden="true" />
-              Ouvert maintenant
-            </button>
-
-            {[3, 4].map(n => (
-              <button key={n} onClick={() => setMinRating(minRating === n ? null : n)}
-                aria-pressed={minRating === n}
-                aria-label={`Note minimum ${n} étoiles`}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1
-                  ${minRating === n ? 'bg-amber-400 border-amber-400 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600'}`}>
-                {n}+ <Star size={10} className={minRating === n ? 'fill-white text-white' : 'fill-amber-400 text-amber-400'} aria-hidden="true" />
-              </button>
-            ))}
-
-            {(sortBy !== 'distance' || openNow || minRating !== null) && (
-              <button onClick={() => { setSortBy('distance'); setOpenNow(false); setMinRating(null); }}
-                aria-label="Réinitialiser tous les filtres"
-                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all flex items-center gap-1">
-                <X size={11} aria-hidden="true" /> Réinitialiser
-              </button>
-            )}
-
-            <div className="w-px h-4 bg-slate-200 mx-1" aria-hidden="true" />
-
-            <button
-              onClick={userPosition ? disableGeo : requestGeo}
-              disabled={geoStatus === 'loading'}
-              aria-pressed={!!userPosition}
-              aria-label={geoStatus === 'denied' ? "Géolocalisation refusée — modifiez les permissions du navigateur" : userPosition ? "Désactiver la géolocalisation" : "Activer la géolocalisation"}
-              title={geoStatus === 'denied' ? "Accès refusé — cliquez sur le cadenas dans la barre d'adresse pour autoriser" : ''}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-1.5
-                ${userPosition
-                  ? 'bg-rose-500 border-rose-500 text-white'
-                  : geoStatus === 'denied'
-                    ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-help'
-                    : geoStatus === 'loading'
-                      ? 'bg-white border-slate-200 text-slate-400'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-500'}`}
-            >
-              <MapPin size={11} className={geoStatus === 'loading' ? 'animate-pulse' : ''} aria-hidden="true" />
-              {userPosition ? 'Ma position' : geoStatus === 'denied' ? 'Localisation refusée' : geoStatus === 'loading' ? 'Localisation...' : 'Ma position'}
-            </button>
+            <label className="sort">
+              <span className="sort__label">Trier par</span>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Trier les prestataires">
+                <option value="distance">Distance</option>
+                <option value="rating">Mieux notés</option>
+                <option value="name">Nom (A à Z)</option>
+              </select>
+              <ChevronDown size={15} className="sort__chevron" aria-hidden="true" />
+            </label>
           </div>
 
         </div>
@@ -312,16 +292,16 @@ export default function Home() {
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* Compteur */}
-        <div className="py-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="font-display text-xl font-bold text-slate-900">
-            {userPosition ? "À proximité" : "Tous les prestataires"}
+        {/* En-tête des résultats */}
+        <div className="results-head">
+          <h2 className="results-head__title font-display">
+            {activeCategoryName ?? (userPosition ? "Près de chez vous" : "Tous les prestataires")}
           </h2>
-          {!loading && (
-            <span className="text-sm text-slate-400">
-              — {filteredProviders.length} établissement{filteredProviders.length > 1 ? 's' : ''}
-              {userPosition && <span className="ml-1.5 text-rose-500 font-medium inline-flex items-center gap-0.5"><MapPin size={11} /> distance</span>}
-            </span>
+          {!loading && !fetchError && (
+            <p className="results-head__count" aria-live="polite">
+              {filteredProviders.length} établissement{filteredProviders.length > 1 ? 's' : ''}
+              {userPosition ? ', du plus proche au plus loin' : ''}
+            </p>
           )}
         </div>
 

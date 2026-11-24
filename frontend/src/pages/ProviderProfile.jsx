@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Phone, Clock, Loader2, CalendarPlus,
-  ChevronRight, Scissors, CheckCircle2, MessageSquare, ThumbsUp,
+  Scissors, CheckCircle2,
   BadgeCheck, EyeOff, Eye, MessageSquareWarning, ShieldBan, X, Images, AlignLeft,
 } from 'lucide-react';
 import API_BASE_URL from '../api/api';

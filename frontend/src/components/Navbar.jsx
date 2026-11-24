@@ -31,6 +31,15 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Barre un peu plus opaque, avec une ombre, dès que la page défile
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Ferme le menu mobile à chaque changement de page
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
@@ -74,22 +83,22 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="app-navbar">
+    <header className={`app-navbar ${scrolled || menuOpen ? "app-navbar--scrolled" : ""}`}>
       <div className="app-navbar__inner">
         {/* Logo */}
         <Link to="/" className="app-navbar__logo">
-          <img src="/logo.png" alt="O'RDV" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="" style={{ width: '34px', height: '34px', objectFit: 'contain' }} />
           <span className="app-navbar__logo-text">O'RDV</span>
         </Link>
 
         {/* Liens centraux (desktop) */}
-        <nav className="app-navbar__links flex items-center gap-2" aria-label="Navigation principale">
+        <nav className="app-navbar__links" aria-label="Navigation principale">
 
           {user && (
             <Link
               to="/account"
               aria-current={isActive("/account") ? "page" : undefined}
-              className={`app-navbar__link flex items-center gap-1.5 ${isActive("/account") ? "app-navbar__link--active" : ""}`}
+              className={`app-navbar__link gap-1.5 ${isActive("/account") ? "app-navbar__link--active" : ""}`}
             >
               <User size={14} aria-hidden="true" />
               Mon Compte
@@ -100,11 +109,7 @@ export default function Navbar() {
             <Link
               to="/pro/settings"
               aria-current={isActive("/pro/settings") ? "page" : undefined}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-sm border transition-all ${
-                isActive("/pro/settings")
-                  ? "bg-rose-500/20 border-rose-500/30 text-rose-300"
-                  : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
-              }`}
+              className={`app-navbar__pill ${isActive("/pro/settings") ? "app-navbar__pill--active" : ""}`}
             >
               <Briefcase size={14} aria-hidden="true" />
               Espace Pro
@@ -115,7 +120,7 @@ export default function Navbar() {
             <Link
               to="/admin"
               aria-current={isActive("/admin") ? "page" : undefined}
-              className={`app-navbar__link font-bold text-rose-400 flex items-center gap-1.5 ${isActive("/admin") ? "app-navbar__link--active" : ""}`}
+              className={`app-navbar__link gap-1.5 ${isActive("/admin") ? "app-navbar__link--active" : ""}`}
             >
               <ShieldCheck size={14} aria-hidden="true" />
               Admin
@@ -128,9 +133,9 @@ export default function Navbar() {
           {user ? (
             <button
               onClick={handleLogout}
-              className="app-navbar__btn-ghost app-navbar__logout flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-all"
+              className="app-navbar__btn-ghost app-navbar__logout gap-2"
             >
-              <LogOut size={16} /> Déconnexion
+              <LogOut size={16} aria-hidden="true" /> Déconnexion
             </button>
           ) : (
             <>

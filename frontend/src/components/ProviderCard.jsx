@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Heart, Star, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Heart, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { StarDisplay } from './StarRating';
 
 function toMinutes(str) {
@@ -83,7 +83,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
 
   return (
     <article
-      className="group flex flex-col sm:flex-row bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+      className="group flex flex-col sm:flex-row bg-white rounded-2xl border border-slate-200/70 hover:border-slate-300 hover:shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition-all duration-300 overflow-hidden"
       onClick={onClick}
       tabIndex={0}
       role="button"
@@ -157,7 +157,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
         )}
 
         {nouveau && (
-          <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-blue-500/90 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-full">
+          <span className="absolute bottom-3 left-3 text-[11px] font-semibold bg-white/90 backdrop-blur-sm text-slate-800 px-2.5 py-0.5 rounded-full shadow-sm">
             Nouveau
           </span>
         )}
@@ -194,7 +194,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
             <CalendarDays size={16} className="text-slate-400 flex-shrink-0" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prochaine disponibilité</p>
-              <p className="text-sm font-semibold text-blue-600 mt-0.5">{nextAvail}</p>
+              <p className="text-sm font-semibold text-slate-800 mt-0.5">{nextAvail}</p>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function ProviderCard({ provider, onClick, isFavorite = false, on
           <button
             onClick={e => { e.stopPropagation(); onClick && onClick(); }}
             aria-label={`Prendre rendez-vous chez ${provider.name}`}
-            className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-rose-500 transition-colors duration-200"
+            className="px-5 py-2.5 bg-rose-500 text-white text-sm font-semibold rounded-full hover:bg-rose-600 transition-colors duration-200"
           >
             Prendre RDV
           </button>
