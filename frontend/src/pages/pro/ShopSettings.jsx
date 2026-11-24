@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import {
   Store, Plus, Trash2, Clock, Save, MapPin,
   Building2, Loader2, CheckCircle, Phone,

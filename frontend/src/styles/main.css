@@ -14,6 +14,7 @@
 
 /* ── Composants ──────────────────────────────── */
 @import './components/navbar.css';
+@import './components/filters.css';
 @import './components/buttons.css';
 @import './components/inputs.css';
 @import './components/cards.css';
