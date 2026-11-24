@@ -36,10 +36,20 @@ export default function Home() {
   const [stickyH, setStickyH] = useState(110);
   const NAV_H = 64;
   const [stuck, setStuck] = useState(false);
+  const [filtersHidden, setFiltersHidden] = useState(false);
 
-  // Ombre sous la barre de filtres quand elle est collée sous la navbar
+  // Barre de filtres collée sous la navbar : ombre quand elle est collée,
+  // cachée quand on descend dans la liste, de retour dès qu'on remonte un peu.
   useEffect(() => {
-    const onScroll = () => setStuck(!!stickyRef.current && stickyRef.current.getBoundingClientRect().top <= NAV_H + 1);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const isStuck = !!stickyRef.current && stickyRef.current.getBoundingClientRect().top <= NAV_H + 1;
+      setStuck(isStuck);
+      if (Math.abs(y - lastY) < 6) return;
+      setFiltersHidden(isStuck && y > lastY && y > 400);
+      lastY = y;
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -163,7 +173,7 @@ export default function Home() {
     });
   }, [providers, searchQuery, openNow, minRating, sortBy]);
 
-  const mapTop = NAV_H + stickyH + 16;
+  const mapTop = NAV_H + (filtersHidden ? 0 : stickyH) + 16;
   const activeCategoryName = categories.find(c => c.id === activeCategory)?.name;
 
   return (
@@ -207,7 +217,7 @@ export default function Home() {
       </section>
 
       {/* ── Barre de filtres, collée sous la navbar ───────────────────────── */}
-      <div ref={stickyRef} className={`filters ${stuck ? 'filters--stuck' : ''}`} style={{ top: NAV_H }}>
+      <div ref={stickyRef} className={`filters ${stuck ? 'filters--stuck' : ''} ${filtersHidden ? 'filters--hidden' : ''}`} style={{ top: NAV_H }}>
         <div className="filters__inner">
 
           {/* Catégories : onglets avec icône */}
@@ -215,7 +225,7 @@ export default function Home() {
             <div className="filters__cats-wrap">
               <div className="filters__cats" role="group" aria-label="Filtrer par catégorie">
                 <button type="button" className="filters__cat" onClick={() => setActiveCategory(null)} aria-pressed={activeCategory === null}>
-                  <LayoutGrid size={20} strokeWidth={1.75} aria-hidden="true" />
+                  <LayoutGrid size={16} strokeWidth={1.9} aria-hidden="true" />
                   Tous
                 </button>
                 {categories.map((cat) => {
@@ -228,7 +238,7 @@ export default function Home() {
                       onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
                       aria-pressed={activeCategory === cat.id}
                     >
-                      <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
+                      <Icon size={16} strokeWidth={1.9} aria-hidden="true" />
                       {cat.name}
                     </button>
                   );
@@ -248,7 +258,7 @@ export default function Home() {
                 aria-pressed={!!userPosition}
                 title={geoStatus === 'denied' ? "Accès refusé : autorisez la localisation dans le cadenas de la barre d'adresse" : undefined}
               >
-                <MapPin size={14} className={geoStatus === 'loading' ? 'animate-pulse' : ''} aria-hidden="true" />
+                <MapPin size={13} className={geoStatus === 'loading' ? 'animate-pulse' : ''} aria-hidden="true" />
                 {geoStatus === 'loading' ? 'Localisation…' : geoStatus === 'denied' && !userPosition ? 'Localisation refusée' : 'Autour de moi'}
               </button>
 
@@ -262,8 +272,8 @@ export default function Home() {
               {[4, 3].map(n => (
                 <button key={n} type="button" className="chip" onClick={() => setMinRating(minRating === n ? null : n)}
                   aria-pressed={minRating === n} aria-label={`Note minimum ${n} étoiles`}>
-                  <Star size={13} className="chip__star" aria-hidden="true" />
-                  {n},0 et plus
+                  <Star size={12} className="chip__star" aria-hidden="true" />
+                  {n},0+
                 </button>
               ))}
 
@@ -359,7 +369,7 @@ export default function Home() {
             {/* Colonne droite : carte sticky */}
             <div className="hidden lg:block w-[44%] flex-shrink-0">
               <div
-                className="sticky rounded-2xl overflow-hidden shadow-md border border-slate-200"
+                className="sticky rounded-2xl overflow-hidden shadow-md border border-slate-200 transition-all duration-300"
                 style={{ top: mapTop, height: `calc(100vh - ${mapTop + 8}px)` }}
                 onMouseEnter={() => { document.body.style.overflow = 'hidden'; }}
                 onMouseLeave={() => { document.body.style.overflow = ''; }}
